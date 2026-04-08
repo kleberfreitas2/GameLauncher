@@ -31,6 +31,6 @@
           </DataTemplate></ItemsControl.ItemTemplate>
         </ItemsControl></ScrollViewer>
     </Grid>
-    <Border Grid.Row="2" Background="#16213E" Padding="30,10"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12" VerticalAlignment="Center"/><TextBlock Grid.Column="1" Text="{Binding Games.Count, StringFormat={}{0} jogos}" Foreground="#7C4DFF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/></Grid></Border>
+    <Border Grid.Row="2" Background="#16213E" Padding="30,10"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12" VerticalAlignment="Center"/><TextBlock Grid.Column="1" Text="Desenvolvido por Kleber Freitas" Foreground="#555577" FontSize="11" VerticalAlignment="Center"/></Grid></Border>
   </Grid>
 </Window>

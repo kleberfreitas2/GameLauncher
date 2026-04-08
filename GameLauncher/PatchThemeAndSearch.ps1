@@ -1,5 +1,30 @@
-$appXaml  = "C:\Users\mcd_s\source\repos\DashGaming\GameLauncher\App.xaml"
-$mainXaml = "C:\Users\mcd_s\source\repos\DashGaming\GameLauncher\MainWindow.xaml"
+### Fix ThemeDialog.xaml.cs — rewrite clean file
+$themeCs = "C:\Users\mcd_s\source\Repositorio\DashGaming\GameLauncher\Views\ThemeDialog.xaml.cs"
+$clean = "using System.Windows;" + [System.Environment]::NewLine +
+"using System.Windows.Controls;" + [System.Environment]::NewLine +
+"using System.Windows.Input;" + [System.Environment]::NewLine +
+"using System.Windows.Media;" + [System.Environment]::NewLine +
+"using GameLauncher.Services;" + [System.Environment]::NewLine +
+[System.Environment]::NewLine +
+"namespace GameLauncher.Views;" + [System.Environment]::NewLine +
+[System.Environment]::NewLine +
+"public partial class ThemeDialog : Window" + [System.Environment]::NewLine +
+"{" + [System.Environment]::NewLine +
+"    private record ThemePreset(string Name, string Accent, string Secondary, string Bg, string Header, string Card, string CardImg);" + [System.Environment]::NewLine +
+[System.Environment]::NewLine +
+"    private static readonly ThemePreset[] Presets = [" + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Roxo Neon" + [char]34 + ",     " + [char]34 + "#7C4DFF" + [char]34 + ", " + [char]34 + "#00E676" + [char]34 + ", " + [char]34 + "#0D0D0D" + [char]34 + ", " + [char]34 + "#16213E" + [char]34 + ", " + [char]34 + "#1A1A2E" + [char]34 + ", " + [char]34 + "#0F0F23" + [char]34 + ")," + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Azul Eletrico" + [char]34 + ", " + [char]34 + "#1565C0" + [char]34 + ", " + [char]34 + "#00BCD4" + [char]34 + ", " + [char]34 + "#0A0A1A" + [char]34 + ", " + [char]34 + "#0D1B2A" + [char]34 + ", " + [char]34 + "#162032" + [char]34 + ", " + [char]34 + "#0A1020" + [char]34 + ")," + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Matrix" + [char]34 + ",        " + [char]34 + "#00C853" + [char]34 + ", " + [char]34 + "#69F0AE" + [char]34 + ", " + [char]34 + "#050F05" + [char]34 + ", " + [char]34 + "#0A1A0A" + [char]34 + ", " + [char]34 + "#0F1F0F" + [char]34 + ", " + [char]34 + "#060F06" + [char]34 + ")," + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Vermelho" + [char]34 + ",      " + [char]34 + "#D50000" + [char]34 + ", " + [char]34 + "#FF6D00" + [char]34 + ", " + [char]34 + "#100808" + [char]34 + ", " + [char]34 + "#1A0E0E" + [char]34 + ", " + [char]34 + "#1F1212" + [char]34 + ", " + [char]34 + "#100808" + [char]34 + ")," + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Rosa Cyber" + [char]34 + ",    " + [char]34 + "#AD1457" + [char]34 + ", " + [char]34 + "#FF4081" + [char]34 + ", " + [char]34 + "#100812" + [char]34 + ", " + [char]34 + "#1A0E1C" + [char]34 + ", " + [char]34 + "#1F1228" + [char]34 + ", " + [char]34 + "#100810" + [char]34 + ")," + [System.Environment]::NewLine +
+"        new(" + [char]34 + "Artico" + [char]34 + ",        " + [char]34 + "#0097A7" + [char]34 + ", " + [char]34 + "#80DEEA" + [char]34 + ", " + [char]34 + "#060D14" + [char]34 + ", " + [char]34 + "#0B1520" + [char]34 + ", " + [char]34 + "#0F1E2E" + [char]34 + ", " + [char]34 + "#070E18" + [char]34 + ")," + [System.Environment]::NewLine +
+"    ];" + [System.Environment]::NewLine
+[System.IO.File]::WriteAllText($themeCs, $clean, [System.Text.Encoding]::UTF8)
+Write-Host "ThemeDialog.xaml.cs rewritten - partial only, needs rest"
+
+$appXaml  = "C:\Users\mcd_s\source\Repositorio\DashGaming\GameLauncher\App.xaml"
+$mainXaml = "C:\Users\mcd_s\source\Repositorio\DashGaming\GameLauncher\MainWindow.xaml"
 
 # ─── App.xaml: adicionar HeaderBackgroundBrush e CardImageBackgroundBrush ─────
 $app = [System.IO.File]::ReadAllText($appXaml)
