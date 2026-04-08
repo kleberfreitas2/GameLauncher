@@ -34,6 +34,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string searchText = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBackgroundImage))]
+    private string? backgroundImagePath;
+
+    public bool HasBackgroundImage => !string.IsNullOrEmpty(BackgroundImagePath);
+
     public ICollectionView GamesView => _gamesView;
 
     public MainViewModel()
@@ -47,6 +53,9 @@ public partial class MainViewModel : ObservableObject
 
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
+
+        BackgroundImagePath = string.IsNullOrEmpty(SettingsService.Current.BackgroundImagePath)
+            ? null : SettingsService.Current.BackgroundImagePath;
 
         LoadGames();
     }
@@ -211,6 +220,30 @@ public partial class MainViewModel : ObservableObject
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void ChangeBackground()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title  = "Escolha uma imagem de fundo",
+            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp"
+        };
+        if (dialog.ShowDialog() != true) return;
+        BackgroundImagePath = dialog.FileName;
+        SettingsService.Current.BackgroundImagePath = dialog.FileName;
+        SettingsService.Save();
+        StatusMessage = "Imagem de fundo aplicada!";
+    }
+
+    [RelayCommand]
+    private void RemoveBackground()
+    {
+        BackgroundImagePath = null;
+        SettingsService.Current.BackgroundImagePath = string.Empty;
+        SettingsService.Save();
+        StatusMessage = "Imagem de fundo removida.";
     }
 }
 
