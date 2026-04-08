@@ -18,7 +18,8 @@ public class PathToImageSourceConverter : IValueConverter
             bitmap.BeginInit();
             bitmap.UriSource = new Uri(path, UriKind.Absolute);
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.DecodePixelWidth = 185;
+            if (parameter is string p && int.TryParse(p, out int decodeWidth) && decodeWidth > 0)
+                bitmap.DecodePixelWidth = decodeWidth;
             bitmap.EndInit();
             bitmap.Freeze();
             return bitmap;
