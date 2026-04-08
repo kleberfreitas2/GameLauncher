@@ -1,0 +1,36 @@
+﻿<Window x:Class="GameLauncher.Views.RenameDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Renomear Jogo"
+        Width="420" Height="190"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBox x:Name="NameTextBox"
+                 md:HintAssist.Hint="Nome do jogo"
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Foreground="White" CaretBrush="White"
+                 FontSize="14" Height="56" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="RENOMEAR" IsDefault="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#7C4DFF" FontWeight="Bold"
+                    Click="Confirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

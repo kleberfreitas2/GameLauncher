@@ -1,0 +1,102 @@
+<Window x:Class="GameLauncher.Views.CoverSearchDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="🖼️ Buscar Capa — SteamGridDB"
+        Width="780" Height="560"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#0D0D1A"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Título -->
+        <TextBlock Grid.Row="0"
+                   Text="🖼️ Buscar Capa"
+                   FontSize="18" FontWeight="Bold" Foreground="White"
+                   Margin="0,0,0,16"/>
+
+        <!-- Barra de busca -->
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="SearchBox"
+                     Grid.Column="0"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     md:HintAssist.Hint="Nome do jogo..."
+                     Foreground="White" CaretBrush="White"
+                     Background="#16213E"
+                     Margin="0,0,10,0"
+                     KeyDown="SearchBox_KeyDown"/>
+            <Button Grid.Column="1"
+                    Content="BUSCAR"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="{DynamicResource AccentBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    Foreground="White" FontWeight="Bold"
+                    Padding="20,0"
+                    Click="Search_Click"/>
+        </Grid>
+
+        <!-- Área de resultados -->
+        <Border Grid.Row="2" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
+            <Grid>
+                <TextBlock x:Name="StatusText"
+                           Text="Digite o nome do jogo e clique em BUSCAR"
+                           Foreground="#666688"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontSize="14"/>
+                <ProgressBar x:Name="LoadingBar"
+                             IsIndeterminate="True"
+                             Visibility="Collapsed"
+                             Style="{StaticResource MaterialDesignLinearProgressBar}"
+                             VerticalAlignment="Center"
+                             Margin="60,0"/>
+                <ScrollViewer x:Name="ResultsScroll"
+                              VerticalScrollBarVisibility="Auto"
+                              Visibility="Collapsed"
+                              Padding="8">
+                    <WrapPanel x:Name="ResultsPanel" Margin="4"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Rodapé -->
+        <Grid Grid.Row="3" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="SelectedText"
+                       Grid.Column="0"
+                       Text="Nenhuma capa selecionada"
+                       Foreground="#666688"
+                       VerticalAlignment="Center"/>
+            <Button Grid.Column="1"
+                    Content="CANCELAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888"
+                    Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button x:Name="ApplyButton"
+                    Grid.Column="2"
+                    Content="APLICAR"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="{DynamicResource AccentGreenBrush}"
+                    BorderBrush="{DynamicResource AccentGreenBrush}"
+                    Foreground="#0D0D0D" FontWeight="Bold"
+                    IsEnabled="False"
+                    Click="Apply_Click"/>
+        </Grid>
+    </Grid>
+</Window>

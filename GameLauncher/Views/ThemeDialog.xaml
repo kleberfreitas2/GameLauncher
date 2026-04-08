@@ -1,0 +1,41 @@
+<Window x:Class="GameLauncher.Views.ThemeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="🎨 Personalizar Tema"
+        Width="480" Height="360"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="28,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="🎨 Escolha um tema"
+                   FontSize="17" FontWeight="Bold" Foreground="White"
+                   Margin="0,0,0,4"/>
+        <TextBlock Grid.Row="1"
+                   Text="O tema é aplicado imediatamente. As configurações são salvas automaticamente."
+                   FontSize="11" Foreground="#9999BB" TextWrapping="Wrap"
+                   Margin="0,0,0,20"/>
+
+        <!-- Grade de temas -->
+        <UniformGrid Grid.Row="2" Rows="2" Columns="3" x:Name="ThemeGrid"/>
+
+        <!-- Fechar -->
+        <Button Grid.Row="3"
+                Content="FECHAR"
+                Style="{StaticResource MaterialDesignFlatButton}"
+                Foreground="#9999BB"
+                HorizontalAlignment="Right"
+                Margin="0,16,0,0"
+                Click="Close_Click"/>
+    </Grid>
+</Window>
