@@ -2,10 +2,121 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using GameLauncher.Models;
 using GameLauncher.Services;
 
 namespace GameLauncher.Views;
+
+public partial class ThemeDialog : Window
+{
+    private record ThemePreset(
+        string Name,
+        string Accent, string Secondary,
+        string Bg, string Header, string Card, string CardImg);
+
+    private static readonly ThemePreset[] Presets =
+    [
+        new("Roxo Neon",     "#7C4DFF", "#00E676", "#0D0D0D", "#16213E", "#1A1A2E", "#0F0F23"),
+        new("Azul Elétrico", "#1565C0", "#00BCD4", "#0A0A1A", "#0D1B2A", "#162032", "#0A1020"),
+        new("Matrix",        "#00C853", "#69F0AE", "#050F05", "#0A1A0A", "#0F1F0F", "#060F06"),
+        new("Vermelho",      "#D50000", "#FF6D00", "#100808", "#1A0E0E", "#1F1212", "#100808"),
+        new("Rosa Cyber",    "#AD1457", "#FF4081", "#100812", "#1A0E1C", "#1F1228", "#100810"),
+        new("Ártico",        "#0097A7", "#80DEEA", "#060D14", "#0B1520", "#0F1E2E", "#070E18"),
+    ];
+
+    private Border? _activeBorder;
+
+    public ThemeDialog()
+    {
+        InitializeComponent();
+        Loaded += (_, _) => BuildPresets();
+    }
+
+    private void BuildPresets()
+    {
+        for (int i = 0; i < Presets.Length; i++)
+        {
+            var preset      = Presets[i];
+            var row         = i / 3;
+            var col         = i % 3;
+            var accentColor = (Color)ColorConverter.ConvertFromString(preset.Accent);
+            var isActive    = SettingsService.Current.AccentColor
+                                  .Equals(preset.Accent, System.StringComparison.OrdinalIgnoreCase);
+
+            var outer = new Border
+            {
+                Margin          = new Thickness(6),
+                CornerRadius    = new CornerRadius(10),
+                BorderThickness = new Thickness(2),
+                BorderBrush     = isActive
+                    ? new SolidColorBrush(accentColor)
+                    : new SolidColorBrush(Color.FromArgb(50, 255, 255, 255)),
+                Background      = new SolidColorBrush(Color.FromRgb(15, 15, 35)),
+                Cursor          = Cursors.Hand,
+                ClipToBounds    = false
+            };
+
+            var inner = new StackPanel
+            {
+                VerticalAlignment   = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            inner.Children.Add(new Border
+            {
+                Width               = 38,
+                Height              = 38,
+                CornerRadius        = new CornerRadius(19),
+                Background          = new SolidColorBrush(accentColor),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin              = new Thickness(0, 0, 0, 10)
+            });
+
+            inner.Children.Add(new TextBlock
+            {
+                Text                = preset.Name,
+                FontSize            = 13,
+                FontWeight          = FontWeights.SemiBold,
+                Foreground          = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            outer.Child = inner;
+
+            if (isActive) _activeBorder = outer;
+
+            Grid.SetRow(outer, row);
+            Grid.SetColumn(outer, col);
+
+            var captured = preset;
+            outer.MouseLeftButtonDown += (_, _) => ApplyPreset(outer, captured, accentColor);
+
+            ThemeGrid.Children.Add(outer);
+        }
+    }
+
+    private void ApplyPreset(Border border, ThemePreset preset, Color accentColor)
+    {
+        if (_activeBorder is not null)
+            _activeBorder.BorderBrush =
+                new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
+
+        border.BorderBrush = new SolidColorBrush(accentColor);
+        _activeBorder      = border;
+
+        var s = SettingsService.Current;
+        s.AccentColor          = preset.Accent;
+        s.SecondaryAccentColor = preset.Secondary;
+        s.BackgroundColor      = preset.Bg;
+        s.HeaderColor          = preset.Header;
+        s.CardColor            = preset.Card;
+        s.CardImageColor       = preset.CardImg;
+
+        SettingsService.Save();
+        SettingsService.ApplyTheme();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+}
 
 public partial class ThemeDialog : Window
 {
@@ -56,14 +167,14 @@ public partial class ThemeDialog : Window
             {
                 VerticalAlignment   = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 14, 0, 14)
+                Margin = new Thickness(0, 10, 0, 10)
             };
 
             inner.Children.Add(new Border
             {
-                Width        = 32,
-                Height       = 32,
-                CornerRadius = new CornerRadius(16),
+                Width        = 36,
+                Height       = 36,
+                CornerRadius = new CornerRadius(18),
                 Background   = new SolidColorBrush(accentColor),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 8)
@@ -75,7 +186,8 @@ public partial class ThemeDialog : Window
                 FontSize            = 12,
                 FontWeight          = FontWeights.SemiBold,
                 Foreground          = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center,
+                TextWrapping        = TextWrapping.NoWrap
             });
 
             outer.Child = inner;
