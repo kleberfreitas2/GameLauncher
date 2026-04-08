@@ -41,10 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="GameLauncher\App.xaml" />
-    <Page Include="GameLauncher\MainWindow.xaml" />
     <Page Include="GameLauncher\Views\RenameDialog.xaml" />
     <Page Include="GameLauncher\Views\ApiKeyDialog.xaml" />
     <Page Include="GameLauncher\Views\CoverSearchDialog.xaml" />
     <Page Include="GameLauncher\Views\ThemeDialog.xaml" />
+    <Page Include="GameLauncher\MainWindow.xaml" />
   </ItemGroup>
 </Project>
