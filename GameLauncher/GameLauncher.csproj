@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
-    <AssemblyTitle>Game Launcher EXP.</AssemblyTitle>
-    <Product>Game Launcher EXP.</Product>
+    <AssemblyTitle>GLauncher</AssemblyTitle>
+    <Product>GLauncher</Product>
   </PropertyGroup>
 
   <ItemGroup>

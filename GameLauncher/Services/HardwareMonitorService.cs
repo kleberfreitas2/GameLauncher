@@ -16,7 +16,7 @@ public class HardwareMetrics
 public sealed class HardwareMonitorService : IDisposable
 {
     private readonly Computer _computer;
-    private readonly Timer _timer;
+    private readonly System.Timers.Timer _timer;
     private bool _disposed;
 
     public event Action<HardwareMetrics>? MetricsUpdated;
@@ -33,7 +33,7 @@ public sealed class HardwareMonitorService : IDisposable
         try { _computer.Open(); }
         catch { }
 
-        _timer = new Timer(intervalMs);
+        _timer = new System.Timers.Timer(intervalMs);
         _timer.Elapsed += OnTimerElapsed;
     }
 

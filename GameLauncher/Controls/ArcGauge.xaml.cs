@@ -2,7 +2,6 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 
 namespace GameLauncher.Controls;
 
@@ -80,18 +79,6 @@ public partial class ArcGauge : UserControl
         var from = _currentValue;
         _currentValue = target;
 
-        var anim = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(400))
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-        };
-        anim.CurrentTimeInvalidated += (_, _) =>
-        {
-            var clock = ((AnimationClock)((object)anim).GetType()
-                .GetMethod("get_CurrentTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(anim, null) ?? anim);
-        };
-
-        var storyboard = new Storyboard();
         var helper = new AnimationHelper(this, from, target);
         helper.Start();
     }
