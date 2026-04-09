@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="GameLauncher/Assets/icon.png" width="100" alt="GLauncher Logo"/>
+  <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
   # GLauncher
 
