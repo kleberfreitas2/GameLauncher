@@ -45,6 +45,7 @@
     <None Include="GameLauncher\Tools\IconGen\Program.cs" />
     <None Include="GameLauncher\Services\XInputService.cs" />
     <None Include="GameLauncher\Converters\EqualityConverter.cs" />
+    <None Include="GameLauncher\Converters\SelectedGamepadVisibilityConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="GameLauncher\App.xaml" />

@@ -132,6 +132,7 @@
     <None Include="GameLauncher\Controls\ArcGauge.xaml.cs" />
     <None Include="GameLauncher\Converters\EqualityConverter.cs" />
     <None Include="GameLauncher\Converters\PathToImageSourceConverter.cs" />
+    <None Include="GameLauncher\Converters\SelectedGamepadVisibilityConverter.cs" />
     <None Include="GameLauncher\GameLauncher.csproj" />
     <None Include="GameLauncher\GenerateIcon.ps1" />
     <None Include="GameLauncher\MainWindow.xaml.cs" />

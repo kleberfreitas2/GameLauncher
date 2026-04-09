@@ -129,11 +129,12 @@
         <!-- Status text -->
         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
           <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
-          <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-            <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10"/>
-            <TextBlock Text="{Binding GamepadStatus}" Foreground="#00E676" FontSize="10" Margin="12,0,0,0" FontWeight="SemiBold"/>
-          </StackPanel>
+          <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10" Margin="0,2,0,0"/>
         </StackPanel>
+
+        <!-- Gamepad status (centro) -->
+        <TextBlock Grid.Column="1" Text="{Binding GamepadStatus}" Foreground="#00E676" FontSize="11"
+                   FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
         <!-- Hardware Gauges -->
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">

@@ -326,12 +326,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher.BeginInvoke(() =>
         {
             GamepadConnected = connected;
-            GamepadStatus = connected ? "🎮 Controle conectado" : "";
+            GamepadStatus = connected ? "🎮 Controle conectado  |  A = Jogar  |  Y = Favorito" : "";
             if (connected && SelectedGame is null && GetVisibleGames().Count > 0)
             {
                 _selectedIndex = 0;
                 SelectedGame = GetVisibleGames()[0];
-                StatusMessage = "🎮 Use o controle para navegar | A = Jogar | Y = Favorito";
             }
             if (!connected)
             {
