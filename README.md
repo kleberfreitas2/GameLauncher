@@ -1,4 +1,4 @@
-# 🎮 GLauncher — Game Launcher EXP.
+# 🎮 GLauncher — Game Launcher.
 
 > **Versão 1.0** — Seus jogos favoritos em um só lugar.
 
