@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -274,44 +273,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
-    }
-
-    [RelayCommand]
-    private async Task FetchIgdbInfo(Game game)
-    {
-        var clientId     = SettingsService.Current.IgdbClientId;
-        var clientSecret = SettingsService.Current.IgdbClientSecret;
-
-        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
-        {
-            var setup = new IgdbSetupDialog { Owner = Application.Current.MainWindow };
-            if (setup.ShowDialog() != true) return;
-            SettingsService.Current.IgdbClientId     = setup.ClientId;
-            SettingsService.Current.IgdbClientSecret = setup.ClientSecret;
-            SettingsService.Save();
-            clientId     = setup.ClientId;
-            clientSecret = setup.ClientSecret;
-        }
-
-        var dialog = new IgdbGameInfoDialog(clientId, clientSecret, game.DisplayName)
-        {
-            Owner = Application.Current.MainWindow
-        };
-
-        if (dialog.ShowDialog() == true && dialog.SelectedGame is { } igdbGame)
-        {
-            game.Summary     = igdbGame.Summary;
-            game.IgdbRating  = igdbGame.Rating;
-            game.Genres      = igdbGame.GenreNames == "—" ? null : igdbGame.GenreNames;
-            game.ReleaseYear = igdbGame.ReleaseYear;
-            game.IgdbId      = igdbGame.Id;
-
-            if (dialog.DownloadedCoverPath is not null)
-                game.CustomImagePath = dialog.DownloadedCoverPath;
-
-            SaveGames();
-            StatusMessage = $"'{game.DisplayName}' atualizado com info do IGDB!";
-        }
     }
 
     [RelayCommand]

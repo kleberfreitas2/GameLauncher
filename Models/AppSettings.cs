@@ -3,8 +3,6 @@ namespace GameLauncher.Models;
 public class AppSettings
 {
     public string SteamGridDbApiKey    { get; set; } = string.Empty;
-    public string IgdbClientId         { get; set; } = string.Empty;
-    public string IgdbClientSecret     { get; set; } = string.Empty;
     public string BackgroundImagePath  { get; set; } = string.Empty;
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
