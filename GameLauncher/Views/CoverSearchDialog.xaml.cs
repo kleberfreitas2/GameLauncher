@@ -15,11 +15,8 @@ public partial class CoverSearchDialog : Window
     private readonly string _gameName;
     private string? _selectedImageUrl;
     private Border? _selectedBorder;
-    private int _selectedGameId;
 
     public string? DownloadedImagePath { get; private set; }
-    public string? DownloadedLogoPath  { get; private set; }
-    public string? DownloadedHeroPath  { get; private set; }
 
     public CoverSearchDialog(string apiKey, string gameName)
     {
@@ -61,7 +58,6 @@ public partial class CoverSearchDialog : Window
             return;
         }
 
-        _selectedGameId = games[0].Id;
         var covers = await _service.GetCoversAsync(games[0].Id);
         SetLoading(false);
 
@@ -141,18 +137,6 @@ public partial class CoverSearchDialog : Window
         if (_selectedImageUrl is null) return;
         SetLoading(true);
         DownloadedImagePath = await _service.DownloadCoverAsync(_selectedImageUrl, _gameName);
-
-        if (DownloadedImagePath is not null && _selectedGameId > 0)
-        {
-            var logos = await _service.GetLogosAsync(_selectedGameId);
-            if (logos.Count > 0)
-                DownloadedLogoPath = await _service.DownloadLogoAsync(logos[0].Url, _gameName);
-
-            var heroes = await _service.GetHeroesAsync(_selectedGameId);
-            if (heroes.Count > 0)
-                DownloadedHeroPath = await _service.DownloadHeroAsync(heroes[0].Url, _gameName);
-        }
-
         SetLoading(false);
 
         if (DownloadedImagePath is not null)

@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GameLauncher.Models;
@@ -27,28 +25,13 @@ public partial class Game : ObservableObject
     [NotifyPropertyChangedFor(nameof(EffectiveImagePath))]
     [NotifyPropertyChangedFor(nameof(HasImage))]
     [NotifyPropertyChangedFor(nameof(HasNoImage))]
-    [NotifyPropertyChangedFor(nameof(HeroBackdropPath))]
     private string? iconPath;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EffectiveImagePath))]
     [NotifyPropertyChangedFor(nameof(HasImage))]
     [NotifyPropertyChangedFor(nameof(HasNoImage))]
-    [NotifyPropertyChangedFor(nameof(HeroBackdropPath))]
     private string? customImagePath;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasLogo))]
-    [NotifyPropertyChangedFor(nameof(HasNoLogo))]
-    private string? logoPath;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HeroBackdropPath))]
-    private string? heroPath;
-
-    [ObservableProperty]
-    [property: JsonIgnore]
-    private string installSizeText = "";
 
     public string DisplayName => Name.Replace(".exe", "").Replace("_", " ");
 
@@ -58,15 +41,6 @@ public partial class Game : ObservableObject
 
     public bool HasImage   => EffectiveImagePath is not null;
     public bool HasNoImage => EffectiveImagePath is null;
-
-    public bool HasLogo   => !string.IsNullOrEmpty(LogoPath);
-    public bool HasNoLogo => string.IsNullOrEmpty(LogoPath);
-
-    public string? HeroBackdropPath =>
-        !string.IsNullOrEmpty(HeroPath) ? HeroPath : EffectiveImagePath;
-
-    [JsonIgnore]
-    public string ExecutableFileName => Path.GetFileName(ExecutablePath);
 
     public string FavoriteIcon  => IsFavorite ? "Star" : "StarOutline";
     public string FavoriteColor => IsFavorite ? "#FFD700" : "#666688";

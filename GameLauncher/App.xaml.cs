@@ -5,8 +5,6 @@ namespace GameLauncher;
 
 public partial class App : System.Windows.Application
 {
-    private bool _shutdownHandled;
-
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -20,28 +18,5 @@ public partial class App : System.Windows.Application
         };
         SettingsService.Load();
         SettingsService.ApplyTheme();
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        if (!_shutdownHandled)
-        {
-            _shutdownHandled = true;
-
-            foreach (Window window in Windows)
-            {
-                if (window.DataContext is IDisposable disposable)
-                {
-                    try { disposable.Dispose(); } catch { }
-                }
-            }
-
-            if (MainWindow?.DataContext is IDisposable mainDisposable)
-            {
-                try { mainDisposable.Dispose(); } catch { }
-            }
-        }
-
-        base.OnExit(e);
     }
 }

@@ -143,7 +143,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task AddGameAsync()
+    private void AddGame()
     {
         var dialog = new OpenFileDialog
         {
@@ -154,7 +154,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (dialog.ShowDialog() != true) return;
 
-        var newGames = new List<Game>();
         foreach (var file in dialog.FileNames)
         {
             if (Games.Any(g => g.ExecutablePath == file)) continue;
@@ -168,65 +167,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             };
 
             Games.Add(game);
-            newGames.Add(game);
         }
 
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
-
-        var apiKey = SettingsService.Current.SteamGridDbApiKey;
-        if (!string.IsNullOrEmpty(apiKey) && newGames.Count > 0)
-        {
-            foreach (var game in newGames)
-                await AutoFetchAssetsAsync(game, apiKey);
-            SaveGames();
-            StatusMessage = $"{Games.Count} jogos na biblioteca";
-        }
-    }
-
-    private async Task AutoFetchAssetsAsync(Game game, string apiKey)
-    {
-        try
-        {
-            StatusMessage = $"🔍 Buscando '{game.DisplayName}' no SteamGridDB...";
-            var service = new SteamGridDbService(apiKey);
-            var results = await service.SearchGamesAsync(game.DisplayName);
-            if (results.Count == 0)
-            {
-                StatusMessage = $"'{game.DisplayName}' não encontrado no SteamGridDB.";
-                return;
-            }
-
-            var sgdbId   = results[0].Id;
-            var safeName = game.DisplayName;
-
-            var covers = await service.GetCoversAsync(sgdbId);
-            if (covers.Count > 0)
-            {
-                var path = await service.DownloadCoverAsync(covers[0].Url, safeName);
-                if (path is not null) game.CustomImagePath = path;
-            }
-
-            var logos = await service.GetLogosAsync(sgdbId);
-            if (logos.Count > 0)
-            {
-                var path = await service.DownloadLogoAsync(logos[0].Url, safeName);
-                if (path is not null) game.LogoPath = path;
-            }
-
-            var heroes = await service.GetHeroesAsync(sgdbId);
-            if (heroes.Count > 0)
-            {
-                var path = await service.DownloadHeroAsync(heroes[0].Url, safeName);
-                if (path is not null) game.HeroPath = path;
-            }
-
-            StatusMessage = $"✓ Assets de '{game.DisplayName}' baixados!";
-        }
-        catch
-        {
-            StatusMessage = $"⚠ Erro ao buscar assets de '{game.DisplayName}'.";
-        }
     }
 
     [RelayCommand]
@@ -252,40 +196,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Games.Remove(game);
         SaveGames();
         StatusMessage = $"'{game.DisplayName}' removido. {Games.Count} jogos na biblioteca";
-    }
-
-    [RelayCommand]
-    private async Task SelectGameAsync(Game game)
-    {
-        SelectedGame = game;
-        var visible = GetVisibleGames();
-        _selectedIndex = visible.IndexOf(game);
-
-        if (string.IsNullOrEmpty(game.InstallSizeText))
-        {
-            game.InstallSizeText = "Calculando...";
-            game.InstallSizeText = await Task.Run(() => ComputeInstallSize(game.InstallDirectory));
-        }
-    }
-
-    private static string ComputeInstallSize(string? dir)
-    {
-        if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return "Desconhecido";
-        try
-        {
-            var size = new DirectoryInfo(dir)
-                .GetFiles("*", SearchOption.AllDirectories)
-                .Sum(f => f.Length);
-            return FormatBytes(size);
-        }
-        catch { return "Desconhecido"; }
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024L * 1024)        return $"{bytes / 1024.0:F0} KB";
-        if (bytes < 1024L * 1024 * 1024) return $"{bytes / 1024.0 / 1024:F1} MB";
-        return $"{bytes / 1024.0 / 1024 / 1024:F2} GB";
     }
 
     [RelayCommand]
@@ -353,10 +263,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (dialog.ShowDialog() == true && dialog.DownloadedImagePath is not null)
         {
             game.CustomImagePath = dialog.DownloadedImagePath;
-            if (dialog.DownloadedLogoPath is not null)
-                game.LogoPath = dialog.DownloadedLogoPath;
-            if (dialog.DownloadedHeroPath is not null)
-                game.HeroPath = dialog.DownloadedHeroPath;
             SaveGames();
             StatusMessage = $"Capa de '{game.DisplayName}' atualizada!";
         }
