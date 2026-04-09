@@ -91,5 +91,3 @@ GLauncher é um launcher de jogos para Windows desenvolvido em **WPF (.NET 8)** 
 3. No launcher, clique no ícone 🔍 do card → insira a API Key → pesquise e selecione a capa
 
 ---
-
-## 📁 Estrutura do Projeto
