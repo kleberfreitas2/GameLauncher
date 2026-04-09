@@ -105,18 +105,174 @@
                 </Style>
               </Border.Style>
             <Border x:Name="CardRoot" Width="185" Height="310" CornerRadius="10" Cursor="Hand" ClipToBounds="True" Background="{DynamicResource CardBackgroundBrush}">
-              <Border.InputBindings><MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/></Border.InputBindings>
+              <Border.InputBindings><MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/></Border.InputBindings>
               <Border.Style><Style TargetType="Border"><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background"><Setter.Value><SolidColorBrush Color="#2A2A4A"/></Setter.Value></Setter><Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#7C4DFF" BlurRadius="22" Opacity="0.55"/></Setter.Value></Setter><Setter Property="Tag" Value="1"/></Trigger><DataTrigger Binding="{Binding IsFavorite}" Value="True"><Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#FFD700" BlurRadius="22" ShadowDepth="0" Opacity="0.7"/></Setter.Value></Setter></DataTrigger></Style.Triggers></Style></Border.Style>
               <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="95"/></Grid.RowDefinitions>
                 <Border Grid.Row="0" CornerRadius="0" ClipToBounds="True" Background="{DynamicResource CardImageBackgroundBrush}"><Grid><md:PackIcon Kind="GamepadVariant" Width="75" Height="75" Foreground="#7C4DFF" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasNoImage, Converter={StaticResource BoolToVisibility}}"/><Image Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility}}" Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=185}" Stretch="UniformToFill"/></Grid></Border>
-                <Border Grid.Row="0" VerticalAlignment="Top" Panel.ZIndex="1" Background="#BB111130"><Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=Border}}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Border.Style><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,4,4,4"><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#22223A" BorderThickness="0" ToolTip="Favorito" Margin="0,0,3,0"><md:PackIcon Kind="{Binding FavoriteIcon}" Width="14" Height="14" Foreground="{Binding FavoriteColor}"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.ChangeImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#333355" BorderThickness="0" ToolTip="Alterar imagem" Margin="0,0,3,0"><md:PackIcon Kind="Camera" Width="14" Height="14" Foreground="#AAAAFF"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.SearchCoverCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#223344" BorderThickness="0" ToolTip="Buscar capa online" Margin="0,0,3,0"><md:PackIcon Kind="Magnify" Width="14" Height="14" Foreground="#66AAFF"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.RenameGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#223322" BorderThickness="0" ToolTip="Renomear" Margin="0,0,3,0"><md:PackIcon Kind="Pencil" Width="14" Height="14" Foreground="#88FF88"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#AA2222" BorderThickness="0" ToolTip="Remover jogo"><md:PackIcon Kind="Close" Width="14" Height="14" Foreground="White"/></Button></StackPanel></Border>
+                <Border Grid.Row="0" VerticalAlignment="Top" Panel.ZIndex="1" Background="#BB111130"><Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=Border}}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Border.Style><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,4,4,4"><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#22223A" BorderThickness="0" ToolTip="Favorito" Margin="0,0,3,0"><md:PackIcon Kind="{Binding FavoriteIcon}" Width="14" Height="14" Foreground="{Binding FavoriteColor}"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.ChangeImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#333355" BorderThickness="0" ToolTip="Alterar imagem" Margin="0,0,3,0"><md:PackIcon Kind="Camera" Width="14" Height="14" Foreground="#AAAAFF"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.SearchCoverCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#223344" BorderThickness="0" ToolTip="Buscar capa online" Margin="0,0,3,0"><md:PackIcon Kind="Magnify" Width="14" Height="14" Foreground="#66AAFF"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.FetchIgdbInfoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#0A1A2E" BorderThickness="0" ToolTip="Buscar info IGDB" Margin="0,0,3,0"><md:PackIcon Kind="InformationOutline" Width="14" Height="14" Foreground="#88DDFF"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.RenameGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#223322" BorderThickness="0" ToolTip="Renomear" Margin="0,0,3,0"><md:PackIcon Kind="Pencil" Width="14" Height="14" Foreground="#88FF88"/></Button><Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Background="#AA2222" BorderThickness="0" ToolTip="Remover jogo"><md:PackIcon Kind="Close" Width="14" Height="14" Foreground="White"/></Button></StackPanel></Border>
                 <StackPanel Grid.Row="1" Margin="14,10" VerticalAlignment="Top"><TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold" Foreground="White" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/><StackPanel Orientation="Horizontal" Margin="0,5,0,0"><md:PackIcon Kind="ClockOutline" Width="11" Height="11" Foreground="#9999BB" VerticalAlignment="Center" Margin="0,0,3,0"/><TextBlock Text="{Binding LastPlayedText}" FontSize="10" Foreground="#9999BB" VerticalAlignment="Center"/></StackPanel><TextBlock Text="Jogar" FontSize="11" Foreground="#00E676" Margin="0,5,0,0" FontWeight="SemiBold"/></StackPanel>
               </Grid>
             </Border>
             </Border>
           </DataTemplate></ItemsControl.ItemTemplate>
         </ItemsControl></ScrollViewer>
+
+      <!-- ══ Detail Panel Overlay ══════════════════════════════════════ -->
+      <Border Panel.ZIndex="10" CornerRadius="0" ClipToBounds="True">
+        <Border.Style>
+          <Style TargetType="Border">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding ShowDetailPanel}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
+        <Grid>
+          <!-- Semi-transparent backdrop -->
+          <Border Background="#CC0A0A18" MouseLeftButtonDown="DetailBackdrop_Click"/>
+
+          <!-- Detail card -->
+          <Border Background="#1A1A2E" CornerRadius="16" MaxWidth="820" MaxHeight="480"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Padding="0" Margin="40">
+            <Border.Effect>
+              <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="8" Opacity="0.7"/>
+            </Border.Effect>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+
+              <!-- Cover image -->
+              <Border Grid.Column="0" CornerRadius="16,0,0,16" ClipToBounds="True"
+                      Background="{DynamicResource CardImageBackgroundBrush}">
+                <Grid>
+                  <md:PackIcon Kind="GamepadVariant" Width="80" Height="80"
+                               Foreground="#333355" HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding DetailGame.HasNoImage, Converter={StaticResource BoolToVisibility}}"/>
+                  <Image Source="{Binding DetailGame.EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=240}"
+                         Stretch="UniformToFill"
+                         Visibility="{Binding DetailGame.HasImage, Converter={StaticResource BoolToVisibility}}"
+                         RenderOptions.BitmapScalingMode="HighQuality"/>
+                </Grid>
+              </Border>
+
+              <!-- Info panel -->
+              <Grid Grid.Column="1" Margin="28,24,28,20">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Close button -->
+                <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Width="30" Height="30" Padding="0" Margin="0,-4,-8,0"
+                        Command="{Binding CloseDetailCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Background="Transparent" BorderThickness="0" Cursor="Hand">
+                  <md:PackIcon Kind="Close" Width="18" Height="18" Foreground="#666688"/>
+                </Button>
+
+                <!-- Title -->
+                <TextBlock Grid.Row="0" Text="{Binding DetailGame.DisplayName}"
+                           FontSize="22" FontWeight="Bold" Foreground="White"
+                           TextWrapping="Wrap" Margin="0,0,36,0"/>
+
+                <!-- Meta info -->
+                <StackPanel Grid.Row="1" Margin="0,14,0,0">
+                  <!-- Rating -->
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <md:PackIcon Kind="Star" Width="15" Height="15" Foreground="#FFD700"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Rating: " FontSize="12" Foreground="#9999BB" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DetailGame.RatingDisplay}" FontSize="12"
+                               Foreground="#FFD700" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <!-- Year -->
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <md:PackIcon Kind="Calendar" Width="15" Height="15" Foreground="#66AAFF"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Lançamento: " FontSize="12" Foreground="#9999BB" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DetailGame.YearDisplay}" FontSize="12"
+                               Foreground="#66AAFF" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <!-- Genres -->
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <md:PackIcon Kind="TagOutline" Width="15" Height="15" Foreground="#AA88FF"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Gêneros: " FontSize="12" Foreground="#9999BB" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DetailGame.GenresDisplay}" FontSize="12"
+                               Foreground="#AA88FF" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <!-- Last played -->
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
+                    <md:PackIcon Kind="ClockOutline" Width="15" Height="15" Foreground="#9999BB"
+                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding DetailGame.LastPlayedText}" FontSize="12"
+                               Foreground="#9999BB" VerticalAlignment="Center"/>
+                  </StackPanel>
+                </StackPanel>
+
+                <!-- Description -->
+                <ScrollViewer Grid.Row="2" Margin="0,14,0,0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                  <TextBlock Text="{Binding DetailGame.SummaryDisplay}"
+                             FontSize="12" Foreground="#AAAACC"
+                             TextWrapping="Wrap" LineHeight="19"/>
+                </ScrollViewer>
+
+                <!-- Play button with Xbox A -->
+                <Button Grid.Row="3" Margin="0,16,0,0"
+                        HorizontalAlignment="Stretch" Height="48"
+                        Command="{Binding LaunchDetailGameCommand}"
+                        Cursor="Hand" BorderThickness="0">
+                  <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                      <Border x:Name="PlayBorder" Background="#00C853" CornerRadius="10"
+                              Padding="20,0">
+                        <Border.Effect>
+                          <DropShadowEffect Color="#00E676" BlurRadius="16"
+                                            ShadowDepth="0" Opacity="0.5"/>
+                        </Border.Effect>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                          <!-- Xbox A Button -->
+                          <Grid Width="30" Height="30" Margin="0,0,10,0">
+                            <Ellipse Fill="#107C10" Stroke="#00E676" StrokeThickness="2"/>
+                            <TextBlock Text="A" FontSize="15" FontWeight="Bold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                          </Grid>
+                          <TextBlock Text="JOGAR" FontSize="16" FontWeight="Bold"
+                                     Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="PlayBorder" Property="Background" Value="#00E676"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                          <Setter TargetName="PlayBorder" Property="Background" Value="#00B248"/>
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </Button.Template>
+                </Button>
+              </Grid>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
     </Grid>
     <Border Grid.Row="2" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,6">
       <Grid>

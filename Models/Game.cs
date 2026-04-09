@@ -33,6 +33,20 @@ public partial class Game : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasNoImage))]
     private string? customImagePath;
 
+    // ── Metadados IGDB ──────────────────────────────────────
+    public int?    IgdbId      { get; set; }
+    public string? Summary     { get; set; }
+    public double? IgdbRating  { get; set; }
+    public string? Genres      { get; set; }
+    public int?    ReleaseYear { get; set; }
+
+    public bool HasIgdbInfo => !string.IsNullOrEmpty(Summary) || IgdbRating.HasValue;
+
+    public string RatingDisplay  => IgdbRating.HasValue ? $"{IgdbRating.Value:F0} / 100" : "—";
+    public string YearDisplay    => ReleaseYear?.ToString() ?? "—";
+    public string GenresDisplay  => !string.IsNullOrEmpty(Genres) ? Genres : "—";
+    public string SummaryDisplay => !string.IsNullOrEmpty(Summary) ? Summary : "Sem descrição disponível.";
+
     public string DisplayName => Name.Replace(".exe", "").Replace("_", " ");
 
     public string? EffectiveImagePath =>

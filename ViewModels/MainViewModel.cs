@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -54,6 +55,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string gpuTempText = "--°C";
 
     [ObservableProperty] private Game? selectedGame;
+    [ObservableProperty] private Game? detailGame;
+    [ObservableProperty] private bool showDetailPanel;
     [ObservableProperty] private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
 
@@ -143,7 +146,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void AddGame()
+    private async Task AddGame()
     {
         var dialog = new OpenFileDialog
         {
@@ -153,6 +156,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
 
         if (dialog.ShowDialog() != true) return;
+
+        var newGames = new List<Game>();
 
         foreach (var file in dialog.FileNames)
         {
@@ -167,10 +172,71 @@ public partial class MainViewModel : ObservableObject, IDisposable
             };
 
             Games.Add(game);
+            newGames.Add(game);
         }
 
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
+
+        // Auto-busca informações do IGDB para cada jogo adicionado
+        foreach (var game in newGames)
+            await AutoFetchIgdbAsync(game);
+    }
+
+    private async Task AutoFetchIgdbAsync(Game game)
+    {
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            return;
+
+        try
+        {
+            StatusMessage = $"Buscando info de '{game.DisplayName}'...";
+
+            using var svc = new IgdbService(clientId, clientSecret);
+            var results = await svc.SearchGamesAsync(game.DisplayName);
+
+            if (results.Count == 0)
+            {
+                StatusMessage = $"Nenhum resultado IGDB para '{game.DisplayName}'";
+                return;
+            }
+
+            var igdbGame = results[0];
+
+            // Traduz descrição para PT-BR
+            var summary = igdbGame.Summary;
+            if (!string.IsNullOrEmpty(summary))
+            {
+                StatusMessage = $"Traduzindo descrição de '{game.DisplayName}'...";
+                summary = await TranslationService.TranslateToPortugueseAsync(summary);
+            }
+
+            game.Summary     = summary;
+            game.IgdbRating  = igdbGame.Rating;
+            game.IgdbId      = igdbGame.Id;
+            game.ReleaseYear = igdbGame.ReleaseYear;
+
+            // Traduz gêneros para PT-BR
+            var genres = igdbGame.GenreNames;
+            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+
+            if (!string.IsNullOrEmpty(igdbGame.CoverUrl))
+            {
+                var coverPath = await svc.DownloadCoverAsync(igdbGame.CoverUrl, game.DisplayName);
+                if (coverPath is not null)
+                    game.CustomImagePath = coverPath;
+            }
+
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada automaticamente!";
+        }
+        catch
+        {
+            StatusMessage = $"{Games.Count} jogos na biblioteca";
+        }
     }
 
     [RelayCommand]
@@ -276,6 +342,53 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task FetchIgdbInfo(Game game)
+    {
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+        {
+            var setup = new IgdbSetupDialog { Owner = Application.Current.MainWindow };
+            if (setup.ShowDialog() != true) return;
+            SettingsService.Current.IgdbClientId     = setup.ClientId;
+            SettingsService.Current.IgdbClientSecret = setup.ClientSecret;
+            SettingsService.Save();
+            clientId     = setup.ClientId;
+            clientSecret = setup.ClientSecret;
+        }
+
+        var dialog = new IgdbGameInfoDialog(clientId, clientSecret, game.DisplayName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true && dialog.SelectedGame is { } igdbGame)
+        {
+            var summary = igdbGame.Summary;
+            if (!string.IsNullOrEmpty(summary))
+            {
+                StatusMessage = $"Traduzindo descrição de '{game.DisplayName}'...";
+                summary = await TranslationService.TranslateToPortugueseAsync(summary);
+            }
+
+            game.Summary     = summary;
+            game.IgdbRating  = igdbGame.Rating;
+            game.IgdbId      = igdbGame.Id;
+            game.ReleaseYear = igdbGame.ReleaseYear;
+
+            var genres = igdbGame.GenreNames;
+            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+
+            if (dialog.DownloadedCoverPath is not null)
+                game.CustomImagePath = dialog.DownloadedCoverPath;
+
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' atualizado com info do IGDB!";
+        }
+    }
+
+    [RelayCommand]
     private void ChangeBackground()
     {
         var dialog = new OpenFileDialog
@@ -317,6 +430,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SettingsService.Current.BackgroundImagePath = string.Empty;
         SettingsService.Save();
         StatusMessage = "Imagem de fundo removida.";
+    }
+
+    [RelayCommand]
+    private void ShowDetail(Game game)
+    {
+        DetailGame = game;
+        ShowDetailPanel = true;
+    }
+
+    [RelayCommand]
+    private void CloseDetail()
+    {
+        ShowDetailPanel = false;
+        DetailGame = null;
+    }
+
+    [RelayCommand]
+    private void LaunchDetailGame()
+    {
+        if (DetailGame is not null)
+            LaunchGame(DetailGame);
     }
 
     // ── Gamepad Navigation ──────────────────────────────────────
@@ -377,8 +511,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     NavigateBy(-columns * 2, visible);
                     break;
                 case GamepadButton.A:
-                    if (SelectedGame is not null)
-                        LaunchGame(SelectedGame);
+                    if (ShowDetailPanel && DetailGame is not null)
+                        LaunchGame(DetailGame);
+                    else if (SelectedGame is not null)
+                        ShowDetail(SelectedGame);
                     break;
                 case GamepadButton.Y:
                     if (SelectedGame is not null)
@@ -389,7 +525,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         SearchCover(SelectedGame);
                     break;
                 case GamepadButton.B:
-                    if (!string.IsNullOrEmpty(SearchText))
+                    if (ShowDetailPanel)
+                        CloseDetail();
+                    else if (!string.IsNullOrEmpty(SearchText))
                         SearchText = string.Empty;
                     break;
             }
