@@ -39,16 +39,7 @@
 
         <!-- Logo -->
         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-          <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,10,0" ClipToBounds="True">
-            <Border.Background>
-              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#3A1C71" Offset="0"/>
-                <GradientStop Color="#1A3A5C" Offset="0.5"/>
-                <GradientStop Color="#0D7377" Offset="1"/>
-              </LinearGradientBrush>
-            </Border.Background>
-            <md:PackIcon Kind="GamepadVariant" Width="22" Height="22" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-          </Border>
+          <Image Source="Assets/icon.png" Width="44" Height="44" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality"/>
           <StackPanel VerticalAlignment="Center">
             <TextBlock FontSize="20" FontWeight="Bold">
               <Run Text="G" Foreground="{DynamicResource AccentGreenBrush}"/><Run Text="Launcher" Foreground="White"/>

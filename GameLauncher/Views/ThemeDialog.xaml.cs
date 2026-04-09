@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using GameLauncher.Services;
+using Color = System.Windows.Media.Color;
 
 namespace GameLauncher.Views;
 
