@@ -1,9 +1,9 @@
   Determinando os projetos a serem restaurados...
-  C:\Users\mcd_s\source\Repositorio\DashGaming\GameLauncher\GameLauncher.csproj restaurado (em 318 ms).
+  Todos os projetos estão atualizados para restauração.
   GameLauncher -> C:\Users\mcd_s\source\Repositorio\DashGaming\GameLauncher\bin\Debug\net8.0-windows\GameLauncher.dll
 
 Compilação com êxito.
     0 Aviso(s)
     0 Erro(s)
 
-Tempo Decorrido 00:00:02.48
+Tempo Decorrido 00:00:05.86

@@ -28,7 +28,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private readonly ICollectionView _gamesView;
     private readonly HardwareMonitorService _hwMonitor;
+    private readonly XInputService _xinput;
     private readonly Dispatcher _dispatcher;
+    private int _selectedIndex = -1;
 
     [ObservableProperty]
     private ObservableCollection<Game> games = new();
@@ -50,6 +52,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double ramUsage;
     [ObservableProperty] private string cpuTempText = "--°C";
     [ObservableProperty] private string gpuTempText = "--°C";
+
+    [ObservableProperty] private Game? selectedGame;
+    [ObservableProperty] private bool gamepadConnected;
+    [ObservableProperty] private string gamepadStatus = "";
 
     public bool HasBackgroundImage => BackgroundImage is not null;
 
@@ -78,6 +84,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
         _hwMonitor.Start();
+
+        _xinput = new XInputService();
+        _xinput.ButtonPressed += OnGamepadButton;
+        _xinput.ConnectionChanged += OnGamepadConnectionChanged;
+        _xinput.Start();
     }
 
     private void OnMetricsUpdated(HardwareMetrics m)
@@ -96,6 +107,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _xinput.Stop();
+        _xinput.Dispose();
         _hwMonitor.Stop();
         _hwMonitor.Dispose();
     }
@@ -304,6 +317,113 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SettingsService.Current.BackgroundImagePath = string.Empty;
         SettingsService.Save();
         StatusMessage = "Imagem de fundo removida.";
+    }
+
+    // ── Gamepad Navigation ──────────────────────────────────────
+
+    private void OnGamepadConnectionChanged(bool connected)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            GamepadConnected = connected;
+            GamepadStatus = connected ? "🎮 Controle conectado" : "";
+            if (connected && SelectedGame is null && GetVisibleGames().Count > 0)
+            {
+                _selectedIndex = 0;
+                SelectedGame = GetVisibleGames()[0];
+                StatusMessage = "🎮 Use o controle para navegar | A = Jogar | Y = Favorito";
+            }
+            if (!connected)
+            {
+                SelectedGame = null;
+                _selectedIndex = -1;
+            }
+        });
+    }
+
+    private void OnGamepadButton(GamepadButton button)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            var visible = GetVisibleGames();
+            if (visible.Count == 0) return;
+
+            // Ensure valid selection
+            if (_selectedIndex < 0 || _selectedIndex >= visible.Count)
+            {
+                _selectedIndex = 0;
+                SelectedGame = visible[0];
+            }
+
+            int columns = EstimateColumns();
+
+            switch (button)
+            {
+                case GamepadButton.DPadRight:
+                    NavigateBy(1, visible);
+                    break;
+                case GamepadButton.DPadLeft:
+                    NavigateBy(-1, visible);
+                    break;
+                case GamepadButton.DPadDown:
+                    NavigateBy(columns, visible);
+                    break;
+                case GamepadButton.DPadUp:
+                    NavigateBy(-columns, visible);
+                    break;
+                case GamepadButton.RightShoulder:
+                    NavigateBy(columns * 2, visible);
+                    break;
+                case GamepadButton.LeftShoulder:
+                    NavigateBy(-columns * 2, visible);
+                    break;
+                case GamepadButton.A:
+                    if (SelectedGame is not null)
+                        LaunchGame(SelectedGame);
+                    break;
+                case GamepadButton.Y:
+                    if (SelectedGame is not null)
+                        ToggleFavorite(SelectedGame);
+                    break;
+                case GamepadButton.X:
+                    if (SelectedGame is not null)
+                        SearchCover(SelectedGame);
+                    break;
+                case GamepadButton.B:
+                    if (!string.IsNullOrEmpty(SearchText))
+                        SearchText = string.Empty;
+                    break;
+            }
+        });
+    }
+
+    private void NavigateBy(int delta, List<Game> visible)
+    {
+        int newIndex = _selectedIndex + delta;
+        newIndex = Math.Clamp(newIndex, 0, visible.Count - 1);
+        _selectedIndex = newIndex;
+        SelectedGame = visible[newIndex];
+    }
+
+    private List<Game> GetVisibleGames()
+    {
+        var list = new List<Game>();
+        foreach (var item in _gamesView)
+        {
+            if (item is Game g)
+                list.Add(g);
+        }
+        return list;
+    }
+
+    private static int EstimateColumns()
+    {
+        var mainWindow = Application.Current.MainWindow;
+        if (mainWindow is null) return 5;
+        double availableWidth = mainWindow.ActualWidth - 60; // padding
+        int cardWidth = 185 + 20; // card + margin
+        int cols = Math.Max(1, (int)(availableWidth / cardWidth));
+        return cols;
     }
 }
 
