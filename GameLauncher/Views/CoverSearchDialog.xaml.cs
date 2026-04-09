@@ -51,7 +51,9 @@ public partial class CoverSearchDialog : Window
         if (games.Count == 0)
         {
             SetLoading(false);
-            StatusText.Text       = $"Nenhum jogo encontrado para '{term}'.";
+            StatusText.Text = _service.LastError is not null
+                ? $"Erro ao buscar: {_service.LastError}"
+                : $"Nenhum jogo encontrado para '{term}'.";
             StatusText.Visibility = Visibility.Visible;
             return;
         }
@@ -61,7 +63,9 @@ public partial class CoverSearchDialog : Window
 
         if (covers.Count == 0)
         {
-            StatusText.Text       = $"Sem capas disponíveis para '{games[0].Name}'.";
+            StatusText.Text = _service.LastError is not null
+                ? $"Erro ao buscar capas: {_service.LastError}"
+                : $"Sem capas disponíveis para '{games[0].Name}'.";
             StatusText.Visibility = Visibility.Visible;
             return;
         }

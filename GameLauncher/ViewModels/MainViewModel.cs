@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GameLauncher.Models;
@@ -19,13 +20,15 @@ using Microsoft.Win32;
 
 namespace GameLauncher.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     private static readonly string SaveFilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "GameLauncher", "games.json");
 
     private readonly ICollectionView _gamesView;
+    private readonly HardwareMonitorService _hwMonitor;
+    private readonly Dispatcher _dispatcher;
 
     [ObservableProperty]
     private ObservableCollection<Game> games = new();
@@ -40,12 +43,22 @@ public partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasBackgroundImage))]
     private BitmapSource? backgroundImage;
 
+    [ObservableProperty] private double cpuUsage;
+    [ObservableProperty] private double cpuTemp;
+    [ObservableProperty] private double gpuUsage;
+    [ObservableProperty] private double gpuTemp;
+    [ObservableProperty] private double ramUsage;
+    [ObservableProperty] private string cpuTempText = "--°C";
+    [ObservableProperty] private string gpuTempText = "--°C";
+
     public bool HasBackgroundImage => BackgroundImage is not null;
 
     public ICollectionView GamesView => _gamesView;
 
     public MainViewModel()
     {
+        _dispatcher = Dispatcher.CurrentDispatcher;
+
         _gamesView = CollectionViewSource.GetDefaultView(Games);
         _gamesView.Filter = obj =>
             obj is Game g &&
@@ -61,6 +74,30 @@ public partial class MainViewModel : ObservableObject
             BackgroundImage = LoadHighQualityBackground(bgPath);
 
         LoadGames();
+
+        _hwMonitor = new HardwareMonitorService();
+        _hwMonitor.MetricsUpdated += OnMetricsUpdated;
+        _hwMonitor.Start();
+    }
+
+    private void OnMetricsUpdated(HardwareMetrics m)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            CpuUsage = m.CpuUsage;
+            CpuTemp = m.CpuTemp;
+            GpuUsage = m.GpuUsage;
+            GpuTemp = m.GpuTemp;
+            RamUsage = m.RamUsage;
+            CpuTempText = m.CpuTemp > 0 ? $"{m.CpuTemp:F0}°C" : "--°C";
+            GpuTempText = m.GpuTemp > 0 ? $"{m.GpuTemp:F0}°C" : "--°C";
+        });
+    }
+
+    public void Dispose()
+    {
+        _hwMonitor.Stop();
+        _hwMonitor.Dispose();
     }
 
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
@@ -198,7 +235,13 @@ public partial class MainViewModel : ObservableObject
     {
         var apiKey = SettingsService.Current.SteamGridDbApiKey;
         if (string.IsNullOrEmpty(apiKey))
-            apiKey = AppSettings.DefaultSteamGridDbApiKey;
+        {
+            var keyDialog = new ApiKeyDialog { Owner = Application.Current.MainWindow };
+            if (keyDialog.ShowDialog() != true) return;
+            SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+            SettingsService.Save();
+            apiKey = keyDialog.ApiKey;
+        }
 
         var dialog = new CoverSearchDialog(apiKey, game.DisplayName)
         {

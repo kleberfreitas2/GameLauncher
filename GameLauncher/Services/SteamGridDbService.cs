@@ -16,6 +16,8 @@ public class SteamGridDbService
     private readonly SteamGridDb _client;
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
 
+    public string? LastError { get; private set; }
+
     public SteamGridDbService(string apiKey)
     {
         _client = new SteamGridDb(apiKey);
@@ -23,16 +25,22 @@ public class SteamGridDbService
 
     public async Task<List<SteamGridGame>> SearchGamesAsync(string term)
     {
+        LastError = null;
         try
         {
             var games = await _client.SearchForGamesAsync(term);
             return games?.Select(g => new SteamGridGame(g.Id, g.Name)).ToList() ?? [];
         }
-        catch { return []; }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
     }
 
     public async Task<List<SteamGridImage>> GetCoversAsync(int gameId)
     {
+        LastError = null;
         try
         {
             var grids = await _client.GetGridsByGameIdAsync(gameId,
@@ -40,11 +48,16 @@ public class SteamGridDbService
             return grids?.Select(g => new SteamGridImage(
                 g.FullImageUrl, g.ThumbnailImageUrl)).ToList() ?? [];
         }
-        catch { return []; }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
     }
 
     public async Task<string?> DownloadCoverAsync(string url, string gameName)
     {
+        LastError = null;
         try
         {
             var bytes = await _http.GetByteArrayAsync(url);
@@ -58,6 +71,10 @@ public class SteamGridDbService
             await File.WriteAllBytesAsync(path, bytes);
             return path;
         }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return null;
+        }
     }
 }

@@ -1,4 +1,4 @@
-<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" Title="Game Launcher EXP." Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
+<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" Title="Game Launcher EXP." Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
   <Window.Resources>
     <Style x:Key="HeaderActionButton" TargetType="Button">
       <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
@@ -102,15 +102,34 @@
           </DataTemplate></ItemsControl.ItemTemplate>
         </ItemsControl></ScrollViewer>
     </Grid>
-    <Border Grid.Row="2" Background="{DynamicResource HeaderBackgroundBrush}" Padding="30,10">
+    <Border Grid.Row="2" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,6">
       <Grid>
         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12" VerticalAlignment="Center"/>
-        <TextBlock Grid.Column="1" Foreground="{DynamicResource AccentGreenBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
-                   Text="{Binding Games.Count, StringFormat='{}{0} jogos'}"/>
+
+        <!-- Status text -->
+        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
+          <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
+          <TextBlock Foreground="{DynamicResource AccentGreenBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0"
+                     Text="{Binding Games.Count, StringFormat='{}{0} jogos'}"/>
+        </StackPanel>
+
+        <!-- Hardware Gauges -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+          <!-- CPU Usage -->
+          <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" SubLabel="{Binding CpuTempText}" Margin="4,0"/>
+          <!-- GPU Usage -->
+          <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" SubLabel="{Binding GpuTempText}" Margin="4,0"/>
+          <!-- CPU Temp -->
+          <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0"/>
+          <!-- GPU Temp -->
+          <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0"/>
+          <!-- RAM -->
+          <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="4,0"/>
+        </StackPanel>
       </Grid>
     </Border>
   </Grid>

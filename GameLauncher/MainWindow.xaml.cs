@@ -9,5 +9,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = new MainViewModel();
+        Closed += (_, _) => (DataContext as MainViewModel)?.Dispose();
     }
 }
