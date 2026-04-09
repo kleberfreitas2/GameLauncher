@@ -68,12 +68,12 @@ public partial class CoverSearchDialog : Window
 
         StatusText.Visibility = Visibility.Collapsed;
         foreach (var cover in covers)
-            AddThumbnail(cover.Url);
+            AddThumbnail(cover.Url, cover.ThumbnailUrl);
 
         ResultsScroll.Visibility = Visibility.Visible;
     }
 
-    private void AddThumbnail(string url)
+    private void AddThumbnail(string fullUrl, string? thumbnailUrl)
     {
         var border = new Border
         {
@@ -90,9 +90,10 @@ public partial class CoverSearchDialog : Window
 
         try
         {
+            var previewUrl = !string.IsNullOrEmpty(thumbnailUrl) ? thumbnailUrl : fullUrl;
             var bmp = new BitmapImage();
             bmp.BeginInit();
-            bmp.UriSource      = new Uri(url);
+            bmp.UriSource        = new Uri(previewUrl);
             bmp.DecodePixelWidth = 112;
             bmp.EndInit();
             border.Child = new Image { Source = bmp, Stretch = Stretch.UniformToFill };
@@ -108,7 +109,7 @@ public partial class CoverSearchDialog : Window
             };
         }
 
-        border.MouseLeftButtonDown += (_, _) => SelectCover(border, url);
+        border.MouseLeftButtonDown += (_, _) => SelectCover(border, fullUrl);
         ResultsPanel.Children.Add(border);
     }
 

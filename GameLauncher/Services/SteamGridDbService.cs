@@ -1,41 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Threading.Tasks;
+using craftersmine.SteamGridDBNet;
 
 namespace GameLauncher.Services;
 
 public record SteamGridGame(int Id, string Name);
-public record SteamGridImage(string Url);
+public record SteamGridImage(string Url, string? ThumbnailUrl);
 
 public class SteamGridDbService
 {
+    private readonly SteamGridDb _client;
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
 
     public SteamGridDbService(string apiKey)
     {
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", apiKey);
+        _client = new SteamGridDb(apiKey);
     }
 
     public async Task<List<SteamGridGame>> SearchGamesAsync(string term)
     {
         try
         {
-            var json = await _http.GetStringAsync(
-                $"https://www.steamgriddb.com/api/v2/search/autocomplete/{Uri.EscapeDataString(term)}");
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (!root.GetProperty("success").GetBoolean()) return [];
-            var list = new List<SteamGridGame>();
-            foreach (var item in root.GetProperty("data").EnumerateArray())
-                list.Add(new SteamGridGame(
-                    item.GetProperty("id").GetInt32(),
-                    item.GetProperty("name").GetString()!));
-            return list;
+            var games = await _client.SearchForGamesAsync(term);
+            return games?.Select(g => new SteamGridGame(g.Id, g.Name)).ToList() ?? [];
         }
         catch { return []; }
     }
@@ -44,15 +35,10 @@ public class SteamGridDbService
     {
         try
         {
-            var json = await _http.GetStringAsync(
-                $"https://www.steamgriddb.com/api/v2/grids/game/{gameId}?dimensions=600x900");
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (!root.GetProperty("success").GetBoolean()) return [];
-            var list = new List<SteamGridImage>();
-            foreach (var item in root.GetProperty("data").EnumerateArray())
-                list.Add(new SteamGridImage(item.GetProperty("url").GetString()!));
-            return list;
+            var grids = await _client.GetGridsByGameIdAsync(gameId,
+                dimensions: SteamGridDbDimensions.W600H900);
+            return grids?.Select(g => new SteamGridImage(
+                g.FullImageUrl, g.ThumbnailImageUrl)).ToList() ?? [];
         }
         catch { return []; }
     }
