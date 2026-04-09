@@ -129,7 +129,10 @@
   <ItemGroup>
     <None Include="GameLauncher.sln" />
     <None Include="GameLauncher\App.xaml.cs" />
+    <None Include="GameLauncher\Controls\ArcGauge.xaml.cs" />
+    <None Include="GameLauncher\Converters\EqualityConverter.cs" />
     <None Include="GameLauncher\Converters\PathToImageSourceConverter.cs" />
+    <None Include="GameLauncher\Converters\SelectedGamepadVisibilityConverter.cs" />
     <None Include="GameLauncher\GameLauncher.csproj" />
     <None Include="GameLauncher\GenerateIcon.ps1" />
     <None Include="GameLauncher\MainWindow.xaml.cs" />
@@ -142,9 +145,14 @@
     <None Include="GameLauncher\PatchWindowBg.ps1" />
     <None Include="GameLauncher\PatchXaml.ps1" />
     <None Include="GameLauncher\Services\GameScanner.cs" />
+    <None Include="GameLauncher\Services\HardwareMonitorService.cs" />
     <None Include="GameLauncher\Services\IconExtractor.cs" />
     <None Include="GameLauncher\Services\SettingsService.cs" />
     <None Include="GameLauncher\Services\SteamGridDbService.cs" />
+    <None Include="GameLauncher\Services\XInputService.cs" />
+    <None Include="GameLauncher\Tools\GenerateIcon.csx" />
+    <None Include="GameLauncher\Tools\IconGen\IconGen.csproj" />
+    <None Include="GameLauncher\Tools\IconGen\Program.cs" />
     <None Include="GameLauncher\ViewModels\MainViewModel.cs" />
     <None Include="GameLauncher\Views\ApiKeyDialog.xaml.cs" />
     <None Include="GameLauncher\Views\CoverSearchDialog.xaml.cs" />
@@ -153,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="GameLauncher\App.xaml" />
+    <Page Include="GameLauncher\Controls\ArcGauge.xaml" />
     <Page Include="GameLauncher\MainWindow.xaml" />
     <Page Include="GameLauncher\Views\ApiKeyDialog.xaml" />
     <Page Include="GameLauncher\Views\CoverSearchDialog.xaml" />

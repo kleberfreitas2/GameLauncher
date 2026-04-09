@@ -51,7 +51,9 @@ public partial class CoverSearchDialog : Window
         if (games.Count == 0)
         {
             SetLoading(false);
-            StatusText.Text       = $"Nenhum jogo encontrado para '{term}'.";
+            StatusText.Text = _service.LastError is not null
+                ? $"Erro ao buscar: {_service.LastError}"
+                : $"Nenhum jogo encontrado para '{term}'.";
             StatusText.Visibility = Visibility.Visible;
             return;
         }
@@ -61,19 +63,21 @@ public partial class CoverSearchDialog : Window
 
         if (covers.Count == 0)
         {
-            StatusText.Text       = $"Sem capas disponíveis para '{games[0].Name}'.";
+            StatusText.Text = _service.LastError is not null
+                ? $"Erro ao buscar capas: {_service.LastError}"
+                : $"Sem capas disponíveis para '{games[0].Name}'.";
             StatusText.Visibility = Visibility.Visible;
             return;
         }
 
         StatusText.Visibility = Visibility.Collapsed;
         foreach (var cover in covers)
-            AddThumbnail(cover.Url);
+            AddThumbnail(cover.Url, cover.ThumbnailUrl);
 
         ResultsScroll.Visibility = Visibility.Visible;
     }
 
-    private void AddThumbnail(string url)
+    private void AddThumbnail(string fullUrl, string? thumbnailUrl)
     {
         var border = new Border
         {
@@ -90,9 +94,10 @@ public partial class CoverSearchDialog : Window
 
         try
         {
+            var previewUrl = !string.IsNullOrEmpty(thumbnailUrl) ? thumbnailUrl : fullUrl;
             var bmp = new BitmapImage();
             bmp.BeginInit();
-            bmp.UriSource      = new Uri(url);
+            bmp.UriSource        = new Uri(previewUrl);
             bmp.DecodePixelWidth = 112;
             bmp.EndInit();
             border.Child = new Image { Source = bmp, Stretch = Stretch.UniformToFill };
@@ -108,7 +113,7 @@ public partial class CoverSearchDialog : Window
             };
         }
 
-        border.MouseLeftButtonDown += (_, _) => SelectCover(border, url);
+        border.MouseLeftButtonDown += (_, _) => SelectCover(border, fullUrl);
         ResultsPanel.Children.Add(border);
     }
 

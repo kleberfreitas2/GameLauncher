@@ -1,0 +1,54 @@
+<UserControl x:Class="GameLauncher.Controls.ArcGauge"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="90" Height="90">
+    <Grid>
+        <!-- Background arc (track) -->
+        <Canvas Width="80" Height="80" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Path Stroke="#1A1A3E" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="12,60">
+                            <ArcSegment x:Name="TrackArc" Point="68,60" Size="32,32" SweepDirection="Clockwise" IsLargeArc="True"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+            <!-- Value arc (colored) -->
+            <Path x:Name="ValuePath" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure x:Name="ArcFigure" StartPoint="12,60">
+                            <ArcSegment x:Name="ValueArc" Point="12,60" Size="32,32" SweepDirection="Clockwise" IsLargeArc="False"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+            <!-- Glow effect on value arc -->
+            <Path x:Name="GlowPath" StrokeThickness="10" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.25">
+                <Path.Effect>
+                    <BlurEffect Radius="8"/>
+                </Path.Effect>
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure x:Name="GlowFigure" StartPoint="12,60">
+                            <ArcSegment x:Name="GlowArc" Point="12,60" Size="32,32" SweepDirection="Clockwise" IsLargeArc="False"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+
+        <!-- Center content -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,10">
+            <TextBlock x:Name="ValueText" Text="0%" FontSize="16" FontWeight="Bold"
+                       Foreground="White" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="LabelText" Text="" FontSize="9" FontWeight="SemiBold"
+                       Foreground="#8888AA" HorizontalAlignment="Center" Margin="0,-1,0,0"/>
+        </StackPanel>
+
+        <!-- Bottom label (icon + secondary info) -->
+        <TextBlock x:Name="SubText" Text="" FontSize="9" Foreground="#6666AA"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+    </Grid>
+</UserControl>

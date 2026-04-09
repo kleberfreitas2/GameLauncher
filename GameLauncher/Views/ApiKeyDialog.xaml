@@ -19,9 +19,19 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,14">
             <TextBlock Text="🔑 Configure sua chave API do SteamGridDB"
                        FontSize="13" FontWeight="SemiBold" Foreground="White"/>
-            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB"
-                       TextWrapping="Wrap">
-                Obtenha sua chave gratuita em steamgriddb.com/api
+            <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                1. Acesse
+                <Hyperlink NavigateUri="https://www.steamgriddb.com/profile/preferences/api"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="#7C9DFF" TextDecorations="Underline">
+                    steamgriddb.com/profile/preferences/api
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                2. Faça login e copie sua API Key (NÃO é seu Steam ID)
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                3. Cole abaixo e clique SALVAR
             </TextBlock>
         </StackPanel>
 

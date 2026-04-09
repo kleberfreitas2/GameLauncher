@@ -38,6 +38,14 @@
     <None Include="GameLauncher\PatchThemeAndSearch.ps1" />
     <None Include="GameLauncher\PatchWindowBg.ps1" />
     <None Include="GameLauncher\PatchFixHeader.ps1" />
+    <None Include="GameLauncher\Services\HardwareMonitorService.cs" />
+    <None Include="GameLauncher\Controls\ArcGauge.xaml.cs" />
+    <None Include="GameLauncher\Tools\GenerateIcon.csx" />
+    <None Include="GameLauncher\Tools\IconGen\IconGen.csproj" />
+    <None Include="GameLauncher\Tools\IconGen\Program.cs" />
+    <None Include="GameLauncher\Services\XInputService.cs" />
+    <None Include="GameLauncher\Converters\EqualityConverter.cs" />
+    <None Include="GameLauncher\Converters\SelectedGamepadVisibilityConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="GameLauncher\App.xaml" />
@@ -46,5 +54,6 @@
     <Page Include="GameLauncher\Views\CoverSearchDialog.xaml" />
     <Page Include="GameLauncher\Views\ThemeDialog.xaml" />
     <Page Include="GameLauncher\MainWindow.xaml" />
+    <Page Include="GameLauncher\Controls\ArcGauge.xaml" />
   </ItemGroup>
 </Project>

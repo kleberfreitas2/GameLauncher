@@ -23,6 +23,8 @@ public static class SettingsService
             if (!File.Exists(SettingsPath)) return;
             var json = File.ReadAllText(SettingsPath);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            if (Current.SteamGridDbApiKey.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                Current.SteamGridDbApiKey = string.Empty;
         }
         catch { Current = new AppSettings(); }
     }
