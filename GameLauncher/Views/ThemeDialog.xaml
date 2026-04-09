@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="🎨 Personalizar Tema"
-        Width="480" Height="360"
+        Width="540" Height="480"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#16213E"
@@ -26,8 +26,18 @@
                    FontSize="11" Foreground="#9999BB" TextWrapping="Wrap"
                    Margin="0,0,0,20"/>
 
-        <!-- Grade de temas -->
-        <UniformGrid Grid.Row="2" Rows="2" Columns="3" x:Name="ThemeGrid"/>
+        <!-- Grade de temas: Grid fixo 2 linhas x 3 colunas -->
+        <Grid Grid.Row="2" x:Name="ThemeGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+        </Grid>
 
         <!-- Fechar -->
         <Button Grid.Row="3"

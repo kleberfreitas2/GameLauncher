@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GameLauncher.Models;
@@ -34,6 +36,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string searchText = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBackgroundImage))]
+    private BitmapSource? backgroundImage;
+
+    public bool HasBackgroundImage => BackgroundImage is not null;
+
     public ICollectionView GamesView => _gamesView;
 
     public MainViewModel()
@@ -47,6 +55,10 @@ public partial class MainViewModel : ObservableObject
 
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
+
+        var bgPath = SettingsService.Current.BackgroundImagePath;
+        if (!string.IsNullOrEmpty(bgPath))
+            BackgroundImage = LoadHighQualityBackground(bgPath);
 
         LoadGames();
     }
@@ -211,6 +223,50 @@ public partial class MainViewModel : ObservableObject
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void ChangeBackground()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title  = "Escolha uma imagem de fundo",
+            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp"
+        };
+        if (dialog.ShowDialog() != true) return;
+        var image = LoadHighQualityBackground(dialog.FileName);
+        if (image is null) return;
+        BackgroundImage = image;
+        SettingsService.Current.BackgroundImagePath = dialog.FileName;
+        SettingsService.Save();
+        StatusMessage = "Imagem de fundo aplicada!";
+    }
+
+    private static BitmapSource? LoadHighQualityBackground(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return null;
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var decoder = BitmapDecoder.Create(
+                stream,
+                BitmapCreateOptions.PreservePixelFormat | BitmapCreateOptions.IgnoreColorProfile,
+                BitmapCacheOption.OnLoad);
+            var frame = decoder.Frames[0];
+            frame.Freeze();
+            return frame;
+        }
+        catch { return null; }
+    }
+
+    [RelayCommand]
+    private void RemoveBackground()
+    {
+        BackgroundImage = null;
+        SettingsService.Current.BackgroundImagePath = string.Empty;
+        SettingsService.Save();
+        StatusMessage = "Imagem de fundo removida.";
     }
 }
 

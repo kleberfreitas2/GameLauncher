@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="DashGaming.vcxproj" />
+  <Project Path="DashGaming.vcxproj" Id="fea82c98-89bb-4360-aadd-f6924d3f81e6" />
 </Solution>

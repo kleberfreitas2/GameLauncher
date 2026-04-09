@@ -1,8 +1,7 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using GameLauncher.Models;
 using GameLauncher.Services;
 
 namespace GameLauncher.Views;
@@ -10,18 +9,18 @@ namespace GameLauncher.Views;
 public partial class ThemeDialog : Window
 {
     private record ThemePreset(
-        string Name, string Emoji,
+        string Name,
         string Accent, string Secondary,
         string Bg, string Header, string Card, string CardImg);
 
     private static readonly ThemePreset[] Presets =
     [
-        new("Roxo Neon",      "🟣", "#7C4DFF", "#00E676", "#0D0D0D", "#16213E", "#1A1A2E", "#0F0F23"),
-        new("Azul Elétrico",  "🔵", "#1565C0", "#00BCD4", "#0A0A1A", "#0D1B2A", "#162032", "#0A1020"),
-        new("Matrix",         "🟢", "#00C853", "#69F0AE", "#050F05", "#0A1A0A", "#0F1F0F", "#060F06"),
-        new("Vermelho",       "🔴", "#D50000", "#FF6D00", "#100808", "#1A0E0E", "#1F1212", "#100808"),
-        new("Rosa Cyber",     "🩷", "#AD1457", "#FF4081", "#100812", "#1A0E1C", "#1F1228", "#100810"),
-        new("Ártico",         "🩵", "#0097A7", "#80DEEA", "#060D14", "#0B1520", "#0F1E2E", "#070E18"),
+        new("Roxo Neon",     "#7C4DFF", "#00E676", "#0D0D0D", "#1A1A3A", "#2A2A4A", "#1E1E3A"),
+        new("Azul Elétrico", "#1565C0", "#00BCD4", "#0A0A1E", "#122040", "#1E3255", "#162844"),
+        new("Matrix",        "#00C853", "#69F0AE", "#0A160A", "#163016", "#204A20", "#183A18"),
+        new("Vermelho",      "#D50000", "#FF6D00", "#1A0808", "#2A1010", "#3A1818", "#2E1212"),
+        new("Rosa Cyber",    "#AD1457", "#FF4081", "#160A1C", "#221030", "#341848", "#261030"),
+        new("Ártico",        "#0097A7", "#80DEEA", "#080E1E", "#102030", "#183248", "#122438"),
     ];
 
     private Border? _activeBorder;
@@ -34,8 +33,11 @@ public partial class ThemeDialog : Window
 
     private void BuildPresets()
     {
-        foreach (var preset in Presets)
+        for (int i = 0; i < Presets.Length; i++)
         {
+            var preset      = Presets[i];
+            var row         = i / 3;
+            var col         = i % 3;
             var accentColor = (Color)ColorConverter.ConvertFromString(preset.Accent);
             var isActive    = SettingsService.Current.AccentColor
                                   .Equals(preset.Accent, System.StringComparison.OrdinalIgnoreCase);
@@ -48,31 +50,31 @@ public partial class ThemeDialog : Window
                 BorderBrush     = isActive
                     ? new SolidColorBrush(accentColor)
                     : new SolidColorBrush(Color.FromArgb(50, 255, 255, 255)),
-                Background  = new SolidColorBrush(Color.FromRgb(15, 15, 35)),
-                Cursor      = Cursors.Hand
+                Background      = new SolidColorBrush(Color.FromRgb(15, 15, 35)),
+                Cursor          = Cursors.Hand,
+                ClipToBounds    = false
             };
 
             var inner = new StackPanel
             {
                 VerticalAlignment   = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 14, 0, 14)
+                HorizontalAlignment = HorizontalAlignment.Center
             };
 
             inner.Children.Add(new Border
             {
-                Width        = 32,
-                Height       = 32,
-                CornerRadius = new CornerRadius(16),
-                Background   = new SolidColorBrush(accentColor),
+                Width               = 38,
+                Height              = 38,
+                CornerRadius        = new CornerRadius(19),
+                Background          = new SolidColorBrush(accentColor),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 8)
+                Margin              = new Thickness(0, 0, 0, 10)
             });
 
             inner.Children.Add(new TextBlock
             {
                 Text                = preset.Name,
-                FontSize            = 12,
+                FontSize            = 13,
                 FontWeight          = FontWeights.SemiBold,
                 Foreground          = Brushes.White,
                 HorizontalAlignment = HorizontalAlignment.Center
@@ -81,6 +83,9 @@ public partial class ThemeDialog : Window
             outer.Child = inner;
 
             if (isActive) _activeBorder = outer;
+
+            Grid.SetRow(outer, row);
+            Grid.SetColumn(outer, col);
 
             var captured = preset;
             outer.MouseLeftButtonDown += (_, _) => ApplyPreset(outer, captured, accentColor);
@@ -96,7 +101,7 @@ public partial class ThemeDialog : Window
                 new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
 
         border.BorderBrush = new SolidColorBrush(accentColor);
-        _activeBorder = border;
+        _activeBorder      = border;
 
         var s = SettingsService.Current;
         s.AccentColor          = preset.Accent;
