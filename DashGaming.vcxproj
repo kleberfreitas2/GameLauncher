@@ -24,6 +24,7 @@
     <ProjectGuid>{fea82c98-89bb-4360-aadd-f6924d3f81e6}</ProjectGuid>
     <RootNamespace>DashGaming</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>GameLauncher</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
