@@ -4,6 +4,8 @@
 
 GLauncher é um launcher de jogos para Windows desenvolvido em **WPF (.NET 8)** com visual moderno e dark, permitindo organizar, personalizar e lançar todos os seus jogos a partir de uma única tela.
 
+<img width="1918" height="1027" alt="image" src="https://github.com/user-attachments/assets/053508a2-f51b-44cd-b8e5-5b5c4d3b46ff" />
+
 ---
 
 ## 📸 Visão Geral
