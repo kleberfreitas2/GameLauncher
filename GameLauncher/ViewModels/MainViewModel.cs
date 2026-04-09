@@ -198,13 +198,7 @@ public partial class MainViewModel : ObservableObject
     {
         var apiKey = SettingsService.Current.SteamGridDbApiKey;
         if (string.IsNullOrEmpty(apiKey))
-        {
-            var keyDialog = new ApiKeyDialog { Owner = Application.Current.MainWindow };
-            if (keyDialog.ShowDialog() != true) return;
-            SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
-            SettingsService.Save();
-            apiKey = keyDialog.ApiKey;
-        }
+            apiKey = AppSettings.DefaultSteamGridDbApiKey;
 
         var dialog = new CoverSearchDialog(apiKey, game.DisplayName)
         {

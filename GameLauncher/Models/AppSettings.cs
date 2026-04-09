@@ -2,7 +2,9 @@ namespace GameLauncher.Models;
 
 public class AppSettings
 {
-    public string SteamGridDbApiKey    { get; set; } = string.Empty;
+    public const string DefaultSteamGridDbApiKey = "76561198072027788";
+
+    public string SteamGridDbApiKey    { get; set; } = DefaultSteamGridDbApiKey;
     public string BackgroundImagePath  { get; set; } = string.Empty;
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
