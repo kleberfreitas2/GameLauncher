@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using GameLauncher.ViewModels;
 
@@ -13,9 +14,12 @@ public partial class MainWindow : Window
         Closed += (_, _) => (DataContext as MainViewModel)?.Dispose();
     }
 
-    private void DetailBackdrop_Click(object sender, MouseButtonEventArgs e)
+    private void BtnMais_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel vm)
-            vm.CloseDetailCommand.Execute(null);
+        if (sender is Button btn && btn.ContextMenu is not null)
+        {
+            btn.ContextMenu.PlacementTarget = btn;
+            btn.ContextMenu.IsOpen = true;
+        }
     }
 }

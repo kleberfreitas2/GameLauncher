@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using craftersmine.SteamGridDBNet;
 
 namespace GameLauncher.Services;
@@ -55,7 +51,33 @@ public class SteamGridDbService
         }
     }
 
+    public async Task<List<SteamGridImage>> GetIconsAsync(int gameId)
+    {
+        LastError = null;
+        try
+        {
+            var icons = await _client.GetIconsByGameIdAsync(gameId);
+            return icons?.Select(i => new SteamGridImage(
+                i.FullImageUrl, i.ThumbnailImageUrl)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
     public async Task<string?> DownloadCoverAsync(string url, string gameName)
+    {
+        return await DownloadImageAsync(url, gameName, "covers");
+    }
+
+    public async Task<string?> DownloadIconAsync(string url, string gameName)
+    {
+        return await DownloadImageAsync(url, gameName, "icons");
+    }
+
+    private async Task<string?> DownloadImageAsync(string url, string gameName, string subfolder)
     {
         LastError = null;
         try
@@ -64,7 +86,7 @@ public class SteamGridDbService
             var ext   = Path.GetExtension(url.Split('?')[0]);
             if (string.IsNullOrEmpty(ext)) ext = ".png";
             var dir  = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                           "GameLauncher", "covers");
+                           "GameLauncher", subfolder);
             Directory.CreateDirectory(dir);
             var safe = string.Concat(gameName.Split(Path.GetInvalidFileNameChars()));
             var path = Path.Combine(dir, $"{safe}_{DateTime.Now.Ticks}{ext}");
