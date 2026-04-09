@@ -19,6 +19,32 @@ public record IgdbGenre(
     [property: JsonPropertyName("id")]   int    Id,
     [property: JsonPropertyName("name")] string Name);
 
+public record IgdbScreenshot(
+    [property: JsonPropertyName("id")]  int    Id,
+    [property: JsonPropertyName("url")] string Url)
+{
+    public string FullUrl => Url is { } u
+        ? "https:" + u.Replace("t_thumb", "t_1080p")
+        : string.Empty;
+
+    public string ThumbUrl => Url is { } u
+        ? "https:" + u.Replace("t_thumb", "t_screenshot_med")
+        : string.Empty;
+}
+
+public record IgdbArtwork(
+    [property: JsonPropertyName("id")]  int    Id,
+    [property: JsonPropertyName("url")] string Url)
+{
+    public string FullUrl => Url is { } u
+        ? "https:" + u.Replace("t_thumb", "t_1080p")
+        : string.Empty;
+
+    public string ThumbUrl => Url is { } u
+        ? "https:" + u.Replace("t_thumb", "t_screenshot_med")
+        : string.Empty;
+}
+
 public record IgdbGame(
     [property: JsonPropertyName("id")]                 int            Id,
     [property: JsonPropertyName("name")]               string         Name,
@@ -141,6 +167,89 @@ public class IgdbService : IDisposable
 
             var safe = string.Concat(gameName.Split(Path.GetInvalidFileNameChars()));
             var path = Path.Combine(dir, $"{safe}_igdb_{DateTime.Now.Ticks}{ext}");
+            await File.WriteAllBytesAsync(path, bytes);
+            return path;
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return null;
+        }
+    }
+
+    public async Task<List<IgdbScreenshot>> GetScreenshotsAsync(int gameId)
+    {
+        LastError = null;
+        if (!await EnsureTokenAsync()) return [];
+
+        try
+        {
+            var query = $"fields url; where game = {gameId}; limit 20;";
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.igdb.com/v4/screenshots")
+            {
+                Content = new StringContent(query, Encoding.UTF8, "text/plain")
+            };
+            request.Headers.Add("Client-ID",     _clientId);
+            request.Headers.Add("Authorization", $"Bearer {_accessToken}");
+
+            var response = await _http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var items = await response.Content.ReadFromJsonAsync<List<IgdbScreenshot>>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return items ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
+    public async Task<List<IgdbArtwork>> GetArtworksAsync(int gameId)
+    {
+        LastError = null;
+        if (!await EnsureTokenAsync()) return [];
+
+        try
+        {
+            var query = $"fields url; where game = {gameId}; limit 20;";
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.igdb.com/v4/artworks")
+            {
+                Content = new StringContent(query, Encoding.UTF8, "text/plain")
+            };
+            request.Headers.Add("Client-ID",     _clientId);
+            request.Headers.Add("Authorization", $"Bearer {_accessToken}");
+
+            var response = await _http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var items = await response.Content.ReadFromJsonAsync<List<IgdbArtwork>>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return items ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
+    public async Task<string?> DownloadBackgroundAsync(string url, string gameName)
+    {
+        LastError = null;
+        try
+        {
+            var bytes = await _http.GetByteArrayAsync(url);
+            var ext   = Path.GetExtension(url.Split('?')[0]);
+            if (string.IsNullOrEmpty(ext)) ext = ".jpg";
+
+            var dir  = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                           "GameLauncher", "backgrounds");
+            Directory.CreateDirectory(dir);
+
+            var safe = string.Concat(gameName.Split(Path.GetInvalidFileNameChars()));
+            var path = Path.Combine(dir, $"{safe}_bg_{DateTime.Now.Ticks}{ext}");
             await File.WriteAllBytesAsync(path, bytes);
             return path;
         }

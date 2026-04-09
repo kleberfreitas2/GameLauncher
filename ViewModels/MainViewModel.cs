@@ -67,6 +67,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
 
         LoadGames();
+        _ = RefreshAllAssetsOnStartupAsync();
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -172,15 +173,55 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
 
-        // Auto-busca informações do IGDB e ícone do SteamGridDB
+        // Auto-busca: visuais (SteamGridDB) + texto (IGDB) para jogos recém-adicionados
         foreach (var game in newGames)
         {
+            await AutoFetchSteamGridDbAssetsAsync(game);
             await AutoFetchIgdbAsync(game);
-            await AutoFetchIconAsync(game);
         }
     }
 
-    private async Task AutoFetchIconAsync(Game game)
+    private async Task RefreshAllAssetsOnStartupAsync()
+    {
+        // 1. Visuais — SteamGridDB (logo, capa, fundo, ícone)
+        var apiKey = SettingsService.Current.SteamGridDbApiKey;
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            var visualGames = Games
+                .Where(g => string.IsNullOrEmpty(g.LogoPath)
+                         || string.IsNullOrEmpty(g.CustomImagePath)
+                         || string.IsNullOrEmpty(g.BackgroundImagePath))
+                .ToList();
+
+            if (visualGames.Count > 0)
+            {
+                StatusMessage = $"Atualizando visuais de {visualGames.Count} jogo(s)...";
+                foreach (var game in visualGames)
+                    await AutoFetchSteamGridDbAssetsAsync(game);
+            }
+        }
+
+        // 2. Texto — IGDB (sinopse, gêneros, nota, ano) + tradução PT-BR
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+        {
+            var textGames = Games
+                .Where(g => !g.HasIgdbInfo)
+                .ToList();
+
+            if (textGames.Count > 0)
+            {
+                StatusMessage = $"Buscando informações de {textGames.Count} jogo(s) no IGDB...";
+                foreach (var game in textGames)
+                    await AutoFetchIgdbAsync(game);
+            }
+        }
+
+        StatusMessage = $"{Games.Count} jogos na biblioteca";
+    }
+
+    private async Task AutoFetchSteamGridDbAssetsAsync(Game game)
     {
         var apiKey = SettingsService.Current.SteamGridDbApiKey;
         if (string.IsNullOrEmpty(apiKey))
@@ -188,26 +229,62 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            StatusMessage = $"Buscando ícone de '{game.DisplayName}'...";
-
             var svc = new SteamGridDbService(apiKey);
             var games = await svc.SearchGamesAsync(game.DisplayName);
             if (games.Count == 0) return;
 
-            var icons = await svc.GetIconsAsync(games[0].Id);
-            if (icons.Count > 0)
+            var sgdbId = games[0].Id;
+
+            // Ícone
+            if (string.IsNullOrEmpty(game.IconPath) || !System.IO.File.Exists(game.IconPath))
             {
-                var iconPath = await svc.DownloadIconAsync(icons[0].Url, game.DisplayName);
-                if (iconPath is not null)
+                StatusMessage = $"Buscando ícone de '{game.DisplayName}'...";
+                var icons = await svc.GetIconsAsync(sgdbId);
+                if (icons.Count > 0)
                 {
-                    game.IconPath = iconPath;
-                    SaveGames();
-                    StatusMessage = $"Ícone de '{game.DisplayName}' atualizado!";
-                    return;
+                    var path = await svc.DownloadIconAsync(icons[0].Url, game.DisplayName);
+                    if (path is not null) game.IconPath = path;
                 }
             }
 
-            StatusMessage = $"{Games.Count} jogos na biblioteca";
+            // Logo
+            if (string.IsNullOrEmpty(game.LogoPath))
+            {
+                StatusMessage = $"Buscando logo de '{game.DisplayName}'...";
+                var logos = await svc.GetLogosAsync(sgdbId);
+                if (logos.Count > 0)
+                {
+                    var path = await svc.DownloadLogoAsync(logos[0].Url, game.DisplayName);
+                    if (path is not null) game.LogoPath = path;
+                }
+            }
+
+            // Capa (Grid)
+            if (string.IsNullOrEmpty(game.CustomImagePath))
+            {
+                StatusMessage = $"Buscando capa de '{game.DisplayName}'...";
+                var covers = await svc.GetCoversAsync(sgdbId);
+                if (covers.Count > 0)
+                {
+                    var path = await svc.DownloadCoverAsync(covers[0].Url, game.DisplayName);
+                    if (path is not null) game.CustomImagePath = path;
+                }
+            }
+
+            // Fundo (Hero)
+            if (string.IsNullOrEmpty(game.BackgroundImagePath))
+            {
+                StatusMessage = $"Buscando fundo de '{game.DisplayName}'...";
+                var heroes = await svc.GetHeroesAsync(sgdbId);
+                if (heroes.Count > 0)
+                {
+                    var path = await svc.DownloadHeroAsync(heroes[0].Url, game.DisplayName);
+                    if (path is not null) game.BackgroundImagePath = path;
+                }
+            }
+
+            SaveGames();
+            StatusMessage = $"Assets de '{game.DisplayName}' atualizados!";
         }
         catch
         {
@@ -255,15 +332,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var genres = igdbGame.GenreNames;
             game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
 
-            if (!string.IsNullOrEmpty(igdbGame.CoverUrl))
-            {
-                var coverPath = await svc.DownloadCoverAsync(igdbGame.CoverUrl, game.DisplayName);
-                if (coverPath is not null)
-                    game.CustomImagePath = coverPath;
-            }
-
             SaveGames();
-            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada automaticamente!";
+            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
         }
         catch
         {
@@ -374,6 +444,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void SearchBackground(Game game)
+    {
+        var apiKey = SettingsService.Current.SteamGridDbApiKey;
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            var keyDialog = new ApiKeyDialog { Owner = Application.Current.MainWindow };
+            if (keyDialog.ShowDialog() != true) return;
+            SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+            SettingsService.Save();
+            apiKey = keyDialog.ApiKey;
+        }
+
+        var dialog = new BackgroundSearchDialog(apiKey, game.DisplayName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true && dialog.DownloadedBackgroundPath is not null)
+        {
+            game.BackgroundImagePath = dialog.DownloadedBackgroundPath;
+            SaveGames();
+            StatusMessage = $"Fundo de '{game.DisplayName}' atualizado!";
+        }
+    }
+
+    [RelayCommand]
     private void OpenTheme()
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
@@ -419,11 +515,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var genres = igdbGame.GenreNames;
             game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
 
-            if (dialog.DownloadedCoverPath is not null)
-                game.CustomImagePath = dialog.DownloadedCoverPath;
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
+
+            // Auto-busca visuais do SteamGridDB (logo, capa, fundo)
+            await AutoFetchSteamGridDbAssetsAsync(game);
 
             SaveGames();
-            StatusMessage = $"'{game.DisplayName}' atualizado com info do IGDB!";
+            StatusMessage = $"'{game.DisplayName}' atualizado!";
         }
     }
 

@@ -67,6 +67,38 @@ public class SteamGridDbService
         }
     }
 
+    public async Task<List<SteamGridImage>> GetLogosAsync(int gameId)
+    {
+        LastError = null;
+        try
+        {
+            var logos = await _client.GetLogosByGameIdAsync(gameId);
+            return logos?.Select(l => new SteamGridImage(
+                l.FullImageUrl, l.ThumbnailImageUrl)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
+    public async Task<List<SteamGridImage>> GetHeroesAsync(int gameId)
+    {
+        LastError = null;
+        try
+        {
+            var heroes = await _client.GetHeroesByGameIdAsync(gameId);
+            return heroes?.Select(h => new SteamGridImage(
+                h.FullImageUrl, h.ThumbnailImageUrl)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
     public async Task<string?> DownloadCoverAsync(string url, string gameName)
     {
         return await DownloadImageAsync(url, gameName, "covers");
@@ -75,6 +107,16 @@ public class SteamGridDbService
     public async Task<string?> DownloadIconAsync(string url, string gameName)
     {
         return await DownloadImageAsync(url, gameName, "icons");
+    }
+
+    public async Task<string?> DownloadLogoAsync(string url, string gameName)
+    {
+        return await DownloadImageAsync(url, gameName, "logos");
+    }
+
+    public async Task<string?> DownloadHeroAsync(string url, string gameName)
+    {
+        return await DownloadImageAsync(url, gameName, "heroes");
     }
 
     private async Task<string?> DownloadImageAsync(string url, string gameName, string subfolder)

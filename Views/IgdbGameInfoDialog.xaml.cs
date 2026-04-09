@@ -1,9 +1,6 @@
-using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using GameLauncher.Services;
 
 namespace GameLauncher.Views;
@@ -13,7 +10,6 @@ public partial class IgdbGameInfoDialog : Window
     private readonly IgdbService _service;
     private IgdbGame? _selected;
 
-    public string?   DownloadedCoverPath { get; private set; }
     public IgdbGame? SelectedGame        => _selected;
 
     public IgdbGameInfoDialog(string clientId, string clientSecret, string gameName)
@@ -80,25 +76,6 @@ public partial class IgdbGameInfoDialog : Window
             ? game.Summary
             : "Descrição não disponível.";
 
-        CoverImage.Source       = null;
-        ApplyCoverButton.IsEnabled = false;
-
-        if (!string.IsNullOrEmpty(game.CoverUrl))
-        {
-            try
-            {
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                bmp.UriSource        = new Uri(game.CoverUrl);
-                bmp.DecodePixelWidth = 150;
-                bmp.CacheOption      = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-                CoverImage.Source          = bmp;
-                ApplyCoverButton.IsEnabled = true;
-            }
-            catch { }
-        }
-
         ApplyInfoButton.IsEnabled = true;
         FooterText.Text           = $"IGDB ID: {game.Id}";
     }
@@ -109,30 +86,7 @@ public partial class IgdbGameInfoDialog : Window
         DetailPanel.Visibility     = Visibility.Collapsed;
         EmptyDetail.Visibility     = Visibility.Visible;
         ApplyInfoButton.IsEnabled  = false;
-        ApplyCoverButton.IsEnabled = false;
         FooterText.Text            = string.Empty;
-    }
-
-    private async void ApplyCover_Click(object sender, RoutedEventArgs e)
-    {
-        if (_selected?.CoverUrl is null) return;
-
-        ApplyCoverButton.IsEnabled = false;
-        FooterText.Text            = "Baixando capa...";
-
-        DownloadedCoverPath = await _service.DownloadCoverAsync(_selected.CoverUrl, _selected.Name);
-
-        if (DownloadedCoverPath is not null)
-        {
-            FooterText.Text = "✓ Capa baixada com sucesso!";
-        }
-        else
-        {
-            ApplyCoverButton.IsEnabled = true;
-            FooterText.Text            = string.Empty;
-            MessageBox.Show($"Erro ao baixar capa: {_service.LastError}",
-                "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
     }
 
     private void ApplyInfo_Click(object sender, RoutedEventArgs e)

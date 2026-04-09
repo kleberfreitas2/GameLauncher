@@ -20,7 +20,7 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="🌐 Buscar Informações — IGDB"
                        FontSize="18" FontWeight="Bold" Foreground="White"/>
-            <TextBlock Text="Busque metadados: descrição, rating, gênero, ano de lançamento e capa"
+            <TextBlock Text="Busque metadados: descrição, rating, gênero e ano de lançamento"
                        FontSize="11" Foreground="#666688" Margin="0,3,0,0"/>
         </StackPanel>
 
@@ -132,30 +132,8 @@
 
                     <!-- Painel de detalhes -->
                     <Grid x:Name="DetailPanel" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Capa -->
-                        <Border Grid.Column="0"
-                                Width="150" Height="210"
-                                CornerRadius="8" ClipToBounds="True"
-                                Background="#1A1A3A"
-                                VerticalAlignment="Top">
-                            <Grid>
-                                <md:PackIcon Kind="GamepadVariant" Width="50" Height="50"
-                                             Foreground="#333355"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Center"/>
-                                <Image x:Name="CoverImage"
-                                       Stretch="UniformToFill"
-                                       RenderOptions.BitmapScalingMode="HighQuality"/>
-                            </Grid>
-                        </Border>
-
                         <!-- Informações -->
-                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                        <StackPanel Margin="0">
                             <!-- Título -->
                             <TextBlock x:Name="GameTitle"
                                        FontSize="16" FontWeight="Bold" Foreground="White"
@@ -217,7 +195,6 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <TextBlock x:Name="FooterText" Grid.Column="0"
@@ -229,17 +206,8 @@
                     Foreground="#888888" Margin="0,0,8,0"
                     Click="Cancel_Click"/>
 
-            <Button x:Name="ApplyCoverButton"
-                    Grid.Column="2"
-                    Content="APLICAR CAPA"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="#1565C0" BorderBrush="#1565C0"
-                    Foreground="White" FontWeight="Bold"
-                    IsEnabled="False" Margin="0,0,8,0"
-                    Click="ApplyCover_Click"/>
-
             <Button x:Name="ApplyInfoButton"
-                    Grid.Column="3"
+                    Grid.Column="2"
                     Content="APLICAR INFORMAÇÕES"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Background="{DynamicResource AccentGreenBrush}"
