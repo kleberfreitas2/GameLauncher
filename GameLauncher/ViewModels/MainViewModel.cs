@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string gamepadStatus = "";
 
     public bool HasBackgroundImage => BackgroundImage is not null;
+    public bool HasGames => Games.Count > 0;
 
     public ICollectionView GamesView => _gamesView;
 
@@ -66,6 +67,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         _gamesView = CollectionViewSource.GetDefaultView(Games);
+        Games.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasGames));
         _gamesView.Filter = obj =>
             obj is Game g &&
             (string.IsNullOrWhiteSpace(SearchText) ||
@@ -126,6 +128,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             foreach (var g in saved)
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
+            if (Games.Count > 0)
+                SelectedGame = Games[0];
         }
         catch { }
     }
@@ -171,7 +175,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
+        SelectedGame ??= Games.FirstOrDefault();
     }
+
+    [RelayCommand]
+    private void SelectGame(Game game) => SelectedGame = game;
 
     [RelayCommand]
     private void ChangeImage(Game game)
