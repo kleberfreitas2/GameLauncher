@@ -147,6 +147,9 @@
     <None Include="GameLauncher\Services\IconExtractor.cs" />
     <None Include="GameLauncher\Services\SettingsService.cs" />
     <None Include="GameLauncher\Services\SteamGridDbService.cs" />
+    <None Include="GameLauncher\Tools\GenerateIcon.csx" />
+    <None Include="GameLauncher\Tools\IconGen\IconGen.csproj" />
+    <None Include="GameLauncher\Tools\IconGen\Program.cs" />
     <None Include="GameLauncher\ViewModels\MainViewModel.cs" />
     <None Include="GameLauncher\Views\ApiKeyDialog.xaml.cs" />
     <None Include="GameLauncher\Views\CoverSearchDialog.xaml.cs" />

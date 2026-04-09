@@ -40,6 +40,9 @@
     <None Include="GameLauncher\PatchFixHeader.ps1" />
     <None Include="GameLauncher\Services\HardwareMonitorService.cs" />
     <None Include="GameLauncher\Controls\ArcGauge.xaml.cs" />
+    <None Include="GameLauncher\Tools\GenerateIcon.csx" />
+    <None Include="GameLauncher\Tools\IconGen\IconGen.csproj" />
+    <None Include="GameLauncher\Tools\IconGen\Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="GameLauncher\App.xaml" />
