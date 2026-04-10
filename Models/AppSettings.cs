@@ -6,6 +6,8 @@ public class AppSettings
     public string IgdbClientId         { get; set; } = string.Empty;
     public string IgdbClientSecret     { get; set; } = string.Empty;
     public string BackgroundImagePath  { get; set; } = string.Empty;
+    public string AvatarImagePath      { get; set; } = string.Empty;
+    public string PlayerName            { get; set; } = "Jogador";
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
     public string BackgroundColor      { get; set; } = "#0D0D0D";

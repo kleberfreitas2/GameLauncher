@@ -99,6 +99,54 @@ public class SteamGridDbService
         }
     }
 
+    public async Task<List<SteamGridImage>> GetHeroesAsync(int gameId,
+        SteamGridDbStyles styles = SteamGridDbStyles.AllHeroes,
+        SteamGridDbDimensions dimensions = SteamGridDbDimensions.AllHeroes,
+        SteamGridDbTypes types = SteamGridDbTypes.All,
+        SteamGridDbFormats formats = SteamGridDbFormats.All,
+        bool nsfw = false, bool humorous = false, bool epilepsy = false)
+    {
+        LastError = null;
+        try
+        {
+            var heroes = await _client.GetHeroesByGameIdAsync(gameId,
+                styles: styles, dimensions: dimensions,
+                types: types, formats: formats,
+                nsfw: nsfw, humorous: humorous, epilepsy: epilepsy);
+            return heroes?.Select(h => new SteamGridImage(
+                h.FullImageUrl, h.ThumbnailImageUrl)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
+    public async Task<List<SteamGridImage>> GetGridsWideAsync(int gameId,
+        SteamGridDbStyles styles = SteamGridDbStyles.AllGrids,
+        SteamGridDbDimensions dimensions = SteamGridDbDimensions.AllGrids,
+        SteamGridDbTypes types = SteamGridDbTypes.All,
+        SteamGridDbFormats formats = SteamGridDbFormats.All,
+        bool nsfw = false, bool humorous = false, bool epilepsy = false)
+    {
+        LastError = null;
+        try
+        {
+            var grids = await _client.GetGridsByGameIdAsync(gameId,
+                styles: styles, dimensions: dimensions,
+                types: types, formats: formats,
+                nsfw: nsfw, humorous: humorous, epilepsy: epilepsy);
+            return grids?.Select(g => new SteamGridImage(
+                g.FullImageUrl, g.ThumbnailImageUrl)).ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            LastError = ex.Message;
+            return [];
+        }
+    }
+
     public async Task<string?> DownloadCoverAsync(string url, string gameName)
     {
         return await DownloadImageAsync(url, gameName, "covers");

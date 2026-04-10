@@ -14,12 +14,18 @@ public partial class MainWindow : Window
         Closed += (_, _) => (DataContext as MainViewModel)?.Dispose();
     }
 
-    private void BtnMais_Click(object sender, RoutedEventArgs e)
+    private void BtnGear_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.ContextMenu is not null)
         {
             btn.ContextMenu.PlacementTarget = btn;
             btn.ContextMenu.IsOpen = true;
         }
+    }
+
+    private void Avatar_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ChangeAvatarCommand.Execute(null);
     }
 }

@@ -50,6 +50,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
 
+    [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
+    [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAvatar))]
+    [NotifyPropertyChangedFor(nameof(HasNoAvatar))]
+    private string? avatarPath = string.IsNullOrEmpty(SettingsService.Current.AvatarImagePath) ? null : SettingsService.Current.AvatarImagePath;
+
+    public bool HasAvatar   => !string.IsNullOrEmpty(AvatarPath);
+    public bool HasNoAvatar => !HasAvatar;
+
+    private readonly DispatcherTimer _clockTimer;
+
     public ICollectionView GamesView => _gamesView;
 
     public MainViewModel()
@@ -77,6 +89,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.ButtonPressed += OnGamepadButton;
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
         _xinput.Start();
+
+        _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+        _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
+        _clockTimer.Start();
     }
 
     private void OnMetricsUpdated(HardwareMetrics m)
@@ -95,10 +111,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _clockTimer.Stop();
         _xinput.Stop();
         _xinput.Dispose();
         _hwMonitor.Stop();
         _hwMonitor.Dispose();
+    }
+
+    [RelayCommand]
+    private void ChangeAvatar()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Escolha uma imagem de avatar",
+            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp"
+        };
+        if (dialog.ShowDialog() != true) return;
+        AvatarPath = dialog.FileName;
+        SettingsService.Current.AvatarImagePath = dialog.FileName;
+        SettingsService.Save();
+        StatusMessage = "Avatar atualizado!";
     }
 
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
