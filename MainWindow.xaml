@@ -227,7 +227,7 @@
                           Stretch="UniformToFill" Opacity="0.90"
                    RenderOptions.BitmapScalingMode="HighQuality"
                    UseLayoutRounding="True"
-                   VerticalAlignment="Center" HorizontalAlignment="Center"
+                   VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                    Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}"
                    IsHitTestVisible="False"/>
             <!-- Gradient overlay for readability -->
@@ -639,16 +639,23 @@
 
                 <!-- Hardware Gauges -->
                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                    <!-- CPU Usage -->
-                    <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" SubLabel="{Binding CpuTempText}" Margin="4,0"/>
-                    <!-- GPU Usage -->
-                    <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" SubLabel="{Binding GpuTempText}" Margin="4,0"/>
-                    <!-- CPU Temp -->
-                    <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0"/>
-                    <!-- GPU Temp -->
-                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0"/>
-                    <!-- RAM -->
-                    <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="4,0"/>
+                    <!-- Uso -->
+                    <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" Margin="2,0">
+                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
+                    </ctrl:ArcGauge>
+                    <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" Margin="2,0">
+                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
+                    </ctrl:ArcGauge>
+                    <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="2,0">
+                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
+                    </ctrl:ArcGauge>
+                    <!-- Temperatura (maiores) -->
+                    <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0">
+                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
+                    </ctrl:ArcGauge>
+                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0">
+                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
+                    </ctrl:ArcGauge>
                 </StackPanel>
             </Grid>
         </Border>

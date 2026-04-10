@@ -207,9 +207,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             if (Games.Any(g => g.ExecutablePath == file)) continue;
 
+            var defaultName = Path.GetFileNameWithoutExtension(file);
+
+            var nameDialog = new GameNameInputDialog(defaultName)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            var gameName = nameDialog.ShowDialog() == true
+                ? nameDialog.GameName
+                : defaultName;
+
             var game = new Game
             {
-                Name = Path.GetFileNameWithoutExtension(file),
+                Name = gameName,
                 ExecutablePath = file,
                 InstallDirectory = Path.GetDirectoryName(file) ?? string.Empty,
                 IconPath = IconExtractor.ExtractIcon(file)
@@ -222,11 +233,149 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
 
-        // Auto-busca: visuais (SteamGridDB) + texto (IGDB) para jogos recém-adicionados
+        // Auto-busca com progresso visual para jogos recém-adicionados
         foreach (var game in newGames)
         {
-            await AutoFetchSteamGridDbAssetsAsync(game);
-            await AutoFetchIgdbAsync(game);
+            await AutoFetchAllWithProgressAsync(game);
+        }
+    }
+
+    private async Task AutoFetchAllWithProgressAsync(Game game)
+    {
+        var progressDialog = new LoadingProgressDialog(game.DisplayName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        progressDialog.Show();
+
+        try
+        {
+            // Passo 1/6 — Ícone (0→15%)
+            progressDialog.UpdateProgress(0, "Buscando ícone...");
+            var apiKey = SettingsService.Current.SteamGridDbApiKey;
+            SteamGridDbService? svc = null;
+            int sgdbId = 0;
+            bool hasSteamGridDb = false;
+
+            if (!string.IsNullOrEmpty(apiKey))
+            {
+                svc = new SteamGridDbService(apiKey);
+                var sgdbGames = await svc.SearchGamesAsync(game.DisplayName);
+                if (sgdbGames.Count > 0)
+                {
+                    sgdbId = sgdbGames[0].Id;
+                    hasSteamGridDb = true;
+                }
+            }
+
+            if (hasSteamGridDb && svc is not null)
+            {
+                if (string.IsNullOrEmpty(game.IconPath) || !System.IO.File.Exists(game.IconPath))
+                {
+                    var icons = await svc.GetIconsAsync(sgdbId);
+                    if (icons.Count > 0)
+                    {
+                        var path = await svc.DownloadIconAsync(icons[0].Url, game.DisplayName);
+                        if (path is not null) game.IconPath = path;
+                    }
+                }
+            }
+            progressDialog.UpdateProgress(15, "Ícone concluído!");
+
+            // Passo 2/6 — Logo (15→30%)
+            progressDialog.UpdateProgress(18, "Buscando logo...");
+            if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.LogoPath))
+            {
+                var logos = await svc.GetLogosAsync(sgdbId);
+                if (logos.Count > 0)
+                {
+                    var path = await svc.DownloadLogoAsync(logos[0].Url, game.DisplayName);
+                    if (path is not null) game.LogoPath = path;
+                }
+            }
+            progressDialog.UpdateProgress(30, "Logo concluído!");
+
+            // Passo 3/6 — Capa (30→50%)
+            progressDialog.UpdateProgress(33, "Buscando capa...");
+            if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.CustomImagePath))
+            {
+                var covers = await svc.GetCoversAsync(sgdbId);
+                if (covers.Count > 0)
+                {
+                    var path = await svc.DownloadCoverAsync(covers[0].Url, game.DisplayName);
+                    if (path is not null) game.CustomImagePath = path;
+                }
+            }
+            progressDialog.UpdateProgress(50, "Capa concluída!");
+
+            // Passo 4/6 — Fundo (50→65%)
+            progressDialog.UpdateProgress(53, "Buscando fundo...");
+            if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.BackgroundImagePath))
+            {
+                var heroes = await svc.GetHeroesAsync(sgdbId);
+                if (heroes.Count > 0)
+                {
+                    var path = await svc.DownloadHeroAsync(heroes[0].Url, game.DisplayName);
+                    if (path is not null) game.BackgroundImagePath = path;
+                }
+            }
+            progressDialog.UpdateProgress(65, "Fundo concluído!");
+
+            SaveGames();
+
+            // Passo 5/6 — IGDB info (65→85%)
+            progressDialog.UpdateProgress(68, "Buscando descrição e informações (IGDB)...");
+            var clientId     = SettingsService.Current.IgdbClientId;
+            var clientSecret = SettingsService.Current.IgdbClientSecret;
+
+            if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+            {
+                using var igdb = new IgdbService(clientId, clientSecret);
+                var results = await igdb.SearchGamesAsync(game.DisplayName);
+
+                if (results.Count > 0)
+                {
+                    var igdbGame = results[0];
+
+                    progressDialog.UpdateProgress(80, "Traduzindo descrição...");
+                    var summary = igdbGame.Summary;
+                    if (!string.IsNullOrEmpty(summary))
+                        summary = await TranslationService.TranslateToPortugueseAsync(summary);
+
+                    game.Summary     = summary;
+                    game.IgdbRating  = igdbGame.Rating;
+                    game.IgdbId      = igdbGame.Id;
+                    game.ReleaseYear = igdbGame.ReleaseYear;
+                    game.IsSummaryTranslated = true;
+
+                    var genres = igdbGame.GenreNames;
+                    game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+                }
+            }
+            progressDialog.UpdateProgress(90, "Informações IGDB concluídas!");
+
+            SaveGames();
+
+            // Passo 6/6 — Finalizado (90→100%)
+            progressDialog.UpdateProgress(100, "Tudo pronto!");
+            StatusMessage = $"'{game.DisplayName}' adicionado com sucesso!";
+
+            await Task.Delay(600); // pequena pausa para o usuário ver 100%
+            progressDialog.Finish();
+
+            // Força atualização da tela de detalhes e lista
+            _gamesView.Refresh();
+            if (SelectedGame == game)
+            {
+                DetailGame = null;
+                DetailGame = game;
+                ShowDetailPanel = true;
+            }
+        }
+        catch
+        {
+            StatusMessage = $"{Games.Count} jogos na biblioteca";
+            try { progressDialog.Close(); } catch { }
         }
     }
 
