@@ -242,23 +242,28 @@
                 </Border.Background>
             </Border>
 
-            <!-- Loading overlay — blocks clicks and shows progress while decoding animated background -->
+            <!-- Full-screen click blocker during loading -->
             <Border Panel.ZIndex="99"
               Visibility="{Binding IsLoading, ElementName=BackgroundAnim, Converter={StaticResource BoolToVisibility}}"
-              Background="#99000000">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="320">
-                    <TextBlock Text="Carregando animação..." FontSize="14" Foreground="#CCDDEE"
-                     HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                    <ProgressBar Value="{Binding LoadingProgress, ElementName=BackgroundAnim, Mode=OneWay}"
-                       Minimum="0" Maximum="100" Height="8"
-                       Foreground="{DynamicResource AccentBrush}"
-                       Background="#33FFFFFF"/>
-                    <TextBlock Foreground="#99AABB" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0">
-                        <TextBlock.Text>
-                            <Binding Path="LoadingProgress" ElementName="BackgroundAnim" StringFormat="{}{0:0}%" Mode="OneWay"/>
-                        </TextBlock.Text>
-                    </TextBlock>
-                </StackPanel>
+              Background="#01000000" IsHitTestVisible="True">
+                <!-- Floating pill progress indicator -->
+                <Border Background="#CC0A0A18" CornerRadius="14"
+                  VerticalAlignment="Top" HorizontalAlignment="Center"
+                  Margin="0,100,0,0" Padding="30,18">
+                    <StackPanel HorizontalAlignment="Center" Width="280">
+                        <TextBlock Text="Carregando animação..." FontSize="14" Foreground="#CCDDEE"
+                         HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <ProgressBar Value="{Binding LoadingProgress, ElementName=BackgroundAnim, Mode=OneWay}"
+                           Minimum="0" Maximum="100" Height="8"
+                           Foreground="{DynamicResource AccentBrush}"
+                           Background="#33FFFFFF"/>
+                        <TextBlock Foreground="#99AABB" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0">
+                            <TextBlock.Text>
+                                <Binding Path="LoadingProgress" ElementName="BackgroundAnim" StringFormat="{}{0:0}%" Mode="OneWay"/>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </Border>
 
             <!-- Empty state when no games -->
