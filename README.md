@@ -20,7 +20,7 @@
 
 O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real e suporte a navegação por controle.
 
-<img width="1916" height="1006" alt="image" src="https://github.com/user-attachments/assets/1ef743fb-355f-420f-8a11-9152ce3a5626" />
+<img width="1914" height="1004" alt="image" src="https://github.com/user-attachments/assets/04a7d2c7-8a10-486b-b0a6-dd320c17e7bc" />
 
 ---
 
