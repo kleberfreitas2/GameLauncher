@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using GameLauncher.ViewModels;
 
 namespace GameLauncher;
@@ -10,5 +12,20 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = new MainViewModel();
         Closed += (_, _) => (DataContext as MainViewModel)?.Dispose();
+    }
+
+    private void BtnGear_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.ContextMenu is not null)
+        {
+            btn.ContextMenu.PlacementTarget = btn;
+            btn.ContextMenu.IsOpen = true;
+        }
+    }
+
+    private void Avatar_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ChangeAvatarCommand.Execute(null);
     }
 }

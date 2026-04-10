@@ -27,6 +27,14 @@ public static class SettingsService
                 Current.SteamGridDbApiKey = string.Empty;
         }
         catch { Current = new AppSettings(); }
+
+        // Fill in default credentials when user hasn't configured their own
+        if (string.IsNullOrEmpty(Current.SteamGridDbApiKey))
+            Current.SteamGridDbApiKey = AppSettings.DefaultSteamGridDbApiKey;
+        if (string.IsNullOrEmpty(Current.IgdbClientId))
+            Current.IgdbClientId = AppSettings.DefaultIgdbClientId;
+        if (string.IsNullOrEmpty(Current.IgdbClientSecret))
+            Current.IgdbClientSecret = AppSettings.DefaultIgdbClientSecret;
     }
 
     public static void Save()

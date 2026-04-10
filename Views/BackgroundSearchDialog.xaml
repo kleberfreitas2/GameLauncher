@@ -1,0 +1,213 @@
+﻿<Window x:Class="GameLauncher.Views.BackgroundSearchDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:converters="clr-namespace:GameLauncher.Converters"
+        Title="&#x1f5bc; Selecionar Imagem de Fundo &#x2014; SteamGridDB"
+        Width="920" Height="640"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#0D0D1A"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Window.Resources>
+        <converters:UrlToImageSourceConverter x:Key="UrlToImage"/>
+        <Style x:Key="FilterCombo" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinWidth" Value="110"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#BBCCDD"/>
+            <Setter Property="Background" Value="#1A2233"/>
+            <Setter Property="BorderBrush" Value="#334455"/>
+        </Style>
+        <Style x:Key="FilterCheck" TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#8899AA"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="TabBtn" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#8899AA"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="#1A2233"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1565C0"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header + Type selector -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="&#x1f5bc; Selecionar Imagem de Fundo"
+                           FontSize="18" FontWeight="Bold" Foreground="White"/>
+                <TextBlock x:Name="SubtitleText"
+                           FontSize="11" Foreground="#666688" Margin="0,3,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <RadioButton x:Name="TabHeroes" Content="Heroes" GroupName="ImageType"
+                             IsChecked="True" Style="{StaticResource TabBtn}"
+                             Checked="Tab_Changed"/>
+                <RadioButton x:Name="TabGrids" Content="Key Art" GroupName="ImageType"
+                             Style="{StaticResource TabBtn}"
+                             Checked="Tab_Changed"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Filters bar -->
+        <Border Grid.Row="1" Background="#111822" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
+            <WrapPanel VerticalAlignment="Center">
+                <TextBlock Text="Dimensions" FontSize="10" FontWeight="Bold" Foreground="#556677"
+                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox x:Name="CbDimensions" Style="{StaticResource FilterCombo}"
+                          SelectionChanged="Filter_Changed"/>
+
+                <TextBlock Text="Styles" FontSize="10" FontWeight="Bold" Foreground="#556677"
+                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox x:Name="CbStyles" Style="{StaticResource FilterCombo}"
+                          SelectionChanged="Filter_Changed"/>
+
+                <TextBlock Text="File Type" FontSize="10" FontWeight="Bold" Foreground="#556677"
+                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox x:Name="CbFormats" Style="{StaticResource FilterCombo}"
+                          SelectionChanged="Filter_Changed"/>
+
+                <TextBlock Text="Types" FontSize="10" FontWeight="Bold" Foreground="#556677"
+                           VerticalAlignment="Center" Margin="14,0,6,0"/>
+                <ComboBox x:Name="CbTypes" Style="{StaticResource FilterCombo}"
+                          SelectionChanged="Filter_Changed"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- Tags bar -->
+        <Border Grid.Row="2" Background="#111822" CornerRadius="6" Padding="12,6" Margin="0,0,0,8">
+            <WrapPanel VerticalAlignment="Center">
+                <TextBlock Text="Tags" FontSize="10" FontWeight="Bold" Foreground="#556677"
+                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <CheckBox x:Name="ChkHumor" Content="Humor" Style="{StaticResource FilterCheck}"
+                          Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                <CheckBox x:Name="ChkNsfw" Content="Adult Content" Style="{StaticResource FilterCheck}"
+                          Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                <CheckBox x:Name="ChkEpilepsy" Content="Epilepsy" Style="{StaticResource FilterCheck}"
+                          Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- Image grid -->
+        <Border Grid.Row="3" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
+            <Grid>
+                <TextBlock x:Name="StatusText"
+                           Text="Carregando..."
+                           Foreground="#444466" FontSize="12"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           TextWrapping="Wrap"/>
+                <ProgressBar x:Name="LoadingBar"
+                             IsIndeterminate="True"
+                             Visibility="Collapsed"
+                             Style="{StaticResource MaterialDesignLinearProgressBar}"
+                             VerticalAlignment="Top"/>
+                <ListBox x:Name="ImageList"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Visibility="Collapsed"
+                         SelectionChanged="ImageList_SelectionChanged"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="4"/>
+                            <Setter Property="Margin" Value="4"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="3"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="BorderBrush" Value="#1565C0"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="BorderBrush" Value="#335577"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="240" Height="135" CornerRadius="6" ClipToBounds="True"
+                                    Background="#1A1A2E">
+                                <Image Source="{Binding Thumbnail}"
+                                       Stretch="UniformToFill"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="4" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="FooterText" Grid.Column="0"
+                       Foreground="#444466" FontSize="11"
+                       VerticalAlignment="Center"/>
+
+            <Button Grid.Column="1" Content="CANCELAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+
+            <Button x:Name="ApplyButton"
+                    Grid.Column="2"
+                    Content="APLICAR FUNDO"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="#1565C0" BorderBrush="#1565C0"
+                    Foreground="White" FontWeight="Bold"
+                    IsEnabled="False"
+                    Click="Apply_Click"/>
+        </Grid>
+    </Grid>
+</Window>

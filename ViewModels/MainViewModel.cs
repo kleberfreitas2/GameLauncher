@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,10 +36,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string searchText = string.Empty;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasBackgroundImage))]
-    private BitmapSource? backgroundImage;
-
     [ObservableProperty] private double cpuUsage;
     [ObservableProperty] private double cpuTemp;
     [ObservableProperty] private double gpuUsage;
@@ -53,11 +44,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string cpuTempText = "--°C";
     [ObservableProperty] private string gpuTempText = "--°C";
 
+    [ObservableProperty] private string cpuName = "";
+    [ObservableProperty] private string gpuName = "";
+    [ObservableProperty] private string ramTotal = "";
+    [ObservableProperty] private ObservableCollection<string> storageDrives = [];
+
     [ObservableProperty] private Game? selectedGame;
+    [ObservableProperty] private Game? detailGame;
+    [ObservableProperty] private bool showDetailPanel;
     [ObservableProperty] private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
 
-    public bool HasBackgroundImage => BackgroundImage is not null;
+    [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
+    [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAvatar))]
+    [NotifyPropertyChangedFor(nameof(HasNoAvatar))]
+    private string? avatarPath = string.IsNullOrEmpty(SettingsService.Current.AvatarImagePath) ? null : SettingsService.Current.AvatarImagePath;
+
+    public bool HasAvatar   => !string.IsNullOrEmpty(AvatarPath);
+    public bool HasNoAvatar => !HasAvatar;
+
+    private readonly DispatcherTimer _clockTimer;
 
     public ICollectionView GamesView => _gamesView;
 
@@ -75,11 +83,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
 
-        var bgPath = SettingsService.Current.BackgroundImagePath;
-        if (!string.IsNullOrEmpty(bgPath))
-            BackgroundImage = LoadHighQualityBackground(bgPath);
-
         LoadGames();
+        _ = RefreshAllAssetsOnStartupAsync();
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -89,6 +94,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.ButtonPressed += OnGamepadButton;
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
         _xinput.Start();
+
+        _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+        _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
+        _clockTimer.Start();
     }
 
     private void OnMetricsUpdated(HardwareMetrics m)
@@ -102,18 +111,52 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RamUsage = m.RamUsage;
             CpuTempText = m.CpuTemp > 0 ? $"{m.CpuTemp:F0}°C" : "--°C";
             GpuTempText = m.GpuTemp > 0 ? $"{m.GpuTemp:F0}°C" : "--°C";
+
+            if (!string.IsNullOrEmpty(m.CpuName) && string.IsNullOrEmpty(CpuName))
+                CpuName = m.CpuName;
+            if (!string.IsNullOrEmpty(m.GpuName) && string.IsNullOrEmpty(GpuName))
+                GpuName = m.GpuName;
+            if (!string.IsNullOrEmpty(m.RamTotal) && string.IsNullOrEmpty(RamTotal))
+                RamTotal = m.RamTotal;
+            if (m.StorageDrives.Count > 0 && StorageDrives.Count == 0)
+            {
+                foreach (var d in m.StorageDrives)
+                    StorageDrives.Add(d);
+            }
         });
     }
 
     public void Dispose()
     {
+        _clockTimer.Stop();
         _xinput.Stop();
         _xinput.Dispose();
         _hwMonitor.Stop();
         _hwMonitor.Dispose();
     }
 
+    [RelayCommand]
+    private void ChangeAvatar()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Escolha uma imagem de avatar",
+            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp"
+        };
+        if (dialog.ShowDialog() != true) return;
+        AvatarPath = dialog.FileName;
+        SettingsService.Current.AvatarImagePath = dialog.FileName;
+        SettingsService.Save();
+        StatusMessage = "Avatar atualizado!";
+    }
+
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
+
+    partial void OnSelectedGameChanged(Game? value)
+    {
+        DetailGame = value;
+        ShowDetailPanel = value is not null;
+    }
 
     private void LoadGames()
     {
@@ -126,6 +169,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             foreach (var g in saved)
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
+            _gamesView.Refresh();
+            var first = _gamesView.Cast<Game>().FirstOrDefault();
+            if (first is not null)
+                SelectedGame = first;
         }
         catch { }
     }
@@ -143,7 +190,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void AddGame()
+    private async Task AddGame()
     {
         var dialog = new OpenFileDialog
         {
@@ -153,6 +200,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
 
         if (dialog.ShowDialog() != true) return;
+
+        var newGames = new List<Game>();
 
         foreach (var file in dialog.FileNames)
         {
@@ -167,10 +216,200 @@ public partial class MainViewModel : ObservableObject, IDisposable
             };
 
             Games.Add(game);
+            newGames.Add(game);
         }
 
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
+
+        // Auto-busca: visuais (SteamGridDB) + texto (IGDB) para jogos recém-adicionados
+        foreach (var game in newGames)
+        {
+            await AutoFetchSteamGridDbAssetsAsync(game);
+            await AutoFetchIgdbAsync(game);
+        }
+    }
+
+    private async Task RefreshAllAssetsOnStartupAsync()
+    {
+        // 1. Visuais — SteamGridDB (logo, capa, fundo, ícone)
+        var apiKey = SettingsService.Current.SteamGridDbApiKey;
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            var visualGames = Games
+                .Where(g => string.IsNullOrEmpty(g.LogoPath)
+                         || string.IsNullOrEmpty(g.CustomImagePath)
+                         || string.IsNullOrEmpty(g.BackgroundImagePath))
+                .ToList();
+
+            if (visualGames.Count > 0)
+            {
+                StatusMessage = $"Atualizando visuais de {visualGames.Count} jogo(s)...";
+                foreach (var game in visualGames)
+                    await AutoFetchSteamGridDbAssetsAsync(game);
+            }
+        }
+
+        // 2. Texto — IGDB (sinopse, gêneros, nota, ano) + tradução PT-BR
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+        {
+            var textGames = Games
+                .Where(g => !g.HasIgdbInfo)
+                .ToList();
+
+            if (textGames.Count > 0)
+            {
+                StatusMessage = $"Buscando informações de {textGames.Count} jogo(s) no IGDB...";
+                foreach (var game in textGames)
+                    await AutoFetchIgdbAsync(game);
+            }
+
+            // 3. Re-traduzir descrições que ficaram em inglês
+            var untranslated = Games
+                .Where(g => g.HasIgdbInfo && !string.IsNullOrEmpty(g.Summary) && !g.IsSummaryTranslated)
+                .ToList();
+
+            if (untranslated.Count > 0)
+            {
+                StatusMessage = $"Traduzindo descrições de {untranslated.Count} jogo(s)...";
+                foreach (var game in untranslated)
+                {
+                    try
+                    {
+                        StatusMessage = $"Traduzindo '{game.DisplayName}'...";
+                        game.Summary = await TranslationService.TranslateToPortugueseAsync(game.Summary!);
+                        game.IsSummaryTranslated = true;
+                        SaveGames();
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        StatusMessage = $"{Games.Count} jogos na biblioteca";
+    }
+
+    private async Task AutoFetchSteamGridDbAssetsAsync(Game game)
+    {
+        var apiKey = SettingsService.Current.SteamGridDbApiKey;
+        if (string.IsNullOrEmpty(apiKey))
+            return;
+
+        try
+        {
+            var svc = new SteamGridDbService(apiKey);
+            var games = await svc.SearchGamesAsync(game.DisplayName);
+            if (games.Count == 0) return;
+
+            var sgdbId = games[0].Id;
+
+            // Ícone
+            if (string.IsNullOrEmpty(game.IconPath) || !System.IO.File.Exists(game.IconPath))
+            {
+                StatusMessage = $"Buscando ícone de '{game.DisplayName}'...";
+                var icons = await svc.GetIconsAsync(sgdbId);
+                if (icons.Count > 0)
+                {
+                    var path = await svc.DownloadIconAsync(icons[0].Url, game.DisplayName);
+                    if (path is not null) game.IconPath = path;
+                }
+            }
+
+            // Logo
+            if (string.IsNullOrEmpty(game.LogoPath))
+            {
+                StatusMessage = $"Buscando logo de '{game.DisplayName}'...";
+                var logos = await svc.GetLogosAsync(sgdbId);
+                if (logos.Count > 0)
+                {
+                    var path = await svc.DownloadLogoAsync(logos[0].Url, game.DisplayName);
+                    if (path is not null) game.LogoPath = path;
+                }
+            }
+
+            // Capa (Grid)
+            if (string.IsNullOrEmpty(game.CustomImagePath))
+            {
+                StatusMessage = $"Buscando capa de '{game.DisplayName}'...";
+                var covers = await svc.GetCoversAsync(sgdbId);
+                if (covers.Count > 0)
+                {
+                    var path = await svc.DownloadCoverAsync(covers[0].Url, game.DisplayName);
+                    if (path is not null) game.CustomImagePath = path;
+                }
+            }
+
+            // Fundo (Hero)
+            if (string.IsNullOrEmpty(game.BackgroundImagePath))
+            {
+                StatusMessage = $"Buscando fundo de '{game.DisplayName}'...";
+                var heroes = await svc.GetHeroesAsync(sgdbId);
+                if (heroes.Count > 0)
+                {
+                    var path = await svc.DownloadHeroAsync(heroes[0].Url, game.DisplayName);
+                    if (path is not null) game.BackgroundImagePath = path;
+                }
+            }
+
+            SaveGames();
+            StatusMessage = $"Assets de '{game.DisplayName}' atualizados!";
+        }
+        catch
+        {
+            StatusMessage = $"{Games.Count} jogos na biblioteca";
+        }
+    }
+
+    private async Task AutoFetchIgdbAsync(Game game)
+    {
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            return;
+
+        try
+        {
+            StatusMessage = $"Buscando info de '{game.DisplayName}'...";
+
+            using var svc = new IgdbService(clientId, clientSecret);
+            var results = await svc.SearchGamesAsync(game.DisplayName);
+
+            if (results.Count == 0)
+            {
+                StatusMessage = $"Nenhum resultado IGDB para '{game.DisplayName}'";
+                return;
+            }
+
+            var igdbGame = results[0];
+
+            // Traduz descrição para PT-BR
+            var summary = igdbGame.Summary;
+            if (!string.IsNullOrEmpty(summary))
+            {
+                StatusMessage = $"Traduzindo descrição de '{game.DisplayName}'...";
+                summary = await TranslationService.TranslateToPortugueseAsync(summary);
+            }
+
+            game.Summary     = summary;
+            game.IgdbRating  = igdbGame.Rating;
+            game.IgdbId      = igdbGame.Id;
+            game.ReleaseYear = igdbGame.ReleaseYear;
+            game.IsSummaryTranslated = true;
+
+            // Traduz gêneros para PT-BR
+            var genres = igdbGame.GenreNames;
+            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
+        }
+        catch
+        {
+            StatusMessage = $"{Games.Count} jogos na biblioteca";
+        }
     }
 
     [RelayCommand]
@@ -193,9 +432,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void RemoveGame(Game game)
     {
+        var visible = GetVisibleGames();
+        var idx = visible.IndexOf(game);
         Games.Remove(game);
         SaveGames();
         StatusMessage = $"'{game.DisplayName}' removido. {Games.Count} jogos na biblioteca";
+        visible = GetVisibleGames();
+        if (visible.Count > 0)
+            SelectedGame = visible[Math.Clamp(idx, 0, visible.Count - 1)];
+        else
+            SelectedGame = null;
     }
 
     [RelayCommand]
@@ -269,6 +515,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void SearchBackground(Game game)
+    {
+        var apiKey = SettingsService.Current.SteamGridDbApiKey;
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            var keyDialog = new ApiKeyDialog { Owner = Application.Current.MainWindow };
+            if (keyDialog.ShowDialog() != true) return;
+            SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+            SettingsService.Save();
+            apiKey = keyDialog.ApiKey;
+        }
+
+        var dialog = new BackgroundSearchDialog(apiKey, game.DisplayName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true && dialog.DownloadedBackgroundPath is not null)
+        {
+            game.BackgroundImagePath = dialog.DownloadedBackgroundPath;
+            SaveGames();
+            StatusMessage = $"Fundo de '{game.DisplayName}' atualizado!";
+        }
+    }
+
+    [RelayCommand]
     private void OpenTheme()
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
@@ -276,47 +548,81 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ChangeBackground()
+    private void OpenHelp()
     {
-        var dialog = new OpenFileDialog
-        {
-            Title  = "Escolha uma imagem de fundo",
-            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp"
-        };
-        if (dialog.ShowDialog() != true) return;
-        var image = LoadHighQualityBackground(dialog.FileName);
-        if (image is null) return;
-        BackgroundImage = image;
-        SettingsService.Current.BackgroundImagePath = dialog.FileName;
-        SettingsService.Save();
-        StatusMessage = "Imagem de fundo aplicada!";
-    }
-
-    private static BitmapSource? LoadHighQualityBackground(string path)
-    {
-        if (string.IsNullOrEmpty(path) || !File.Exists(path))
-            return null;
-        try
-        {
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var decoder = BitmapDecoder.Create(
-                stream,
-                BitmapCreateOptions.PreservePixelFormat | BitmapCreateOptions.IgnoreColorProfile,
-                BitmapCacheOption.OnLoad);
-            var frame = decoder.Frames[0];
-            frame.Freeze();
-            return frame;
-        }
-        catch { return null; }
+        var dialog = new HelpDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
     }
 
     [RelayCommand]
-    private void RemoveBackground()
+    private async Task FetchIgdbInfo(Game game)
     {
-        BackgroundImage = null;
-        SettingsService.Current.BackgroundImagePath = string.Empty;
-        SettingsService.Save();
-        StatusMessage = "Imagem de fundo removida.";
+        var clientId     = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+        {
+            var setup = new IgdbSetupDialog { Owner = Application.Current.MainWindow };
+            if (setup.ShowDialog() != true) return;
+            SettingsService.Current.IgdbClientId     = setup.ClientId;
+            SettingsService.Current.IgdbClientSecret = setup.ClientSecret;
+            SettingsService.Save();
+            clientId     = setup.ClientId;
+            clientSecret = setup.ClientSecret;
+        }
+
+        var dialog = new IgdbGameInfoDialog(clientId, clientSecret, game.DisplayName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true && dialog.SelectedGame is { } igdbGame)
+        {
+            var summary = igdbGame.Summary;
+            if (!string.IsNullOrEmpty(summary))
+            {
+                StatusMessage = $"Traduzindo descrição de '{game.DisplayName}'...";
+                summary = await TranslationService.TranslateToPortugueseAsync(summary);
+            }
+
+            game.Summary     = summary;
+            game.IgdbRating  = igdbGame.Rating;
+            game.IgdbId      = igdbGame.Id;
+            game.ReleaseYear = igdbGame.ReleaseYear;
+
+            var genres = igdbGame.GenreNames;
+            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
+
+            // Auto-busca visuais do SteamGridDB (logo, capa, fundo)
+            await AutoFetchSteamGridDbAssetsAsync(game);
+
+            SaveGames();
+            StatusMessage = $"'{game.DisplayName}' atualizado!";
+        }
+    }
+
+    [RelayCommand]
+    private void ShowDetail(Game game)
+    {
+        DetailGame = game;
+        ShowDetailPanel = true;
+    }
+
+    [RelayCommand]
+    private void CloseDetail()
+    {
+        ShowDetailPanel = false;
+        DetailGame = null;
+    }
+
+    [RelayCommand]
+    private void LaunchDetailGame()
+    {
+        if (DetailGame is not null)
+            LaunchGame(DetailGame);
     }
 
     // ── Gamepad Navigation ──────────────────────────────────────
@@ -354,27 +660,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 SelectedGame = visible[0];
             }
 
-            int columns = EstimateColumns();
-
             switch (button)
             {
+                case GamepadButton.DPadDown:
                 case GamepadButton.DPadRight:
                     NavigateBy(1, visible);
                     break;
+                case GamepadButton.DPadUp:
                 case GamepadButton.DPadLeft:
                     NavigateBy(-1, visible);
                     break;
-                case GamepadButton.DPadDown:
-                    NavigateBy(columns, visible);
-                    break;
-                case GamepadButton.DPadUp:
-                    NavigateBy(-columns, visible);
-                    break;
                 case GamepadButton.RightShoulder:
-                    NavigateBy(columns * 2, visible);
+                    NavigateBy(5, visible);
                     break;
                 case GamepadButton.LeftShoulder:
-                    NavigateBy(-columns * 2, visible);
+                    NavigateBy(-5, visible);
                     break;
                 case GamepadButton.A:
                     if (SelectedGame is not null)
@@ -415,15 +715,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return list;
     }
 
-    private static int EstimateColumns()
-    {
-        var mainWindow = Application.Current.MainWindow;
-        if (mainWindow is null) return 5;
-        double availableWidth = mainWindow.ActualWidth - 60; // padding
-        int cardWidth = 185 + 20; // card + margin
-        int cols = Math.Max(1, (int)(availableWidth / cardWidth));
-        return cols;
     }
-}
 
 
