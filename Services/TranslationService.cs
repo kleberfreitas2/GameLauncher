@@ -91,6 +91,7 @@ public static class TranslationService
 
     /// <summary>
     /// Traduz texto de EN para PT-BR usando a API gratuita MyMemory.
+    /// Divide textos longos em pedaços ≤ 450 caracteres para respeitar o limite da API.
     /// Retorna o texto original em caso de falha.
     /// </summary>
     public static async Task<string> TranslateToPortugueseAsync(string text)
@@ -98,6 +99,60 @@ public static class TranslationService
         if (string.IsNullOrWhiteSpace(text))
             return text;
 
+        const int maxChunkLength = 450;
+
+        // Texto curto — traduz direto
+        if (text.Length <= maxChunkLength)
+            return await TranslateChunkAsync(text);
+
+        // Texto longo — divide em sentenças e agrupa em pedaços
+        var chunks = SplitIntoChunks(text, maxChunkLength);
+        var translatedParts = new List<string>();
+
+        foreach (var chunk in chunks)
+        {
+            var translated = await TranslateChunkAsync(chunk);
+            translatedParts.Add(translated);
+            await Task.Delay(300); // Respeita rate limit da API
+        }
+
+        return string.Join(" ", translatedParts);
+    }
+
+    private static List<string> SplitIntoChunks(string text, int maxLength)
+    {
+        var chunks = new List<string>();
+        var sentences = text.Split([". ", "! ", "? "], StringSplitOptions.None);
+
+        var current = "";
+        for (int i = 0; i < sentences.Length; i++)
+        {
+            var sentence = sentences[i];
+            // Restaura o separador (exceto último segmento)
+            var separator = i < sentences.Length - 1 ? ". " : "";
+            var candidate = string.IsNullOrEmpty(current)
+                ? sentence + separator
+                : current + sentence + separator;
+
+            if (candidate.Length > maxLength && !string.IsNullOrEmpty(current))
+            {
+                chunks.Add(current.TrimEnd());
+                current = sentence + separator;
+            }
+            else
+            {
+                current = candidate;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+            chunks.Add(current.TrimEnd());
+
+        return chunks;
+    }
+
+    private static async Task<string> TranslateChunkAsync(string text)
+    {
         try
         {
             var encoded = HttpUtility.UrlEncode(text);

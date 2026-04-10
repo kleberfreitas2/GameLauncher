@@ -52,6 +52,7 @@ public partial class Game : ObservableObject
     public double? IgdbRating  { get; set; }
     public string? Genres      { get; set; }
     public int?    ReleaseYear { get; set; }
+    public bool    IsSummaryTranslated { get; set; }
 
     public bool HasIgdbInfo => !string.IsNullOrEmpty(Summary) || IgdbRating.HasValue;
 

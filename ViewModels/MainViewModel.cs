@@ -216,6 +216,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 foreach (var game in textGames)
                     await AutoFetchIgdbAsync(game);
             }
+
+            // 3. Re-traduzir descrições que ficaram em inglês
+            var untranslated = Games
+                .Where(g => g.HasIgdbInfo && !string.IsNullOrEmpty(g.Summary) && !g.IsSummaryTranslated)
+                .ToList();
+
+            if (untranslated.Count > 0)
+            {
+                StatusMessage = $"Traduzindo descrições de {untranslated.Count} jogo(s)...";
+                foreach (var game in untranslated)
+                {
+                    try
+                    {
+                        StatusMessage = $"Traduzindo '{game.DisplayName}'...";
+                        game.Summary = await TranslationService.TranslateToPortugueseAsync(game.Summary!);
+                        game.IsSummaryTranslated = true;
+                        SaveGames();
+                    }
+                    catch { }
+                }
+            }
         }
 
         StatusMessage = $"{Games.Count} jogos na biblioteca";
@@ -327,6 +348,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.IgdbRating  = igdbGame.Rating;
             game.IgdbId      = igdbGame.Id;
             game.ReleaseYear = igdbGame.ReleaseYear;
+            game.IsSummaryTranslated = true;
 
             // Traduz gêneros para PT-BR
             var genres = igdbGame.GenreNames;
