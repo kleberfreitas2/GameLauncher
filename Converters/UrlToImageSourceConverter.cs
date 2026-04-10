@@ -1,14 +1,15 @@
+using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Net.Http;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using SkiaSharp;
 
 namespace GameLauncher.Converters;
 
 /// <summary>
-/// Downloads image bytes and decodes via SkiaSharp (supports WEBP, PNG, JPEG, GIF).
+/// Downloads image bytes and decodes via System.Drawing (GDI+) which supports WEBP on Windows 10+.
 /// Use with IsAsync=True on the Binding so the HTTP call runs off the UI thread.
 /// </summary>
 public class UrlToImageSourceConverter : IValueConverter
@@ -23,24 +24,19 @@ public class UrlToImageSourceConverter : IValueConverter
         {
             var bytes = _http.GetByteArrayAsync(url).GetAwaiter().GetResult();
 
-            using var skBitmap = SKBitmap.Decode(bytes);
-            if (skBitmap is null) return null;
+            using var inputStream = new MemoryStream(bytes);
+            using var gdiBitmap = new System.Drawing.Bitmap(inputStream);
+            using var pngStream = new MemoryStream();
+            gdiBitmap.Save(pngStream, ImageFormat.Png);
+            pngStream.Position = 0;
 
-            var info = new SKImageInfo(skBitmap.Width, skBitmap.Height,
-                SKColorType.Bgra8888, SKAlphaType.Premul);
-            using var converted = new SKBitmap(info);
-            using var canvas = new SKCanvas(converted);
-            canvas.Clear(SKColors.Transparent);
-            canvas.DrawBitmap(skBitmap, 0, 0);
-
-            var bs = BitmapSource.Create(
-                info.Width, info.Height, 96, 96,
-                PixelFormats.Pbgra32, null,
-                converted.GetPixels(),
-                converted.RowBytes * converted.Height,
-                converted.RowBytes);
-            bs.Freeze();
-            return bs;
+            var bi = new BitmapImage();
+            bi.BeginInit();
+            bi.StreamSource = pngStream;
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            bi.Freeze();
+            return bi;
         }
         catch { return null; }
     }

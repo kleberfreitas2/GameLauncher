@@ -167,7 +167,7 @@
     <Grid Grid.Row="1">
       <!-- Fixed background image of selected game (supports animated WEBP/GIF) -->
       <ctrl:AnimatedImage ImagePath="{Binding DetailGame.EffectiveBackgroundPath}"
-             Stretch="UniformToFill" Opacity="0.6"
+                    Stretch="UniformToFill" Opacity="0.90"
              RenderOptions.BitmapScalingMode="HighQuality"
              VerticalAlignment="Center" HorizontalAlignment="Center"
              Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}"
@@ -177,9 +177,9 @@
               Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}">
         <Border.Background>
           <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#20000000" Offset="0"/>
-            <GradientStop Color="#88080810" Offset="0.55"/>
-            <GradientStop Color="#EE0D0D15" Offset="1"/>
+            <GradientStop Color="#10000000" Offset="0"/>
+            <GradientStop Color="#66080810" Offset="0.55"/>
+            <GradientStop Color="#DD0D0D15" Offset="1"/>
           </LinearGradientBrush>
         </Border.Background>
       </Border>

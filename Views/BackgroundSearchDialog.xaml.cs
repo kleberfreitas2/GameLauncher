@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using craftersmine.SteamGridDBNet;
 using GameLauncher.Services;
-using SkiaSharp;
 
 namespace GameLauncher.Views;
 
@@ -31,7 +32,7 @@ public partial class BackgroundSearchDialog : Window
     }
 
     // Display wrapper that holds a lazily-loaded thumbnail
-    private sealed class DisplayImage : INotifyPropertyChanged
+    internal sealed class DisplayImage : INotifyPropertyChanged
     {
         public SteamGridImage Source { get; }
         private ImageSource? _thumbnail;
@@ -261,7 +262,7 @@ public partial class BackgroundSearchDialog : Window
                 if (ct.IsCancellationRequested) return;
                 var url = item.Source.ThumbnailUrl ?? item.Source.Url;
                 var bytes = await _http.GetByteArrayAsync(url, ct);
-                var bitmapSource = DecodeWithSkia(bytes);
+                var bitmapSource = DecodeImage(bytes);
                 if (bitmapSource is not null)
                     Dispatcher.Invoke(() => item.Thumbnail = bitmapSource);
             }
@@ -271,27 +272,24 @@ public partial class BackgroundSearchDialog : Window
         await Task.WhenAll(tasks);
     }
 
-    private static BitmapSource? DecodeWithSkia(byte[] bytes)
+    private static BitmapSource? DecodeImage(byte[] bytes)
     {
-        using var skBitmap = SKBitmap.Decode(bytes);
-        if (skBitmap is null) return null;
+        // Use System.Drawing (GDI+) which supports WEBP on Windows 10+
+        using var inputStream = new MemoryStream(bytes);
+        using var bitmap = new System.Drawing.Bitmap(inputStream);
 
-        // Convert to BGRA8888 premultiplied for WPF compatibility
-        var info = new SKImageInfo(skBitmap.Width, skBitmap.Height,
-            SKColorType.Bgra8888, SKAlphaType.Premul);
-        using var converted = new SKBitmap(info);
-        using var canvas = new SKCanvas(converted);
-        canvas.Clear(SKColors.Transparent);
-        canvas.DrawBitmap(skBitmap, 0, 0);
+        // Re-encode as PNG and load into WPF BitmapImage
+        using var pngStream = new MemoryStream();
+        bitmap.Save(pngStream, ImageFormat.Png);
+        pngStream.Position = 0;
 
-        var bs = BitmapSource.Create(
-            info.Width, info.Height, 96, 96,
-            PixelFormats.Pbgra32, null,
-            converted.GetPixels(),
-            converted.RowBytes * converted.Height,
-            converted.RowBytes);
-        bs.Freeze();
-        return bs;
+        var bi = new BitmapImage();
+        bi.BeginInit();
+        bi.StreamSource = pngStream;
+        bi.CacheOption = BitmapCacheOption.OnLoad;
+        bi.EndInit();
+        bi.Freeze();
+        return bi;
     }
 
     private void SetLoading(bool loading)

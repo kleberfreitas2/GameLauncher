@@ -1,16 +1,16 @@
 using System;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using SkiaSharp;
 
 namespace GameLauncher.Converters;
 
 /// <summary>
-/// Loads images from local file paths. Uses SkiaSharp for WEBP files,
+/// Loads images from local file paths. Uses System.Drawing (GDI+) for WEBP files,
 /// WPF native BitmapImage for other formats.
 /// </summary>
 public class PathToImageSourceConverter : IValueConverter
@@ -23,7 +23,7 @@ public class PathToImageSourceConverter : IValueConverter
         {
             var ext = Path.GetExtension(path).ToLowerInvariant();
             if (ext is ".webp")
-                return DecodeWithSkia(path);
+                return DecodeWithGdi(path);
 
             using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             var bitmap = new BitmapImage();
@@ -39,26 +39,20 @@ public class PathToImageSourceConverter : IValueConverter
         catch { return null; }
     }
 
-    private static BitmapSource? DecodeWithSkia(string path)
+    private static BitmapSource? DecodeWithGdi(string path)
     {
-        using var skBitmap = SKBitmap.Decode(path);
-        if (skBitmap is null) return null;
+        using var gdiBitmap = new System.Drawing.Bitmap(path);
+        using var pngStream = new MemoryStream();
+        gdiBitmap.Save(pngStream, ImageFormat.Png);
+        pngStream.Position = 0;
 
-        var info = new SKImageInfo(skBitmap.Width, skBitmap.Height,
-            SKColorType.Bgra8888, SKAlphaType.Premul);
-        using var converted = new SKBitmap(info);
-        using var canvas = new SKCanvas(converted);
-        canvas.Clear(SKColors.Transparent);
-        canvas.DrawBitmap(skBitmap, 0, 0);
-
-        var bs = BitmapSource.Create(
-            info.Width, info.Height, 96, 96,
-            PixelFormats.Pbgra32, null,
-            converted.GetPixels(),
-            converted.RowBytes * converted.Height,
-            converted.RowBytes);
-        bs.Freeze();
-        return bs;
+        var bi = new BitmapImage();
+        bi.BeginInit();
+        bi.StreamSource = pngStream;
+        bi.CacheOption = BitmapCacheOption.OnLoad;
+        bi.EndInit();
+        bi.Freeze();
+        return bi;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
