@@ -48,10 +48,25 @@ public partial class Game : ObservableObject
 
     // ── Metadados IGDB ──────────────────────────────────────
     public int?    IgdbId      { get; set; }
-    public string? Summary     { get; set; }
-    public double? IgdbRating  { get; set; }
-    public string? Genres      { get; set; }
-    public int?    ReleaseYear { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIgdbInfo))]
+    [NotifyPropertyChangedFor(nameof(SummaryDisplay))]
+    private string? summary;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIgdbInfo))]
+    [NotifyPropertyChangedFor(nameof(RatingDisplay))]
+    private double? igdbRating;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GenresDisplay))]
+    private string? genres;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(YearDisplay))]
+    private int? releaseYear;
+
     public bool    IsSummaryTranslated { get; set; }
 
     public bool HasIgdbInfo => !string.IsNullOrEmpty(Summary) || IgdbRating.HasValue;

@@ -133,28 +133,40 @@
                                         2. Selecione o arquivo .exe do jogo (é possível selecionar vários de uma vez)
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
-                                        3. O GLauncher irá automaticamente:
+                                        3. Para cada executável, uma caixa de diálogo será exibida para você digitar o nome correto do jogo
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="20,4,0,0" FontStyle="Italic">
+                                        Exemplo: o executável é re9.exe, você digita "Resident Evil Requiem" para pesquisar corretamente nas bases.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        4. Ao clicar em OK, um indicador de progresso (0 a 100%) será exibido enquanto o GLauncher busca automaticamente:
                                     </TextBlock>
                                     <StackPanel Margin="20,6,0,0">
-                                        <TextBlock Text="• Extrair o ícone do executável" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Buscar capa, logo e fundo no SteamGridDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Buscar sinopse, gênero, nota e ano no IGDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Traduzir a descrição para Português" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Ícone do jogo no SteamGridDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Logo do jogo" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Capa (grid) para o carrossel" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Fundo (hero) animado ou estático" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Sinopse, gênero, nota e ano no IGDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="• Tradução automática da descrição para Português" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
                                     </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        5. Ao finalizar, todas as informações são carregadas automaticamente na tela
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14" Margin="0,0,0,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="💡" FontSize="16" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                <DockPanel>
+                                    <TextBlock Text="💡" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        Dica: Para que a busca automática funcione, configure sua chave API 
-                                        do SteamGridDB e credenciais IGDB através do menu de opções (⚙️).
+                                        Dica: Se clicar em "PULAR" na caixa de nome, o GLauncher usará o nome do executável 
+                                        (que pode não ser encontrado nas bases). Para melhores resultados, sempre digite o nome real do jogo.
                                     </TextBlock>
-                                </StackPanel>
+                                </DockPanel>
                             </Border>
-                        </StackPanel>
+
+                            </StackPanel>
 
                         <!-- Page 2: Biblioteca e Carrossel -->
                         <StackPanel x:Name="Page2" Visibility="Collapsed">
@@ -315,13 +327,13 @@
 
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🔑" FontSize="16" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                <DockPanel>
+                                    <TextBlock Text="✅" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        Para usar o SteamGridDB, obtenha uma API Key gratuita em steamgriddb.com. 
-                                        Ela será solicitada automaticamente na primeira busca.
+                                        A integração com o SteamGridDB é automática. As capas, logos, fundos e ícones 
+                                        são buscados automaticamente ao adicionar um jogo.
                                     </TextBlock>
-                                </StackPanel>
+                                </DockPanel>
                             </Border>
                         </StackPanel>
 
@@ -347,13 +359,13 @@
 
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🔑" FontSize="16" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                <DockPanel>
+                                    <TextBlock Text="✅" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        Necessário Client ID e Client Secret da Twitch Developer Console.
-                                        Será solicitado automaticamente na primeira busca via menu ⚙️ → "Buscar Info IGDB".
+                                        A integração com o IGDB é automática. Sinopse, gêneros, nota e ano 
+                                        são buscados e traduzidos automaticamente ao adicionar um jogo.
                                     </TextBlock>
-                                </StackPanel>
+                                </DockPanel>
                             </Border>
                         </StackPanel>
 
@@ -474,15 +486,30 @@
                                 </StackPanel>
                             </Border>
 
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="🖥️ Especificações do Computador" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ao lado dos gauges, a barra inferior também exibe as especificações do seu computador detectadas automaticamente:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• Processador" FontWeight="SemiBold"/> <Run Text="— Modelo da CPU (ex: Intel Core i7-12700K)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• Placa de Vídeo" FontWeight="SemiBold"/> <Run Text="— Modelo da GPU (ex: NVIDIA GeForce RTX 3080)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="• Memória RAM" FontWeight="SemiBold"/> <Run Text="— Total de RAM instalada (ex: 32 GB)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="• Armazenamento" FontWeight="SemiBold"/> <Run Text="— Discos detectados com espaço livre/total" Foreground="#88AACC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="💡" FontSize="16" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                <DockPanel>
+                                    <TextBlock Text="💡" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
                                         As cores dos gauges mudam conforme o nível: verde (normal),
                                         amarelo (atenção) e vermelho (crítico). Temperaturas acima de 80°C ficam vermelhas.
                                     </TextBlock>
-                                </StackPanel>
+                                </DockPanel>
                             </Border>
                         </StackPanel>
 
