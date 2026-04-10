@@ -61,16 +61,39 @@ public partial class Game : ObservableObject
     public string GenresDisplay  => !string.IsNullOrEmpty(Genres) ? Genres : "—";
     public string SummaryDisplay => !string.IsNullOrEmpty(Summary) ? Summary : "Sem descrição disponível.";
 
+    private static readonly HashSet<string> _binSubfolders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "bin", "binaries", "binary", "x64", "x86", "win64", "win32",
+        "win_x64", "win_x86", "game", "build", "release", "debug"
+    };
+
+    public string GameRootDirectory
+    {
+        get
+        {
+            var exeDir = Path.GetDirectoryName(ExecutablePath);
+            if (string.IsNullOrEmpty(exeDir))
+                return InstallDirectory ?? string.Empty;
+
+            var dir = new DirectoryInfo(exeDir);
+            while (dir.Parent != null && _binSubfolders.Contains(dir.Name))
+                dir = dir.Parent;
+
+            return dir.FullName;
+        }
+    }
+
     public string InstallSizeDisplay
     {
         get
         {
-            if (string.IsNullOrEmpty(InstallDirectory) || !Directory.Exists(InstallDirectory))
+            var root = GameRootDirectory;
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
                 return "—";
 
             try
             {
-                var dir = new DirectoryInfo(InstallDirectory);
+                var dir = new DirectoryInfo(root);
                 long bytes = dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length);
 
                 return bytes switch
