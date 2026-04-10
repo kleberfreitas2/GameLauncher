@@ -1,13 +1,13 @@
 using System.ComponentModel;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using craftersmine.SteamGridDBNet;
 using GameLauncher.Services;
+using SkiaSharp;
 
 namespace GameLauncher.Views;
 
@@ -25,17 +25,24 @@ public partial class BackgroundSearchDialog : Window
 
     public string? DownloadedBackgroundPath { get; private set; }
 
-    // Filter item helpers
     private record FilterItem<T>(string Label, T Value)
     {
         public override string ToString() => Label;
     }
 
-    // Display wrapper that holds a lazily-loaded thumbnail
-    internal sealed class DisplayImage : INotifyPropertyChanged
+    internal sealed class DisplayImage : INotifyPropertyChanged, IDisposable
     {
         public SteamGridImage Source { get; }
         private ImageSource? _thumbnail;
+        private WriteableBitmap? _wb;
+        private List<byte[]>? _framePixels;
+        private long[]? _cumulativeMs;
+        private long _totalDurationMs;
+        private int _frameWidth, _frameHeight, _frameStride;
+        private int _frameIndex;
+        private TimeSpan _lastRenderTime;
+        private double _elapsedMs;
+        private bool _renderingAttached;
 
         public ImageSource? Thumbnail
         {
@@ -45,6 +52,81 @@ public partial class BackgroundSearchDialog : Window
 
         public DisplayImage(SteamGridImage source) => Source = source;
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        public void StartAnimation(List<byte[]> framePixels, List<int> delays, int width, int height, int stride)
+        {
+            _framePixels = framePixels;
+            _frameWidth = width;
+            _frameHeight = height;
+            _frameStride = stride;
+            _frameIndex = 0;
+
+            _cumulativeMs = new long[delays.Count];
+            long total = 0;
+            for (int i = 0; i < delays.Count; i++)
+            {
+                total += delays[i];
+                _cumulativeMs[i] = total;
+            }
+            _totalDurationMs = total;
+
+            _wb = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);
+            _wb.WritePixels(new Int32Rect(0, 0, width, height), framePixels[0], stride, 0);
+            Thumbnail = _wb;
+
+            _lastRenderTime = TimeSpan.Zero;
+            _elapsedMs = 0;
+            CompositionTarget.Rendering += OnRendering;
+            _renderingAttached = true;
+        }
+
+        private void OnRendering(object? sender, EventArgs e)
+        {
+            if (_framePixels is null || _wb is null || _cumulativeMs is null) return;
+
+            var args = (RenderingEventArgs)e;
+            if (_lastRenderTime == TimeSpan.Zero)
+            {
+                _lastRenderTime = args.RenderingTime;
+                return;
+            }
+
+            var delta = (args.RenderingTime - _lastRenderTime).TotalMilliseconds;
+            _lastRenderTime = args.RenderingTime;
+            _elapsedMs += delta;
+
+            if (_totalDurationMs > 0 && _elapsedMs >= _totalDurationMs)
+                _elapsedMs %= _totalDurationMs;
+
+            int newIndex = _cumulativeMs.Length - 1;
+            for (int i = 0; i < _cumulativeMs.Length; i++)
+            {
+                if (_elapsedMs < _cumulativeMs[i])
+                {
+                    newIndex = i;
+                    break;
+                }
+            }
+
+            if (newIndex != _frameIndex)
+            {
+                _frameIndex = newIndex;
+                _wb.WritePixels(new Int32Rect(0, 0, _frameWidth, _frameHeight),
+                    _framePixels[_frameIndex], _frameStride, 0);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_renderingAttached)
+            {
+                CompositionTarget.Rendering -= OnRendering;
+                _renderingAttached = false;
+            }
+            _framePixels = null;
+            _cumulativeMs = null;
+            _wb = null;
+        }
     }
 
     public BackgroundSearchDialog(string apiKey, string gameName)
@@ -55,13 +137,12 @@ public partial class BackgroundSearchDialog : Window
         SubtitleText.Text = $"Escolha uma imagem de fundo para \"{gameName}\"";
         PopulateFilters();
         Loaded += async (_, _) => await LoadImagesAsync();
+        Closed += (_, _) => DisposeCurrentItems();
     }
 
     private void PopulateFilters()
     {
         _suppressFilterChange = true;
-
-        // Dimensions — populated based on current tab
         PopulateDimensionsForTab();
 
         // Styles
@@ -252,7 +333,6 @@ public partial class BackgroundSearchDialog : Window
 
     private async Task LoadThumbnailsAsync(List<DisplayImage> items, CancellationToken ct)
     {
-        // Use SemaphoreSlim to limit concurrent downloads
         using var semaphore = new SemaphoreSlim(6);
         var tasks = items.Select(async item =>
         {
@@ -262,9 +342,61 @@ public partial class BackgroundSearchDialog : Window
                 if (ct.IsCancellationRequested) return;
                 var url = item.Source.ThumbnailUrl ?? item.Source.Url;
                 var bytes = await _http.GetByteArrayAsync(url, ct);
-                var bitmapSource = DecodeImage(bytes);
-                if (bitmapSource is not null)
-                    Dispatcher.Invoke(() => item.Thumbnail = bitmapSource);
+                if (ct.IsCancellationRequested) return;
+
+                using var skData = SKData.CreateCopy(bytes);
+                using var codec = SKCodec.Create(skData);
+                if (codec is null) return;
+
+                var info = new SKImageInfo(codec.Info.Width, codec.Info.Height,
+                    SKColorType.Bgra8888, SKAlphaType.Premul);
+
+                if (codec.FrameCount > 1)
+                {
+                    var framePixels = new List<byte[]>(codec.FrameCount);
+                    var delays = new List<int>(codec.FrameCount);
+                    var skBitmaps = new List<SKBitmap>(codec.FrameCount);
+
+                    for (int i = 0; i < codec.FrameCount; i++)
+                    {
+                        var fi = codec.FrameInfo[i];
+                        var frameBmp = new SKBitmap(info);
+
+                        if (fi.RequiredFrame >= 0 && fi.RequiredFrame < skBitmaps.Count)
+                            skBitmaps[fi.RequiredFrame].CopyTo(frameBmp);
+
+                        codec.GetPixels(info, frameBmp.GetPixels(), new SKCodecOptions(i));
+                        skBitmaps.Add(frameBmp);
+
+                        var pixels = new byte[frameBmp.RowBytes * frameBmp.Height];
+                        Marshal.Copy(frameBmp.GetPixels(), pixels, 0, pixels.Length);
+                        framePixels.Add(pixels);
+                        delays.Add(fi.Duration > 0 ? fi.Duration : 100);
+                    }
+
+                    foreach (var b in skBitmaps) b.Dispose();
+                    if (ct.IsCancellationRequested) return;
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (ct.IsCancellationRequested) return;
+                        item.StartAnimation(framePixels, delays, info.Width, info.Height, info.RowBytes);
+                    });
+                }
+                else
+                {
+                    using var bmp = new SKBitmap(info);
+                    codec.GetPixels(info, bmp.GetPixels());
+
+                    var pixels = new byte[bmp.RowBytes * bmp.Height];
+                    Marshal.Copy(bmp.GetPixels(), pixels, 0, pixels.Length);
+                    if (ct.IsCancellationRequested) return;
+
+                    var bs = BitmapSource.Create(info.Width, info.Height, 96, 96,
+                        PixelFormats.Pbgra32, null, pixels, bmp.RowBytes);
+                    bs.Freeze();
+                    Dispatcher.Invoke(() => item.Thumbnail = bs);
+                }
             }
             catch { }
             finally { semaphore.Release(); }
@@ -272,33 +404,13 @@ public partial class BackgroundSearchDialog : Window
         await Task.WhenAll(tasks);
     }
 
-    private static BitmapSource? DecodeImage(byte[] bytes)
-    {
-        // Use System.Drawing (GDI+) which supports WEBP on Windows 10+
-        using var inputStream = new MemoryStream(bytes);
-        using var bitmap = new System.Drawing.Bitmap(inputStream);
-
-        // Re-encode as PNG and load into WPF BitmapImage
-        using var pngStream = new MemoryStream();
-        bitmap.Save(pngStream, ImageFormat.Png);
-        pngStream.Position = 0;
-
-        var bi = new BitmapImage();
-        bi.BeginInit();
-        bi.StreamSource = pngStream;
-        bi.CacheOption = BitmapCacheOption.OnLoad;
-        bi.EndInit();
-        bi.Freeze();
-        return bi;
-    }
-
     private void SetLoading(bool loading)
     {
-        // Cancel any in-progress thumbnail downloads
         if (loading)
         {
             _thumbnailCts?.Cancel();
             _thumbnailCts = null;
+            DisposeCurrentItems();
         }
 
         LoadingBar.Visibility = loading ? Visibility.Visible : Visibility.Collapsed;
@@ -307,6 +419,15 @@ public partial class BackgroundSearchDialog : Window
             StatusText.Text       = "Buscando imagens no SteamGridDB...";
             StatusText.Visibility = Visibility.Visible;
             ImageList.Visibility  = Visibility.Collapsed;
+        }
+    }
+
+    private void DisposeCurrentItems()
+    {
+        if (ImageList.ItemsSource is IEnumerable<DisplayImage> items)
+        {
+            foreach (var item in items)
+                item.Dispose();
         }
     }
 }

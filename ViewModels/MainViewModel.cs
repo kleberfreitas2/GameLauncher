@@ -44,6 +44,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string cpuTempText = "--°C";
     [ObservableProperty] private string gpuTempText = "--°C";
 
+    [ObservableProperty] private string cpuName = "";
+    [ObservableProperty] private string gpuName = "";
+    [ObservableProperty] private string ramTotal = "";
+    [ObservableProperty] private ObservableCollection<string> storageDrives = [];
+
     [ObservableProperty] private Game? selectedGame;
     [ObservableProperty] private Game? detailGame;
     [ObservableProperty] private bool showDetailPanel;
@@ -106,6 +111,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RamUsage = m.RamUsage;
             CpuTempText = m.CpuTemp > 0 ? $"{m.CpuTemp:F0}°C" : "--°C";
             GpuTempText = m.GpuTemp > 0 ? $"{m.GpuTemp:F0}°C" : "--°C";
+
+            if (!string.IsNullOrEmpty(m.CpuName) && string.IsNullOrEmpty(CpuName))
+                CpuName = m.CpuName;
+            if (!string.IsNullOrEmpty(m.GpuName) && string.IsNullOrEmpty(GpuName))
+                GpuName = m.GpuName;
+            if (!string.IsNullOrEmpty(m.RamTotal) && string.IsNullOrEmpty(RamTotal))
+                RamTotal = m.RamTotal;
+            if (m.StorageDrives.Count > 0 && StorageDrives.Count == 0)
+            {
+                foreach (var d in m.StorageDrives)
+                    StorageDrives.Add(d);
+            }
         });
     }
 
@@ -527,6 +544,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenTheme()
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void OpenHelp()
+    {
+        var dialog = new HelpDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
     }
 

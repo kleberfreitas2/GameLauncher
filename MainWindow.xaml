@@ -1,524 +1,651 @@
 ﻿<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" xmlns:converters="clr-namespace:GameLauncher.Converters" Title="GLauncher" Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
-  <Window.Resources>
-    <Style x:Key="HeaderActionButton" TargetType="Button">
-      <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Padding" Value="20,10"/>
-      <Setter Property="FontSize" Value="13"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="Button">
-            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-              <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="2" Opacity="0.35"/></Border.Effect>
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.FontSize="{TemplateBinding FontSize}" TextElement.FontWeight="{TemplateBinding FontWeight}" TextElement.Foreground="{TemplateBinding Foreground}"/>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Opacity" Value="0.87"/></Trigger>
-              <Trigger Property="IsPressed" Value="True"><Setter TargetName="bd" Property="Opacity" Value="0.72"/></Trigger>
-              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="bd" Property="Opacity" Value="0.4"/></Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-  </Window.Resources>
-  <Grid>
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <!-- Header PS5 Style -->
-    <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="16,8">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-
-        <!-- Left: Logo + Nav tabs -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-          <Image Source="Assets/icon.png" Width="36" Height="36" Margin="0,0,14,0" RenderOptions.BitmapScalingMode="HighQuality"/>
-          <TextBlock FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,24,0">
-            <Run Text="G" Foreground="{DynamicResource AccentGreenBrush}"/><Run Text="Launcher" Foreground="White"/>
-          </TextBlock>
-          <Border Background="White" CornerRadius="6" Padding="10,5" Margin="0,0,8,0" VerticalAlignment="Center" MaxWidth="350" MinWidth="200">
-            <DockPanel>
-              <md:PackIcon Kind="Magnify" Width="16" Height="16" Foreground="#0088FF" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="0,0,8,0"/>
-              <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                       Background="Transparent" BorderThickness="0" Foreground="#0077EE" FontSize="13" FontWeight="Medium"
-                       VerticalAlignment="Center" CaretBrush="#0088FF"
-                       md:HintAssist.Hint="Buscar jogo..."
-                       md:HintAssist.Foreground="#AABBDD"
-                       md:TextFieldAssist.DecorationVisibility="Hidden"/>
-            </DockPanel>
-          </Border>
-        </StackPanel>
-
-        <!-- Right: Action buttons + PS5-style icons + clock + avatar -->
-        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-          <Button Content="+ ADICIONAR JOGO" Command="{Binding AddGameCommand}" Style="{StaticResource HeaderActionButton}" Margin="0,0,12,0"/>
-          <Button Content="Tema" Command="{Binding OpenThemeCommand}" Style="{StaticResource HeaderActionButton}" Margin="0,0,18,0"/>
-          <!-- Gamepad connection icon -->
-          <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
+    <Window.Resources>
+        <Style x:Key="HeaderActionButton" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#1A1A2E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="22,11"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="22" Padding="{TemplateBinding Padding}"
+                    RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.5"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.FontSize="{TemplateBinding FontSize}" TextElement.FontWeight="{TemplateBinding FontWeight}" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#EEEEF4"/>
+                                <Setter TargetName="bd" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#D8D8E2"/>
+                                <Setter TargetName="bd" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="252*"/>
+            <RowDefinition Height="275*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- Header PS5 Style -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="16,8">
             <Grid>
-              <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#556677"
-                           VerticalAlignment="Center">
-                <md:PackIcon.Style>
-                  <Style TargetType="md:PackIcon">
-                    <Setter Property="Visibility" Value="Visible"/>
-                    <Style.Triggers>
-                      <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                      </DataTrigger>
-                    </Style.Triggers>
-                  </Style>
-                </md:PackIcon.Style>
-              </md:PackIcon>
-              <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#00E676"
-                           VerticalAlignment="Center">
-                <md:PackIcon.Style>
-                  <Style TargetType="md:PackIcon">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Style.Triggers>
-                      <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
-                        <Setter Property="Visibility" Value="Visible"/>
-                      </DataTrigger>
-                    </Style.Triggers>
-                  </Style>
-                </md:PackIcon.Style>
-                <md:PackIcon.Effect>
-                  <DropShadowEffect Color="#00E676" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
-                </md:PackIcon.Effect>
-              </md:PackIcon>
-            </Grid>
-          </Border>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-          <!-- Settings gear icon with game options -->
-          <Button x:Name="BtnGear" Click="BtnGear_Click" VerticalAlignment="Center" Margin="0,0,16,0"
+                <!-- Left: Logo -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="Assets/icon.png" Width="36" Height="36" Margin="0,0,14,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock FontSize="17" FontWeight="Bold" VerticalAlignment="Center">
+            <Run Text="G" Foreground="{DynamicResource AccentGreenBrush}"/><Run Text="Launcher" Foreground="White"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Center: Search field (pill style) — hidden for now -->
+                <!--
+                <Border Grid.Column="1" Background="White" CornerRadius="22" Padding="18,0"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        MinWidth="280" MaxWidth="480">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.5"/>
+                    </Border.Effect>
+                    <DockPanel VerticalAlignment="Center">
+                        <md:PackIcon Kind="Magnify" Width="18" Height="18" Foreground="#1A1A2E" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="0,0,10,0"/>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="#1A1A2E" FontSize="13" FontWeight="Bold" FontFamily="Segoe UI"
+                                 CaretBrush="#1A1A2E" VerticalAlignment="Center"
+                                 Padding="0,8"
+                                 md:HintAssist.Hint="Buscar jogo..."
+                                 md:HintAssist.Foreground="#8899AA"
+                                 md:TextFieldAssist.DecorationVisibility="Hidden"/>
+                    </DockPanel>
+                </Border>
+                -->
+
+                <!-- Right: Action buttons + PS5-style icons + clock + avatar -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="+ ADICIONAR JOGO" Command="{Binding AddGameCommand}" Style="{StaticResource HeaderActionButton}" Margin="0,0,12,0"/>
+                    <Button Content="TEMA" Command="{Binding OpenThemeCommand}" Style="{StaticResource HeaderActionButton}" Margin="0,0,12,0"/>
+                    <Button Command="{Binding OpenHelpCommand}"
+                            VerticalAlignment="Center" Margin="0,0,18,0"
+                            Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
+                            ToolTip="Manual de utilização">
+                        <Button.Template>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border x:Name="HelpBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                    <md:PackIcon Kind="HelpCircle" Width="24" Height="24" Foreground="#2196F3"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="HelpBd" Property="Background" Value="#22FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <!-- Gamepad connection icon -->
+                    <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
+                        <Grid>
+                            <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#556677" VerticalAlignment="Center">
+                                <md:PackIcon.Style>
+                                    <Style TargetType="md:PackIcon">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </md:PackIcon.Style>
+                            </md:PackIcon>
+                            <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#00E676"
+                           VerticalAlignment="Center">
+                                <md:PackIcon.Style>
+                                    <Style TargetType="md:PackIcon">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </md:PackIcon.Style>
+                                <md:PackIcon.Effect>
+                                    <DropShadowEffect Color="#00E676" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
+                                </md:PackIcon.Effect>
+                            </md:PackIcon>
+                        </Grid>
+                    </Border>
+                    <Button x:Name="BtnGear" Click="BtnGear_Click"
+                  VerticalAlignment="Center" Margin="0,0,16,0"
                   Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                   ToolTip="Opções do jogo selecionado">
-            <Button.Template>
-              <ControlTemplate TargetType="Button">
-                <Border x:Name="GearBd" Background="Transparent" CornerRadius="14" Padding="4">
-                  <md:PackIcon Kind="CogOutline" Width="20" Height="20" Foreground="#8899AA"/>
-                </Border>
-                <ControlTemplate.Triggers>
-                  <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="GearBd" Property="Background" Value="#22FFFFFF"/>
-                  </Trigger>
-                </ControlTemplate.Triggers>
-              </ControlTemplate>
-            </Button.Template>
-            <Button.ContextMenu>
-              <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                <MenuItem Header="Alternar Favorito"
+                        <Button.Template>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border x:Name="GearBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                    <md:PackIcon Kind="CogOutline" Width="20" Height="20" Foreground="#8899AA"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="GearBd" Property="Background" Value="#22FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <Button.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Mode=Self}}">
+                                <MenuItem Header="Alternar Favorito"
                           Command="{Binding ToggleFavoriteCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <MenuItem Header="Alterar Imagem"
+                                <MenuItem Header="Alterar Imagem"
                           Command="{Binding ChangeImageCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <MenuItem Header="Buscar Capa Online"
+                                <MenuItem Header="Buscar Capa Online"
                           Command="{Binding SearchCoverCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <MenuItem Header="Buscar Fundo (Screenshot/Key Art)"
+                                <MenuItem Header="Buscar Fundo (Screenshot/Key Art)"
                           Command="{Binding SearchBackgroundCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <MenuItem Header="Buscar Info IGDB"
+                                <MenuItem Header="Buscar Info IGDB"
                           Command="{Binding FetchIgdbInfoCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <MenuItem Header="Renomear"
+                                <MenuItem Header="Renomear"
                           Command="{Binding RenameGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                <Separator/>
-                <MenuItem Header="Remover Jogo"
+                                <Separator/>
+                                <MenuItem Header="Remover Jogo"
                           Command="{Binding RemoveGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-              </ContextMenu>
-            </Button.ContextMenu>
-          </Button>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
 
-          <!-- Clock -->
-          <TextBlock Text="{Binding CurrentTime}" FontSize="16" FontWeight="SemiBold"
+                    <!-- Settings gear icon with game options -->
+
+                    <!-- Clock -->
+                    <TextBlock Text="{Binding CurrentTime}" FontSize="16" FontWeight="SemiBold"
                      Foreground="White" VerticalAlignment="Center" Margin="0,0,16,0">
-            <TextBlock.Effect>
-              <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.5"/>
-            </TextBlock.Effect>
-          </TextBlock>
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.5"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
 
-          <!-- Avatar -->
-          <Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True"
+                    <!-- Avatar -->
+                    <Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True"
                   Background="#22334455" Cursor="Hand" BorderThickness="2" BorderBrush="#33FFFFFF"
                   ToolTip="Clique para alterar avatar"
                   MouseLeftButtonUp="Avatar_Click">
-            <Grid>
-              <md:PackIcon Kind="AccountCircle" Width="28" Height="28" Foreground="#556677"
+                        <Grid>
+                            <md:PackIcon Kind="AccountCircle" Width="28" Height="28" Foreground="#556677"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            Visibility="{Binding HasNoAvatar, Converter={StaticResource BoolToVisibility}}"/>
-              <Image Source="{Binding AvatarPath, Converter={StaticResource PathToImageConverter}, ConverterParameter=38}"
+                            <Image Source="{Binding AvatarPath, Converter={StaticResource PathToImageConverter}, ConverterParameter=38}"
                      Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
                      Visibility="{Binding HasAvatar, Converter={StaticResource BoolToVisibility}}"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Grid>
-          </Border>
-        </StackPanel>
-      </Grid>
-    </Border>
-    <Grid Grid.Row="1">
-      <!-- Fixed background image of selected game (supports animated WEBP/GIF) -->
-      <ctrl:AnimatedImage ImagePath="{Binding DetailGame.EffectiveBackgroundPath}"
-                    Stretch="UniformToFill" Opacity="0.90"
-             RenderOptions.BitmapScalingMode="HighQuality"
-             VerticalAlignment="Center" HorizontalAlignment="Center"
-             Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}"
-             IsHitTestVisible="False"/>
-      <!-- Gradient overlay for readability -->
-      <Border IsHitTestVisible="False"
+        </Border>
+        <Grid Margin="0,55,0,0" Grid.RowSpan="3">
+            <!-- Fixed background image of selected game (supports animated WEBP/GIF) -->
+            <ctrl:AnimatedImage x:Name="BackgroundAnim"
+                          ImagePath="{Binding DetailGame.EffectiveBackgroundPath}"
+                          Stretch="UniformToFill" Opacity="0.90"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   UseLayoutRounding="True"
+                   VerticalAlignment="Center" HorizontalAlignment="Center"
+                   Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}"
+                   IsHitTestVisible="False"/>
+            <!-- Gradient overlay for readability -->
+            <Border IsHitTestVisible="False"
               Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}">
-        <Border.Background>
-          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#10000000" Offset="0"/>
-            <GradientStop Color="#66080810" Offset="0.55"/>
-            <GradientStop Color="#DD0D0D15" Offset="1"/>
-          </LinearGradientBrush>
-        </Border.Background>
-      </Border>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#10000000" Offset="0"/>
+                        <GradientStop Color="#66080810" Offset="0.55"/>
+                        <GradientStop Color="#DD0D0D15" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
 
-      <!-- Empty state when no games -->
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="1">
-        <StackPanel.Style>
-          <Style TargetType="StackPanel">
-            <Setter Property="Visibility" Value="Collapsed"/>
-            <Style.Triggers>
-              <DataTrigger Binding="{Binding Games.Count}" Value="0">
-                <Setter Property="Visibility" Value="Visible"/>
-              </DataTrigger>
-            </Style.Triggers>
-          </Style>
-        </StackPanel.Style>
-        <md:PackIcon Kind="GamepadVariantOutline" Width="80" Height="80" Foreground="#2A2A3A" HorizontalAlignment="Center"/>
-        <TextBlock Text="Nenhum jogo adicionado" FontSize="18" Foreground="#555566" HorizontalAlignment="Center" Margin="0,16,0,0"/>
-        <TextBlock Text="Clique em + ADICIONAR JOGO para começar" FontSize="12" Foreground="#445566" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-      </StackPanel>
+            <!-- Loading overlay — blocks clicks and shows progress while decoding animated background -->
+            <Border Panel.ZIndex="99"
+              Visibility="{Binding IsLoading, ElementName=BackgroundAnim, Converter={StaticResource BoolToVisibility}}"
+              Background="#99000000">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="320">
+                    <TextBlock Text="Carregando animação..." FontSize="14" Foreground="#CCDDEE"
+                     HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <ProgressBar Value="{Binding LoadingProgress, ElementName=BackgroundAnim, Mode=OneWay}"
+                       Minimum="0" Maximum="100" Height="8"
+                       Foreground="{DynamicResource AccentBrush}"
+                       Background="#33FFFFFF"/>
+                    <TextBlock Foreground="#99AABB" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0">
+                        <TextBlock.Text>
+                            <Binding Path="LoadingProgress" ElementName="BackgroundAnim" StringFormat="{}{0:0}%" Mode="OneWay"/>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
 
-      <!-- PS5-style content layout -->
-      <Grid Panel.ZIndex="2">
-        <Grid.Style>
-          <Style TargetType="Grid">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-              <DataTrigger Binding="{Binding Games.Count}" Value="0">
-                <Setter Property="Visibility" Value="Collapsed"/>
-              </DataTrigger>
-            </Style.Triggers>
-          </Style>
-        </Grid.Style>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="*"/>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+            <!-- Empty state when no games -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="1">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Games.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <md:PackIcon Kind="GamepadVariantOutline" Width="80" Height="80" Foreground="#2A2A3A" HorizontalAlignment="Center"/>
+                <TextBlock Text="Nenhum jogo adicionado" FontSize="18" Foreground="#555566" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                <TextBlock Text="Clique em + ADICIONAR JOGO para começar" FontSize="12" Foreground="#445566" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
 
-        <!-- Row 0: Game Title/Logo + Action Buttons -->
-        <Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,12">
-          <Grid.Style>
-            <Style TargetType="Grid">
-              <Setter Property="Visibility" Value="Collapsed"/>
-              <Style.Triggers>
-                <DataTrigger Binding="{Binding ShowDetailPanel}" Value="True">
-                  <Setter Property="Visibility" Value="Visible"/>
-                </DataTrigger>
-              </Style.Triggers>
-            </Style>
-          </Grid.Style>
-          <StackPanel>
-            <!-- Game Logo -->
-            <Image Source="{Binding DetailGame.LogoPath, Converter={StaticResource PathToImageConverter}}"
+            <!-- PS5-style content layout -->
+            <Grid Panel.ZIndex="2">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Games.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Row 0: Game Title/Logo + Action Buttons -->
+                <Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,12">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowDetailPanel}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <StackPanel>
+                        <!-- Game Logo -->
+                        <Image Source="{Binding DetailGame.LogoPath, Converter={StaticResource PathToImageConverter}}"
                    MaxHeight="100" MaxWidth="420"
                    Stretch="Uniform" HorizontalAlignment="Left"
                    Margin="0,0,0,10"
                    RenderOptions.BitmapScalingMode="HighQuality"
                    Visibility="{Binding DetailGame.HasLogo, Converter={StaticResource BoolToVisibility}}">
-              <Image.Effect>
-                <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.85"/>
-              </Image.Effect>
-            </Image>
-            <!-- Text fallback when no logo -->
-            <TextBlock Text="{Binding DetailGame.DisplayName}"
+                            <Image.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.85"/>
+                            </Image.Effect>
+                        </Image>
+                        <!-- Text fallback when no logo -->
+                        <TextBlock Text="{Binding DetailGame.DisplayName}"
                        FontSize="38" FontWeight="Bold" Foreground="White"
                        Margin="0,0,0,10" TextWrapping="Wrap"
                        Visibility="{Binding DetailGame.HasNoLogo, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock.Effect>
-                <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="3" Opacity="0.9"/>
-              </TextBlock.Effect>
-            </TextBlock>
-            <!-- Action buttons row -->
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-              <Button Command="{Binding LaunchDetailGameCommand}"
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="3" Opacity="0.9"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <!-- Action buttons row -->
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Command="{Binding LaunchDetailGameCommand}"
                       Cursor="Hand" BorderThickness="0">
-                <Button.Template>
-                  <ControlTemplate TargetType="Button">
-                    <Border x:Name="JogarBd" CornerRadius="22" Padding="22,11"
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="JogarBd" CornerRadius="22" Padding="22,11"
                             Background="White"
                             RenderTransformOrigin="0.5,0.5">
-                      <Border.RenderTransform>
-                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                      </Border.RenderTransform>
-                      <Border.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.5"/>
-                      </Border.Effect>
-                      <DockPanel VerticalAlignment="Center">
-                        <Path Data="M0,0 L12,8 0,16Z" Fill="#1A1A2E" Width="10" Height="13"
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                            </Border.RenderTransform>
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.5"/>
+                                            </Border.Effect>
+                                            <DockPanel VerticalAlignment="Center">
+                                                <Path Data="M0,0 L12,8 0,16Z" Fill="#1A1A2E" Width="10" Height="13"
                               Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="JOGAR" FontSize="13" FontWeight="Bold"
+                                                <TextBlock Text="JOGAR" FontSize="13" FontWeight="Bold"
                                    FontFamily="Segoe UI"
                                    Foreground="#1A1A2E" VerticalAlignment="Center"/>
-                      </DockPanel>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="JogarBd" Property="Background" Value="#EEEEF4"/>
-                        <Setter TargetName="JogarBd" Property="RenderTransform">
-                          <Setter.Value>
-                            <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                          </Setter.Value>
-                        </Setter>
-                      </Trigger>
-                      <Trigger Property="IsPressed" Value="True">
-                        <Setter TargetName="JogarBd" Property="Background" Value="#D8D8E2"/>
-                        <Setter TargetName="JogarBd" Property="RenderTransform">
-                          <Setter.Value>
-                            <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                          </Setter.Value>
-                        </Setter>
-                      </Trigger>
-                    </ControlTemplate.Triggers>
-                  </ControlTemplate>
-                </Button.Template>
-              </Button>
-            </StackPanel>
-          </StackPanel>
-        </Grid>
+                                            </DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="JogarBd" Property="Background" Value="#EEEEF4"/>
+                                                <Setter TargetName="JogarBd" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="JogarBd" Property="Background" Value="#D8D8E2"/>
+                                                <Setter TargetName="JogarBd" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
 
-        <!-- Row 1: Horizontal Game Carousel (PS5 style) -->
-        <Border Grid.Row="1" Padding="30,10,30,8">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-              <GradientStop Color="#33000010" Offset="0"/>
-              <GradientStop Color="#77080815" Offset="1"/>
-            </LinearGradientBrush>
-          </Border.Background>
-          <StackPanel>
-            <TextBlock Text="BIBLIOTECA" FontSize="11" FontWeight="SemiBold" Foreground="#7788AA" Margin="14,0,0,8"/>
-            <ListBox ItemsSource="{Binding GamesView}"
+                <!-- Row 1: Horizontal Game Carousel (PS5 style) -->
+                <Border Grid.Row="1" Padding="30,10,30,8">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#33000010" Offset="0"/>
+                            <GradientStop Color="#77080815" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel>
+                        <ListBox ItemsSource="{Binding GamesView}"
                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
                      VirtualizingPanel.IsVirtualizing="True"
                      x:Name="GameCarousel">
-              <ListBox.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <VirtualizingStackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-              </ListBox.ItemsPanel>
-              <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                  <Setter Property="Padding" Value="0"/>
-                  <Setter Property="Margin" Value="6,4"/>
-                  <Setter Property="Template">
-                    <Setter.Value>
-                      <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Bd" Width="130" Height="175"
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="6,4"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd" Width="155" Height="210"
                                 CornerRadius="10" ClipToBounds="True"
                                 Background="#44000000" Cursor="Hand"
                                 BorderThickness="3" BorderBrush="Transparent"
                                 RenderTransformOrigin="0.5,0.5">
-                          <Border.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1"/>
-                          </Border.RenderTransform>
-                          <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                          <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="#55FFFFFF"/>
-                            <Setter TargetName="Bd" Property="RenderTransform">
-                              <Setter.Value>
-                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                              </Setter.Value>
-                            </Setter>
-                          </Trigger>
-                          <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="#00AAFF"/>
-                            <Setter TargetName="Bd" Property="Effect">
-                              <Setter.Value>
-                                <DropShadowEffect Color="#00AAFF" BlurRadius="16" ShadowDepth="0" Opacity="0.6"/>
-                              </Setter.Value>
-                            </Setter>
-                            <Setter TargetName="Bd" Property="RenderTransform">
-                              <Setter.Value>
-                                <ScaleTransform ScaleX="1.08" ScaleY="1.08"/>
-                              </Setter.Value>
-                            </Setter>
-                          </Trigger>
-                        </ControlTemplate.Triggers>
-                      </ControlTemplate>
-                    </Setter.Value>
-                  </Setter>
-                </Style>
-              </ListBox.ItemContainerStyle>
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <Grid Background="#1A2533">
-                    <md:PackIcon Kind="GamepadVariant" Width="30" Height="30"
+                                                    <Border.RenderTransform>
+                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                                    </Border.RenderTransform>
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="#55FFFFFF"/>
+                                                        <Setter TargetName="Bd" Property="RenderTransform">
+                                                            <Setter.Value>
+                                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="#00AAFF"/>
+                                                        <Setter TargetName="Bd" Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect Color="#00AAFF" BlurRadius="16" ShadowDepth="0" Opacity="0.6"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Setter TargetName="Bd" Property="RenderTransform">
+                                                            <Setter.Value>
+                                                                <ScaleTransform ScaleX="1.08" ScaleY="1.08"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Background="#1A2533">
+                                        <md:PackIcon Kind="GamepadVariant" Width="30" Height="30"
                                  Foreground="#334455" HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Visibility="{Binding HasNoImage, Converter={StaticResource BoolToVisibility}}"/>
-                    <Image Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=130}"
+                                        <Image Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=155}"
                            Stretch="UniformToFill"
                            Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility}}"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <md:PackIcon Kind="Star" Width="16" Height="16" Foreground="#FFD700"
+                                        <md:PackIcon Kind="Star" Width="16" Height="16" Foreground="#FFD700"
                                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
                                  Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}">
-                      <md:PackIcon.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.7"/>
-                      </md:PackIcon.Effect>
-                    </md:PackIcon>
-                    <Border VerticalAlignment="Bottom" Padding="6,3">
-                      <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                          <GradientStop Color="Transparent" Offset="0"/>
-                          <GradientStop Color="#CC000000" Offset="1"/>
-                        </LinearGradientBrush>
-                      </Border.Background>
-                      <TextBlock Text="{Binding DisplayName}" FontSize="10" FontWeight="SemiBold"
+                                            <md:PackIcon.Effect>
+                                                <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.7"/>
+                                            </md:PackIcon.Effect>
+                                        </md:PackIcon>
+                                        <Border VerticalAlignment="Bottom" Padding="6,5" Background="#BB000000">
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="10" FontWeight="SemiBold"
                                  Foreground="White" TextTrimming="CharacterEllipsis"
                                  HorizontalAlignment="Center">
-                        <TextBlock.Effect>
-                          <DropShadowEffect Color="Black" BlurRadius="3" ShadowDepth="1" Opacity="0.8"/>
-                        </TextBlock.Effect>
-                      </TextBlock>
-                    </Border>
-                  </Grid>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </StackPanel>
-        </Border>
+                                                <TextBlock.Effect>
+                                                    <DropShadowEffect Color="Black" BlurRadius="3" ShadowDepth="1" Opacity="0.8"/>
+                                                </TextBlock.Effect>
+                                            </TextBlock>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
 
-        <!-- Row 2: Details + Description -->
-        <Border Grid.Row="2" Padding="50,12,50,14">
-          <Border.Background>
-            <SolidColorBrush Color="#0A0A12" Opacity="0.88"/>
-          </Border.Background>
-          <Border.Style>
-            <Style TargetType="Border">
-              <Setter Property="Visibility" Value="Collapsed"/>
-              <Style.Triggers>
-                <DataTrigger Binding="{Binding ShowDetailPanel}" Value="True">
-                  <Setter Property="Visibility" Value="Visible"/>
-                </DataTrigger>
-              </Style.Triggers>
-            </Style>
-          </Border.Style>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="24"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-              <TextBlock Text="Detalhes" FontSize="14" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8">
-                <TextBlock.Effect>
-                  <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
-                </TextBlock.Effect>
-              </TextBlock>
-              <Border Background="#88161622" CornerRadius="8" Padding="14,10">
-                <StackPanel>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Atividade Recente" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.LastPlayedText}" FontSize="11" Foreground="#AABBCC"/>
-                  </Grid>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Local de instalação" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallDirectory}" FontSize="11"
+                <!-- Row 2: Details + Description -->
+                <Border Grid.Row="2" Padding="50,12,50,14">
+                    <Border.Background>
+                        <SolidColorBrush Color="#0A0A12" Opacity="0.88"/>
+                    </Border.Background>
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowDetailPanel}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Detalhes" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                            <Border Background="#88161622" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Atividade Recente" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.LastPlayedText}" FontSize="13" Foreground="#AABBCC"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Local de instalação" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallDirectory}" FontSize="13"
                                Foreground="#5599CC" TextTrimming="CharacterEllipsis"
                                ToolTip="{Binding DetailGame.InstallDirectory}"/>
-                  </Grid>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Tamanho" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallSizeDisplay}" FontSize="11" Foreground="#5599CC"/>
-                  </Grid>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Plataforma" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="PC (Windows)" FontSize="11" Foreground="#5599CC"/>
-                  </Grid>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Gênero" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.GenresDisplay}" FontSize="11" Foreground="#5599CC" TextWrapping="Wrap"/>
-                  </Grid>
-                  <Grid Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Rating IGDB" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.RatingDisplay}" FontSize="11" Foreground="#FFD700"/>
-                  </Grid>
-                  <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Lançamento" FontSize="11" Foreground="#778899"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DetailGame.YearDisplay}" FontSize="11" Foreground="#5599CC"/>
-                  </Grid>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Tamanho" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallSizeDisplay}" FontSize="13" Foreground="#5599CC"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Plataforma" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="PC (Windows)" FontSize="13" Foreground="#5599CC"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Gênero" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.GenresDisplay}" FontSize="13" Foreground="#5599CC" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Rating IGDB" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.RatingDisplay}" FontSize="13" Foreground="#FFD700"/>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Lançamento" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.YearDisplay}" FontSize="13" Foreground="#5599CC"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Descrição" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                            <Border Background="#88161622" CornerRadius="8" Padding="14,10">
+                                <TextBlock Text="{Binding DetailGame.SummaryDisplay}" FontSize="13"
+                           Foreground="#AABBCC" TextWrapping="Wrap" LineHeight="20"
+                           MaxHeight="160" TextTrimming="CharacterEllipsis"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+        <Border Grid.Row="3" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status text -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
+                    <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10" Margin="0,2,0,0"/>
                 </StackPanel>
-              </Border>
-            </StackPanel>
-            <StackPanel Grid.Column="2">
-              <TextBlock Text="Descrição" FontSize="14" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8">
-                <TextBlock.Effect>
-                  <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
-                </TextBlock.Effect>
-              </TextBlock>
-              <Border Background="#88161622" CornerRadius="8" Padding="14,10">
-                <TextBlock Text="{Binding DetailGame.SummaryDisplay}" FontSize="11"
-                           Foreground="#AABBCC" TextWrapping="Wrap" LineHeight="18"
-                           MaxHeight="140" TextTrimming="CharacterEllipsis"/>
-              </Border>
-            </StackPanel>
-          </Grid>
+
+                <!-- Hardware Descriptions -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <!-- Processador -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Processador"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
+                        <!-- Placa de Vídeo -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de Vídeo"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
+                        <!-- Memória -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Memória"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamTotal}" FontSize="10" Foreground="#8899AA" VerticalAlignment="Center"/>
+                        <!-- Armazenamentos -->
+                        <TextBlock Grid.Row="3" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Top"><Run Text="Armazenamento"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding StorageDrives}" VerticalAlignment="Center">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" MaxWidth="320"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Hardware Gauges -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <!-- CPU Usage -->
+                    <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" SubLabel="{Binding CpuTempText}" Margin="4,0"/>
+                    <!-- GPU Usage -->
+                    <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" SubLabel="{Binding GpuTempText}" Margin="4,0"/>
+                    <!-- CPU Temp -->
+                    <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0"/>
+                    <!-- GPU Temp -->
+                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0"/>
+                    <!-- RAM -->
+                    <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="4,0"/>
+                </StackPanel>
+            </Grid>
         </Border>
-      </Grid>
     </Grid>
-    <Border Grid.Row="2" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,6">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-
-        <!-- Status text -->
-        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
-          <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
-          <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10" Margin="0,2,0,0"/>
-        </StackPanel>
-
-        <!-- Hardware Gauges -->
-        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-          <!-- CPU Usage -->
-          <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" SubLabel="{Binding CpuTempText}" Margin="4,0"/>
-          <!-- GPU Usage -->
-          <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" SubLabel="{Binding GpuTempText}" Margin="4,0"/>
-          <!-- CPU Temp -->
-          <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0"/>
-          <!-- GPU Temp -->
-          <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0"/>
-          <!-- RAM -->
-          <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="4,0"/>
-        </StackPanel>
-      </Grid>
-    </Border>
-  </Grid>
 </Window>

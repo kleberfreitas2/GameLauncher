@@ -1,4 +1,5 @@
 using System;
+using System.Management;
 using System.Timers;
 using LibreHardwareMonitor.Hardware;
 
@@ -11,6 +12,10 @@ public class HardwareMetrics
     public float GpuUsage { get; init; }
     public float GpuTemp { get; init; }
     public float RamUsage { get; init; }
+    public string CpuName { get; init; } = "";
+    public string GpuName { get; init; } = "";
+    public string RamTotal { get; init; } = "";
+    public List<string> StorageDrives { get; init; } = [];
 }
 
 public sealed class HardwareMonitorService : IDisposable
@@ -18,6 +23,7 @@ public sealed class HardwareMonitorService : IDisposable
     private readonly Computer _computer;
     private readonly System.Timers.Timer _timer;
     private bool _disposed;
+    private readonly List<string> _storageDrives;
 
     public event Action<HardwareMetrics>? MetricsUpdated;
 
@@ -33,6 +39,8 @@ public sealed class HardwareMonitorService : IDisposable
         try { _computer.Open(); }
         catch { }
 
+        _storageDrives = QueryStorageDrives();
+
         _timer = new System.Timers.Timer(intervalMs);
         _timer.Elapsed += OnTimerElapsed;
     }
@@ -47,6 +55,8 @@ public sealed class HardwareMonitorService : IDisposable
             float cpuUsage = 0, cpuTemp = 0;
             float gpuUsage = 0, gpuTemp = 0;
             float ramUsage = 0;
+            string cpuName = "", gpuName = "";
+            float ramUsed = 0, ramAvailable = 0;
 
             foreach (var hw in _computer.Hardware)
             {
@@ -57,6 +67,7 @@ public sealed class HardwareMonitorService : IDisposable
                 switch (hw.HardwareType)
                 {
                     case HardwareType.Cpu:
+                        if (string.IsNullOrEmpty(cpuName)) cpuName = hw.Name;
                         foreach (var sensor in hw.Sensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Total"))
@@ -77,6 +88,7 @@ public sealed class HardwareMonitorService : IDisposable
                     case HardwareType.GpuNvidia:
                     case HardwareType.GpuAmd:
                     case HardwareType.GpuIntel:
+                        if (string.IsNullOrEmpty(gpuName)) gpuName = hw.Name;
                         foreach (var sensor in hw.Sensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Core"))
@@ -90,11 +102,18 @@ public sealed class HardwareMonitorService : IDisposable
                         foreach (var sensor in hw.Sensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Memory"))
-                            { ramUsage = sensor.Value ?? 0; break; }
+                                ramUsage = sensor.Value ?? 0;
+                            if (sensor.SensorType == SensorType.Data && sensor.Name.Contains("Used"))
+                                ramUsed = sensor.Value ?? 0;
+                            if (sensor.SensorType == SensorType.Data && sensor.Name.Contains("Available"))
+                                ramAvailable = sensor.Value ?? 0;
                         }
                         break;
                 }
             }
+
+            var totalRam = ramUsed + ramAvailable;
+            var ramText = totalRam > 0 ? $"{totalRam:F0} GB" : "";
 
             MetricsUpdated?.Invoke(new HardwareMetrics
             {
@@ -102,10 +121,35 @@ public sealed class HardwareMonitorService : IDisposable
                 CpuTemp = cpuTemp,
                 GpuUsage = gpuUsage,
                 GpuTemp = gpuTemp,
-                RamUsage = ramUsage
+                RamUsage = ramUsage,
+                CpuName = cpuName,
+                GpuName = gpuName,
+                RamTotal = ramText,
+                StorageDrives = _storageDrives
             });
         }
         catch { }
+    }
+
+    private static List<string> QueryStorageDrives()
+    {
+        var drives = new List<string>();
+        try
+        {
+            using var searcher = new ManagementObjectSearcher("SELECT Model, Size, MediaType FROM Win32_DiskDrive");
+            foreach (var obj in searcher.Get())
+            {
+                var model = obj["Model"]?.ToString()?.Trim();
+                var sizeBytes = obj["Size"] as ulong? ?? 0;
+                if (string.IsNullOrEmpty(model)) continue;
+
+                var sizeGb = sizeBytes / (1024.0 * 1024 * 1024);
+                var sizeText = sizeGb >= 1000 ? $"{sizeGb / 1024:F1} TB" : $"{sizeGb:F0} GB";
+                drives.Add($"{model} ({sizeText})");
+            }
+        }
+        catch { }
+        return drives;
     }
 
     public void Dispose()
