@@ -65,6 +65,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
     [ObservableProperty] private bool isAnimationLoading;
+    [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
+    [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
@@ -753,6 +755,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         SettingsService.Current.FpsOverlayEnabled = !SettingsService.Current.FpsOverlayEnabled;
         SettingsService.Save();
+        IsFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
         StatusMessage = SettingsService.Current.FpsOverlayEnabled
             ? "FPS Overlay ativado — será exibido durante os jogos"
             : "FPS Overlay desativado";
@@ -846,6 +849,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         SettingsService.Current.SoundEnabled = !SettingsService.Current.SoundEnabled;
         SettingsService.Save();
+        IsSoundEnabled = SettingsService.Current.SoundEnabled;
         StatusMessage = SettingsService.Current.SoundEnabled
             ? "Sons ativados 🔊"
             : "Sons desativados 🔇";
