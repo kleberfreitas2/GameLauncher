@@ -1,5 +1,14 @@
-﻿<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" xmlns:converters="clr-namespace:GameLauncher.Converters" Title="GLauncher" Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
+﻿<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" xmlns:converters="clr-namespace:GameLauncher.Converters" xmlns:vm="clr-namespace:GameLauncher.ViewModels" Title="GLauncher" Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
     <Window.Resources>
+        <!-- Gamepad focus indicator style for header items -->
+        <Style x:Key="GamepadFocusBorder" TargetType="Border">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="24"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
         <Style x:Key="HeaderActionButton" TargetType="Button">
             <Setter Property="Background" Value="White"/>
             <Setter Property="Foreground" Value="#1A1A2E"/>
@@ -99,8 +108,23 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
                     <!-- Xbox Live Button -->
+                    <Border Margin="0,0,12,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Xbox">
+                                        <Setter Property="BorderBrush" Value="#00E676"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="14" ShadowDepth="0" Opacity="0.7"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     <Button Command="{Binding OpenXboxProfileCommand}"
-                            Cursor="Hand" BorderThickness="0" Margin="0,0,12,0"
+                            Cursor="Hand" BorderThickness="0"
                             ToolTip="Xbox Live">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
@@ -166,10 +190,26 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+                    </Border>
 
                     <!-- Steam Button -->
+                    <Border Margin="0,0,12,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Steam">
+                                        <Setter Property="BorderBrush" Value="#00E676"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="14" ShadowDepth="0" Opacity="0.7"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     <Button Command="{Binding OpenSteamProfileCommand}"
-                            Cursor="Hand" BorderThickness="0" Margin="0,0,12,0"
+                            Cursor="Hand" BorderThickness="0"
                             ToolTip="Steam">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
@@ -235,8 +275,24 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+                    </Border>
+                    <Border Margin="0,0,18,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Help">
+                                        <Setter Property="BorderBrush" Value="#00E676"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="14" ShadowDepth="0" Opacity="0.7"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     <Button Command="{Binding OpenHelpCommand}"
-                            VerticalAlignment="Center" Margin="0,0,18,0"
+                            VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                             ToolTip="Manual de utilização">
                         <Button.Template>
@@ -252,6 +308,7 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+                    </Border>
                     <!-- Gamepad connection icon -->
                     <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
                         <Grid>
@@ -285,8 +342,23 @@
                             </md:PackIcon>
                         </Grid>
                     </Border>
+                    <Border Margin="0,0,16,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Settings">
+                                        <Setter Property="BorderBrush" Value="#00E676"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="14" ShadowDepth="0" Opacity="0.7"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                     <Button x:Name="BtnGear" Click="BtnGear_Click"
-                  VerticalAlignment="Center" Margin="0,0,16,0"
+                  VerticalAlignment="Center"
                   Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                   ToolTip="Configurações">
                         <Button.Template>
@@ -339,6 +411,7 @@
                             </ContextMenu>
                         </Button.ContextMenu>
                     </Button>
+                    </Border>
 
                     <!-- Settings gear icon with game options -->
 
@@ -534,6 +607,23 @@
                         </TextBlock>
                         <!-- Action buttons row -->
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Border CornerRadius="24" Padding="2">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderThickness" Value="2"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveZone}" Value="{x:Static vm:MainViewModel+NavZone.Actions}">
+                                                <Setter Property="BorderBrush" Value="#00E676"/>
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect Color="#00E676" BlurRadius="16" ShadowDepth="0" Opacity="0.8"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                             <Button Command="{Binding LaunchDetailGameCommand}"
                       Cursor="Hand" BorderThickness="0">
                                 <Button.Template>
@@ -576,16 +666,28 @@
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
+                            </Border>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
 
                 <!-- Row 1: Horizontal Game Carousel (PS5 style) -->
-                <Border Grid.Row="1" Padding="30,10,30,8">
+                <Border Grid.Row="1" Padding="30,18,30,16">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderThickness" Value="0,2,0,2"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveZone}" Value="{x:Static vm:MainViewModel+NavZone.Carousel}">
+                                    <Setter Property="BorderBrush" Value="#4400E676"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#33000010" Offset="0"/>
-                            <GradientStop Color="#77080815" Offset="1"/>
+                            <GradientStop Color="#44000010" Offset="0"/>
+                            <GradientStop Color="#88080815" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <StackPanel>
@@ -605,101 +707,137 @@
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="Padding" Value="0"/>
-                                    <Setter Property="Margin" Value="8,24"/>
-                                    <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-                                    <Setter Property="RenderTransform">
-                                        <Setter.Value>
-                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter Property="Margin" Value="10,18"/>
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="ListBoxItem">
-                                                <Border x:Name="Bd" Width="155" Height="210"
-                                 CornerRadius="10" ClipToBounds="True"
-                                 Background="#44000000" Cursor="Hand">
-                                                    <ContentPresenter/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <EventTrigger RoutedEvent="MouseEnter">
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                     To="1.12" Duration="0:0:0.2">
-                                                        <DoubleAnimation.EasingFunction>
-                                                            <CubicEase EasingMode="EaseOut"/>
-                                                        </DoubleAnimation.EasingFunction>
-                                                    </DoubleAnimation>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                     To="1.12" Duration="0:0:0.2">
-                                                        <DoubleAnimation.EasingFunction>
-                                                            <CubicEase EasingMode="EaseOut"/>
-                                                        </DoubleAnimation.EasingFunction>
-                                                    </DoubleAnimation>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                        <EventTrigger RoutedEvent="MouseLeave">
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                     To="1.0" Duration="0:0:0.2">
-                                                        <DoubleAnimation.EasingFunction>
-                                                            <CubicEase EasingMode="EaseOut"/>
-                                                        </DoubleAnimation.EasingFunction>
-                                                    </DoubleAnimation>
-                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                     To="1.0" Duration="0:0:0.2">
-                                                        <DoubleAnimation.EasingFunction>
-                                                            <CubicEase EasingMode="EaseOut"/>
-                                                        </DoubleAnimation.EasingFunction>
-                                                    </DoubleAnimation>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                         To="1.30" Duration="0:0:0.25">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut"/>
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                         To="1.30" Duration="0:0:0.25">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut"/>
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                         To="1.0" Duration="0:0:0.2">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut"/>
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                         To="1.0" Duration="0:0:0.2">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut"/>
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
+                                                <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+                                                    <Grid.RenderTransform>
+                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                                    </Grid.RenderTransform>
+                                                    <!-- Neon glow ring (behind card, visible when selected) -->
+                                                    <Border x:Name="Glow" CornerRadius="13" Margin="-4"
+                                                            BorderThickness="2.5" BorderBrush="#00E676" Opacity="0"
+                                                            IsHitTestVisible="False">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect Color="#00E676" BlurRadius="20" ShadowDepth="0" Opacity="0.75"/>
+                                                        </Border.Effect>
+                                                    </Border>
+                                                    <!-- Card -->
+                                                    <Border x:Name="Bd" Width="155" Height="210"
+                                                            CornerRadius="10" ClipToBounds="True"
+                                                            Background="#44000000" Cursor="Hand">
+                                                        <Grid>
+                                                            <ContentPresenter/>
+                                                            <!-- Glass shine overlay (visible when selected) -->
+                                                            <Border x:Name="Shine" CornerRadius="10" Opacity="0" IsHitTestVisible="False">
+                                                                <Border.Background>
+                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                        <GradientStop Color="#20FFFFFF" Offset="0"/>
+                                                                        <GradientStop Color="#00FFFFFF" Offset="0.35"/>
+                                                                        <GradientStop Color="#08FFFFFF" Offset="1"/>
+                                                                    </LinearGradientBrush>
+                                                                </Border.Background>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <!-- Hover: scale up -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                                     To="1.10" Duration="0:0:0.25">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                                     To="1.10" Duration="0:0:0.25">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                    <!-- Selected: scale up + neon glow ring + glass shine -->
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                                     To="1.10" Duration="0:0:0.3">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                                     To="1.10" Duration="0:0:0.3">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Glow"
+                                                                                     Storyboard.TargetProperty="Opacity"
+                                                                                     To="1" Duration="0:0:0.35">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Shine"
+                                                                                     Storyboard.TargetProperty="Opacity"
+                                                                                     To="1" Duration="0:0:0.4">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Glow"
+                                                                                     Storyboard.TargetProperty="Opacity"
+                                                                                     To="0" Duration="0:0:0.2">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Shine"
+                                                                                     Storyboard.TargetProperty="Opacity"
+                                                                                     To="0" Duration="0:0:0.15">
+                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -853,6 +991,8 @@
                 <!-- Status text -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
+                    <TextBlock Text="{Binding GamepadStatus}" FontSize="10" Foreground="#00E676" Margin="0,2,0,0"
+                               Visibility="{Binding GamepadConnected, Converter={StaticResource BoolToVisibility}}"/>
                     <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10" Margin="0,2,0,0"/>
                 </StackPanel>
 

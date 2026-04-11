@@ -27,6 +27,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
 
+    // ── Gamepad zone navigation ─────────────────────────────────
+    public enum NavZone { Header, Actions, Carousel }
+
+    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Help", "Settings", "AddGame", "Theme"];
+
+    [ObservableProperty] private NavZone activeZone = NavZone.Carousel;
+    [ObservableProperty] private int headerIndex;
+    [ObservableProperty] private string focusedHeaderItem = "";
+
     [ObservableProperty]
     private ObservableCollection<Game> games = new();
 
@@ -54,6 +63,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool showDetailPanel;
     [ObservableProperty] private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
+    [ObservableProperty] private bool isAnimationLoading;
+
+    private bool _isContextMenuOpen;
+    public bool IsContextMenuOpen
+    {
+        get => _isContextMenuOpen;
+        set => SetProperty(ref _isContextMenuOpen, value);
+    }
+
+    /// <summary>Delegate set by code-behind to handle gamepad input while ContextMenu is open.</summary>
+    public Action<GamepadButton>? ContextMenuNavigate { get; set; }
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
@@ -1167,16 +1187,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher.BeginInvoke(() =>
         {
             GamepadConnected = connected;
-            GamepadStatus = connected ? "🎮 Controle conectado  |  A = Jogar  |  Y = Favorito" : "";
-            if (connected && SelectedGame is null && GetVisibleGames().Count > 0)
+            var name = _xinput.ControllerName;
+            bool isPlayStation = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
+                              || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+            var buttons = isPlayStation ? "✕ = Jogar  |  △ = Favorito" : "A = Jogar  |  Y = Favorito";
+            GamepadStatus = connected
+                ? string.IsNullOrEmpty(name)
+                    ? $"🎮 Controle conectado  |  {buttons}"
+                    : $"🎮 {name} conectado  |  {buttons}"
+                : "";
+            if (connected)
             {
-                _selectedIndex = 0;
-                SelectedGame = GetVisibleGames()[0];
+                ActiveZone = NavZone.Carousel;
+                FocusedHeaderItem = "";
+                if (SelectedGame is null && GetVisibleGames().Count > 0)
+                {
+                    _selectedIndex = 0;
+                    SelectedGame = GetVisibleGames()[0];
+                }
             }
             if (!connected)
             {
                 SelectedGame = null;
                 _selectedIndex = -1;
+                FocusedHeaderItem = "";
+                ActiveZone = NavZone.Carousel;
             }
         });
     }
@@ -1185,58 +1220,245 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _dispatcher.BeginInvoke(() =>
         {
-            var visible = GetVisibleGames();
-            if (visible.Count == 0) return;
+            if (IsAnimationLoading) return;
 
-            // Ensure valid selection
-            if (_selectedIndex < 0 || _selectedIndex >= visible.Count)
+            if (IsContextMenuOpen)
             {
-                _selectedIndex = 0;
-                SelectedGame = visible[0];
+                ContextMenuNavigate?.Invoke(button);
+                return;
             }
 
             switch (button)
             {
-                case GamepadButton.DPadDown:
-                case GamepadButton.DPadRight:
-                    NavigateBy(1, visible);
-                    break;
+                // Zone switching (Up/Down)
                 case GamepadButton.DPadUp:
+                    SwitchZone(-1);
+                    return;
+                case GamepadButton.DPadDown:
+                    SwitchZone(1);
+                    return;
+
+                // Within-zone navigation (Left/Right)
                 case GamepadButton.DPadLeft:
-                    NavigateBy(-1, visible);
-                    break;
-                case GamepadButton.RightShoulder:
-                    NavigateBy(5, visible);
-                    break;
+                    NavigateInZone(-1);
+                    return;
+                case GamepadButton.DPadRight:
+                    NavigateInZone(1);
+                    return;
+
+                // Page navigation in carousel
                 case GamepadButton.LeftShoulder:
-                    NavigateBy(-5, visible);
-                    break;
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var vis = GetVisibleGames();
+                        if (vis.Count > 0) NavigateCarousel(-5, vis);
+                    }
+                    return;
+                case GamepadButton.RightShoulder:
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var vis = GetVisibleGames();
+                        if (vis.Count > 0) NavigateCarousel(5, vis);
+                    }
+                    return;
+
+                // Activate
                 case GamepadButton.A:
-                    if (SelectedGame is not null)
-                        LaunchGame(SelectedGame);
-                    break;
+                    ActivateCurrentItem();
+                    return;
+
+                // Context actions
                 case GamepadButton.Y:
                     if (SelectedGame is not null)
                         ToggleFavorite(SelectedGame);
-                    break;
+                    return;
                 case GamepadButton.X:
                     if (SelectedGame is not null)
                         SearchCover(SelectedGame);
-                    break;
+                    return;
                 case GamepadButton.B:
-                    if (!string.IsNullOrEmpty(SearchText))
-                        SearchText = string.Empty;
-                    break;
+                    HandleBack();
+                    return;
+
+                // Menu shortcuts
+                case GamepadButton.Start:
+                    OpenSettingsMenu();
+                    return;
+                case GamepadButton.Back:
+                    OpenHelp();
+                    return;
             }
         });
     }
 
-    private void NavigateBy(int delta, List<Game> visible)
+    private void SwitchZone(int direction)
     {
-        int newIndex = _selectedIndex + delta;
-        newIndex = Math.Clamp(newIndex, 0, visible.Count - 1);
+        var zones = Enum.GetValues<NavZone>();
+        int current = (int)ActiveZone;
+        int next = Math.Clamp(current + direction, 0, zones.Length - 1);
+
+        // Skip Actions zone if no game is selected
+        if ((NavZone)next == NavZone.Actions && !ShowDetailPanel)
+            next = Math.Clamp(next + direction, 0, zones.Length - 1);
+
+        if (next == current) return;
+
+        ActiveZone = (NavZone)next;
+
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                FocusedHeaderItem = HeaderItems[HeaderIndex];
+                break;
+            case NavZone.Carousel:
+                FocusedHeaderItem = "";
+                var visible = GetVisibleGames();
+                if (visible.Count > 0 && (_selectedIndex < 0 || _selectedIndex >= visible.Count))
+                {
+                    _selectedIndex = 0;
+                    SelectedGame = visible[0];
+                }
+                break;
+            case NavZone.Actions:
+                FocusedHeaderItem = "";
+                break;
+        }
+
+        UpdateGamepadStatusForZone();
+    }
+
+    private void NavigateInZone(int direction)
+    {
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                HeaderIndex = Math.Clamp(HeaderIndex + direction, 0, HeaderItems.Length - 1);
+                FocusedHeaderItem = HeaderItems[HeaderIndex];
+                break;
+
+            case NavZone.Carousel:
+                var visible = GetVisibleGames();
+                if (visible.Count > 0)
+                    NavigateCarousel(direction, visible);
+                break;
+
+            case NavZone.Actions:
+                // Single action for now (JOGAR), could expand later
+                break;
+        }
+    }
+
+    private void NavigateCarousel(int delta, List<Game> visible)
+    {
+        if (_selectedIndex < 0 || _selectedIndex >= visible.Count)
+            _selectedIndex = 0;
+
+        int newIndex = Math.Clamp(_selectedIndex + delta, 0, visible.Count - 1);
         _selectedIndex = newIndex;
         SelectedGame = visible[newIndex];
+    }
+
+    private void ActivateCurrentItem()
+    {
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                ActivateHeaderItem(HeaderItems[HeaderIndex]);
+                break;
+
+            case NavZone.Carousel:
+                if (SelectedGame is not null)
+                    LaunchGame(SelectedGame);
+                break;
+
+            case NavZone.Actions:
+                if (SelectedGame is not null)
+                    LaunchGame(SelectedGame);
+                break;
+        }
+    }
+
+    private void ActivateHeaderItem(string item)
+    {
+        switch (item)
+        {
+            case "Xbox":
+                OpenXboxProfileCommand.Execute(null);
+                break;
+            case "Steam":
+                OpenSteamProfileCommand.Execute(null);
+                break;
+            case "Help":
+                OpenHelp();
+                break;
+            case "Settings":
+                OpenSettingsMenu();
+                break;
+            case "AddGame":
+                AddGameCommand.Execute(null);
+                break;
+            case "Theme":
+                OpenTheme();
+                break;
+        }
+    }
+
+    private void HandleBack()
+    {
+        if (ActiveZone == NavZone.Header)
+        {
+            ActiveZone = NavZone.Carousel;
+            FocusedHeaderItem = "";
+            UpdateGamepadStatusForZone();
+        }
+        else if (ActiveZone == NavZone.Actions)
+        {
+            ActiveZone = NavZone.Carousel;
+            UpdateGamepadStatusForZone();
+        }
+        else if (!string.IsNullOrEmpty(SearchText))
+        {
+            SearchText = string.Empty;
+        }
+    }
+
+    private void OpenSettingsMenu()
+    {
+        // Programmatically open the gear context menu
+        _dispatcher.BeginInvoke(() =>
+        {
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow?.FindName("BtnGear") is System.Windows.Controls.Button gearBtn
+                && gearBtn.ContextMenu is not null)
+            {
+                gearBtn.ContextMenu.PlacementTarget = gearBtn;
+                gearBtn.ContextMenu.IsOpen = true;
+            }
+        });
+    }
+
+    private void UpdateGamepadStatusForZone()
+    {
+        var name = _xinput.ControllerName;
+        bool isPS = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
+                 || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+
+        string hint = ActiveZone switch
+        {
+            NavZone.Header => isPS
+                ? "⬅➡ Navegar  |  ✕ = Selecionar  |  ⬇ Jogos"
+                : "⬅➡ Navegar  |  A = Selecionar  |  ⬇ Jogos",
+            NavZone.Actions => isPS
+                ? "✕ = Jogar  |  ⬆ Menu  |  ⬇ Jogos"
+                : "A = Jogar  |  ⬆ Menu  |  ⬇ Jogos",
+            NavZone.Carousel => isPS
+                ? "⬅➡ Jogos  |  ✕ = Jogar  |  △ = Favorito  |  ⬆ Ações"
+                : "⬅➡ Jogos  |  A = Jogar  |  Y = Favorito  |  ⬆ Ações",
+            _ => ""
+        };
+
+        string prefix = string.IsNullOrEmpty(name) ? "🎮" : $"🎮 {name}";
+        GamepadStatus = $"{prefix}  |  {hint}";
     }
 
     private List<Game> GetVisibleGames()

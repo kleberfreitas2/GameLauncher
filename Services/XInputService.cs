@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 
@@ -18,8 +17,9 @@ public sealed class XInputService : IDisposable
     private const uint ERROR_SUCCESS = 0;
     private const short STICK_DEADZONE = 18000;
     private const int POLL_MS = 60;
+    private const int HID_SCAN_INTERVAL_MS = 3000;
 
-    // Button masks
+    // XInput button masks
     private const ushort XINPUT_GAMEPAD_DPAD_UP = 0x0001;
     private const ushort XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;
     private const ushort XINPUT_GAMEPAD_DPAD_LEFT = 0x0004;
@@ -34,6 +34,15 @@ public sealed class XInputService : IDisposable
     private const ushort XINPUT_GAMEPAD_B = 0x2000;
     private const ushort XINPUT_GAMEPAD_X = 0x4000;
     private const ushort XINPUT_GAMEPAD_Y = 0x8000;
+
+    // Known HID Vendor/Product IDs for PlayStation controllers
+    private static readonly (int Vid, int Pid, string Name)[] KnownHidControllers =
+    [
+        (0x054C, 0x0CE6, "DualSense"),          // PS5 DualSense
+        (0x054C, 0x0DF2, "DualSense Edge"),      // PS5 DualSense Edge
+        (0x054C, 0x09CC, "DualShock 4 v2"),      // PS4 DualShock 4 v2
+        (0x054C, 0x05C4, "DualShock 4 v1"),      // PS4 DualShock 4 v1
+    ];
 
     [StructLayout(LayoutKind.Sequential)]
     private struct XINPUT_GAMEPAD
@@ -57,20 +66,136 @@ public sealed class XInputService : IDisposable
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
     private static extern uint XInputGetState(uint dwUserIndex, ref XINPUT_STATE pState);
 
+    // HID P/Invoke for reading PlayStation controllers
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess,
+        uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
+        uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool ReadFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToRead,
+        out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("hid.dll")]
+    private static extern void HidD_GetHidGuid(out Guid hidGuid);
+
+    [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+    private static extern IntPtr SetupDiGetClassDevs(ref Guid classGuid, IntPtr enumerator,
+        IntPtr hwndParent, uint flags);
+
+    [DllImport("setupapi.dll", SetLastError = true)]
+    private static extern bool SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet,
+        IntPtr deviceInfoData, ref Guid interfaceClassGuid, uint memberIndex,
+        ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
+
+    [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet,
+        ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData,
+        uint deviceInterfaceDetailDataSize, out uint requiredSize, IntPtr deviceInfoData);
+
+    [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet,
+        ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData,
+        ref SP_DEVICE_INTERFACE_DETAIL_DATA deviceInterfaceDetailData,
+        uint deviceInterfaceDetailDataSize, out uint requiredSize, IntPtr deviceInfoData);
+
+    [DllImport("setupapi.dll")]
+    private static extern bool SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
+
+    [DllImport("hid.dll")]
+    private static extern bool HidD_GetAttributes(IntPtr hidDeviceObject, ref HIDD_ATTRIBUTES attributes);
+
+    [DllImport("hid.dll")]
+    private static extern bool HidD_GetPreparsedData(IntPtr hidDeviceObject, out IntPtr preparsedData);
+
+    [DllImport("hid.dll")]
+    private static extern bool HidD_FreePreparsedData(IntPtr preparsedData);
+
+    [DllImport("hid.dll")]
+    private static extern int HidP_GetCaps(IntPtr preparsedData, out HIDP_CAPS capabilities);
+
+    private const uint DIGCF_PRESENT = 0x02;
+    private const uint DIGCF_DEVICEINTERFACE = 0x10;
+    private const uint GENERIC_READ = 0x80000000;
+    private const uint FILE_SHARE_READ = 0x01;
+    private const uint FILE_SHARE_WRITE = 0x02;
+    private const uint OPEN_EXISTING = 3;
+    private const uint FILE_FLAG_OVERLAPPED = 0x40000000;
+    private static readonly IntPtr INVALID_HANDLE = new(-1);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SP_DEVICE_INTERFACE_DATA
+    {
+        public int cbSize;
+        public Guid InterfaceClassGuid;
+        public int Flags;
+        public IntPtr Reserved;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct SP_DEVICE_INTERFACE_DETAIL_DATA
+    {
+        public int cbSize;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
+        public string DevicePath;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct HIDD_ATTRIBUTES
+    {
+        public int Size;
+        public ushort VendorID;
+        public ushort ProductID;
+        public ushort VersionNumber;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct HIDP_CAPS
+    {
+        public ushort Usage;
+        public ushort UsagePage;
+        public ushort InputReportByteLength;
+        public ushort OutputReportByteLength;
+        public ushort FeatureReportByteLength;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 17)]
+        public ushort[] Reserved;
+        public ushort NumberLinkCollectionNodes;
+        public ushort NumberInputButtonCaps;
+        public ushort NumberInputValueCaps;
+        public ushort NumberInputDataIndices;
+        public ushort NumberOutputButtonCaps;
+        public ushort NumberOutputValueCaps;
+        public ushort NumberOutputDataIndices;
+        public ushort NumberFeatureButtonCaps;
+        public ushort NumberFeatureValueCaps;
+        public ushort NumberFeatureDataIndices;
+    }
+
+    // State for HID (PlayStation) controller
+    private IntPtr _hidHandle = INVALID_HANDLE;
+    private int _hidReportLength;
+    private byte[] _prevHidReport = [];
+    private string _hidControllerName = "";
+    private bool _hidConnected;
+
     private readonly DispatcherTimer _timer;
     private ushort _prevButtons;
     private bool _prevStickLeft, _prevStickRight, _prevStickUp, _prevStickDown;
     private bool _isConnected;
-    private uint _userIndex;
+    private uint _activeXInputIndex = uint.MaxValue;
+    private int _hidScanCounter;
 
     public event Action<GamepadButton>? ButtonPressed;
     public event Action<bool>? ConnectionChanged;
 
     public bool IsConnected => _isConnected;
+    public string ControllerName { get; private set; } = "";
 
-    public XInputService(uint userIndex = 0)
+    public XInputService()
     {
-        _userIndex = userIndex;
         _timer = new DispatcherTimer(DispatcherPriority.Input)
         {
             Interval = TimeSpan.FromMilliseconds(POLL_MS)
@@ -83,26 +208,64 @@ public sealed class XInputService : IDisposable
 
     private void Poll(object? sender, EventArgs e)
     {
-        var state = new XINPUT_STATE();
-        uint result = XInputGetState(_userIndex, ref state);
-
-        bool connected = result == ERROR_SUCCESS;
-        if (connected != _isConnected)
-        {
-            _isConnected = connected;
-            ConnectionChanged?.Invoke(connected);
-        }
-
-        if (!connected)
-        {
-            _prevButtons = 0;
-            _prevStickLeft = _prevStickRight = _prevStickUp = _prevStickDown = false;
+        // Try XInput first (all 4 indices)
+        if (TryPollXInput())
             return;
+
+        // Fallback: HID controllers (PlayStation, etc.)
+        PollHid();
+    }
+
+    private bool TryPollXInput()
+    {
+        var state = new XINPUT_STATE();
+
+        // If we already have an active index, try it first
+        if (_activeXInputIndex < 4)
+        {
+            uint result = XInputGetState(_activeXInputIndex, ref state);
+            if (result == ERROR_SUCCESS)
+            {
+                SetConnected(true, "Xbox Controller");
+                ProcessXInputState(ref state);
+                return true;
+            }
+            // Lost connection on this index
+            _activeXInputIndex = uint.MaxValue;
         }
 
+        // Scan all 4 indices for a connected controller
+        for (uint i = 0; i < 4; i++)
+        {
+            uint result = XInputGetState(i, ref state);
+            if (result == ERROR_SUCCESS)
+            {
+                _activeXInputIndex = i;
+                SetConnected(true, "Xbox Controller");
+                ProcessXInputState(ref state);
+                return true;
+            }
+        }
+
+        // No XInput controller found
+        if (_activeXInputIndex != uint.MaxValue || (!_hidConnected && _isConnected))
+        {
+            _activeXInputIndex = uint.MaxValue;
+            if (!_hidConnected)
+            {
+                _prevButtons = 0;
+                _prevStickLeft = _prevStickRight = _prevStickUp = _prevStickDown = false;
+            }
+        }
+
+        return false;
+    }
+
+    private void ProcessXInputState(ref XINPUT_STATE state)
+    {
         var gp = state.Gamepad;
         ushort buttons = gp.wButtons;
-        ushort pressed = (ushort)(buttons & ~_prevButtons); // newly pressed
+        ushort pressed = (ushort)(buttons & ~_prevButtons);
 
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_UP, GamepadButton.DPadUp);
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_DOWN, GamepadButton.DPadDown);
@@ -117,7 +280,6 @@ public sealed class XInputService : IDisposable
         CheckButton(pressed, XINPUT_GAMEPAD_START, GamepadButton.Start);
         CheckButton(pressed, XINPUT_GAMEPAD_BACK, GamepadButton.Back);
 
-        // Left stick as digital direction (with edge detection)
         bool stickLeft = gp.sThumbLX < -STICK_DEADZONE;
         bool stickRight = gp.sThumbLX > STICK_DEADZONE;
         bool stickUp = gp.sThumbLY > STICK_DEADZONE;
@@ -135,6 +297,225 @@ public sealed class XInputService : IDisposable
         _prevStickDown = stickDown;
     }
 
+    private void PollHid()
+    {
+        _hidScanCounter++;
+
+        // Periodically scan for HID controllers
+        if (_hidHandle == INVALID_HANDLE)
+        {
+            if (_hidScanCounter % (HID_SCAN_INTERVAL_MS / POLL_MS) == 0)
+                TryOpenHidController();
+
+            if (_hidHandle == INVALID_HANDLE)
+            {
+                if (_isConnected && !_hidConnected)
+                    SetConnected(false, "");
+                return;
+            }
+        }
+
+        // Read HID report
+        var report = new byte[_hidReportLength];
+        if (!ReadFile(_hidHandle, report, (uint)_hidReportLength, out uint bytesRead, IntPtr.Zero)
+            || bytesRead == 0)
+        {
+            // Controller disconnected
+            CloseHid();
+            SetConnected(false, "");
+            return;
+        }
+
+        if (!_hidConnected)
+        {
+            _hidConnected = true;
+            SetConnected(true, _hidControllerName);
+        }
+
+        ProcessHidReport(report);
+        _prevHidReport = report;
+    }
+
+    private void ProcessHidReport(byte[] report)
+    {
+        if (_prevHidReport.Length == 0) return;
+
+        // DualSense and DualShock 4 share a similar HID report structure:
+        // Byte 0: Report ID
+        // Byte 1: Left stick X (0=left, 128=center, 255=right)
+        // Byte 2: Left stick Y (0=up, 128=center, 255=down)
+        // Byte 3: Right stick X
+        // Byte 4: Right stick Y
+        // Byte 5 (low nibble): D-Pad (hat switch: 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW, 8=neutral)
+        // Byte 5 (high nibble): buttons Square(4), Cross(5), Circle(6), Triangle(7)
+        // Byte 6: L1(0), R1(1), L2(2), R2(3), Share/Create(4), Options(5), L3(6), R3(7)
+
+        // Determine offset: DualSense Bluetooth adds 1 byte prefix
+        int off = 0;
+        if (report.Length > 10 && report[0] == 0x31) off = 1;
+
+        if (report.Length < off + 7) return;
+
+        byte lx = report[off + 1];
+        byte ly = report[off + 2];
+        byte buttons1 = report[off + 5];
+        byte buttons2 = report[off + 6];
+        byte prevButtons1 = _prevHidReport.Length > off + 6 ? _prevHidReport[off + 5] : (byte)0;
+        byte prevButtons2 = _prevHidReport.Length > off + 6 ? _prevHidReport[off + 6] : (byte)0;
+        byte prevLx = _prevHidReport.Length > off + 2 ? _prevHidReport[off + 1] : (byte)128;
+        byte prevLy = _prevHidReport.Length > off + 2 ? _prevHidReport[off + 2] : (byte)128;
+
+        // D-Pad (hat switch in low nibble of buttons1)
+        byte hat = (byte)(buttons1 & 0x0F);
+        byte prevHat = (byte)(prevButtons1 & 0x0F);
+
+        if (hat != prevHat)
+        {
+            bool up = hat == 0 || hat == 1 || hat == 7;
+            bool down = hat == 3 || hat == 4 || hat == 5;
+            bool left = hat == 5 || hat == 6 || hat == 7;
+            bool right = hat == 1 || hat == 2 || hat == 3;
+            bool prevUp = prevHat == 0 || prevHat == 1 || prevHat == 7;
+            bool prevDown = prevHat == 3 || prevHat == 4 || prevHat == 5;
+            bool prevLeft = prevHat == 5 || prevHat == 6 || prevHat == 7;
+            bool prevRight = prevHat == 1 || prevHat == 2 || prevHat == 3;
+
+            if (up && !prevUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
+            if (down && !prevDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
+            if (left && !prevLeft) ButtonPressed?.Invoke(GamepadButton.DPadLeft);
+            if (right && !prevRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
+        }
+
+        // Face buttons (high nibble of buttons1): Cross=5, Circle=6, Square=4, Triangle=7
+        byte face = (byte)(buttons1 >> 4);
+        byte prevFace = (byte)(prevButtons1 >> 4);
+        byte facePressed = (byte)(face & ~prevFace);
+
+        if ((facePressed & 0x02) != 0) ButtonPressed?.Invoke(GamepadButton.A);     // Cross
+        if ((facePressed & 0x04) != 0) ButtonPressed?.Invoke(GamepadButton.B);     // Circle
+        if ((facePressed & 0x01) != 0) ButtonPressed?.Invoke(GamepadButton.X);     // Square
+        if ((facePressed & 0x08) != 0) ButtonPressed?.Invoke(GamepadButton.Y);     // Triangle
+
+        // Shoulder buttons and menu (buttons2)
+        byte b2Pressed = (byte)(buttons2 & ~prevButtons2);
+        if ((b2Pressed & 0x01) != 0) ButtonPressed?.Invoke(GamepadButton.LeftShoulder);  // L1
+        if ((b2Pressed & 0x02) != 0) ButtonPressed?.Invoke(GamepadButton.RightShoulder); // R1
+        if ((b2Pressed & 0x10) != 0) ButtonPressed?.Invoke(GamepadButton.Back);          // Share/Create
+        if ((b2Pressed & 0x20) != 0) ButtonPressed?.Invoke(GamepadButton.Start);         // Options
+
+        // Left stick as digital direction
+        const byte deadLow = 60, deadHigh = 196;
+        bool stickLeft = lx < deadLow;
+        bool stickRight = lx > deadHigh;
+        bool stickUp = ly < deadLow;
+        bool stickDown = ly > deadHigh;
+        bool pStickLeft = prevLx < deadLow;
+        bool pStickRight = prevLx > deadHigh;
+        bool pStickUp = prevLy < deadLow;
+        bool pStickDown = prevLy > deadHigh;
+
+        if (stickLeft && !pStickLeft) ButtonPressed?.Invoke(GamepadButton.DPadLeft);
+        if (stickRight && !pStickRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
+        if (stickUp && !pStickUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
+        if (stickDown && !pStickDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
+    }
+
+    private void TryOpenHidController()
+    {
+        try
+        {
+            HidD_GetHidGuid(out Guid hidGuid);
+            IntPtr devInfo = SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, IntPtr.Zero,
+                DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+
+            if (devInfo == INVALID_HANDLE) return;
+
+            try
+            {
+                var ifData = new SP_DEVICE_INTERFACE_DATA();
+                ifData.cbSize = Marshal.SizeOf(ifData);
+
+                for (uint i = 0; SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, i, ref ifData); i++)
+                {
+                    // Get required size
+                    SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, IntPtr.Zero, 0, out uint reqSize, IntPtr.Zero);
+
+                    var detailData = new SP_DEVICE_INTERFACE_DETAIL_DATA();
+                    detailData.cbSize = IntPtr.Size == 8 ? 8 : 6; // 64-bit vs 32-bit
+
+                    if (!SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, ref detailData, reqSize, out _, IntPtr.Zero))
+                        continue;
+
+                    string path = detailData.DevicePath;
+
+                    IntPtr handle = CreateFile(path, GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+
+                    if (handle == INVALID_HANDLE) continue;
+
+                    var attrs = new HIDD_ATTRIBUTES { Size = Marshal.SizeOf<HIDD_ATTRIBUTES>() };
+                    if (!HidD_GetAttributes(handle, ref attrs))
+                    {
+                        CloseHandle(handle);
+                        continue;
+                    }
+
+                    var match = KnownHidControllers.FirstOrDefault(c => c.Vid == attrs.VendorID && c.Pid == attrs.ProductID);
+                    if (match == default)
+                    {
+                        CloseHandle(handle);
+                        continue;
+                    }
+
+                    // Get report length
+                    if (HidD_GetPreparsedData(handle, out IntPtr preparsed))
+                    {
+                        HidP_GetCaps(preparsed, out HIDP_CAPS caps);
+                        HidD_FreePreparsedData(preparsed);
+
+                        if (caps.InputReportByteLength > 0 && caps.Usage == 0x05 && caps.UsagePage == 0x01)
+                        {
+                            _hidHandle = handle;
+                            _hidReportLength = caps.InputReportByteLength;
+                            _hidControllerName = match.Name;
+                            _prevHidReport = [];
+                            return;
+                        }
+                    }
+
+                    CloseHandle(handle);
+                }
+            }
+            finally
+            {
+                SetupDiDestroyDeviceInfoList(devInfo);
+            }
+        }
+        catch
+        {
+            // Ignore HID enumeration errors
+        }
+    }
+
+    private void CloseHid()
+    {
+        if (_hidHandle != INVALID_HANDLE)
+        {
+            CloseHandle(_hidHandle);
+            _hidHandle = INVALID_HANDLE;
+        }
+        _hidConnected = false;
+        _prevHidReport = [];
+    }
+
+    private void SetConnected(bool connected, string name)
+    {
+        if (connected == _isConnected && name == ControllerName) return;
+        _isConnected = connected;
+        ControllerName = name;
+        ConnectionChanged?.Invoke(connected);
+    }
+
     private void CheckButton(ushort pressed, ushort mask, GamepadButton button)
     {
         if ((pressed & mask) != 0)
@@ -145,5 +526,6 @@ public sealed class XInputService : IDisposable
     {
         _timer.Stop();
         _timer.Tick -= Poll;
+        CloseHid();
     }
 }

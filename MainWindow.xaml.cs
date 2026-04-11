@@ -1,7 +1,10 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using GameLauncher.Controls;
+using GameLauncher.Services;
 using GameLauncher.ViewModels;
 
 namespace GameLauncher;
@@ -25,16 +28,103 @@ public partial class MainWindow : Window
     private int _frameCount;
     private TimeSpan _lastFpsTime;
 
+    // ── ContextMenu gamepad navigation state ─────────────────────
+    private List<MenuItem> _menuItems = [];
+    private int _menuIndex;
+
     public MainWindow()
     {
         InitializeComponent();
         DataContext = new MainViewModel();
+
+        var dpd = DependencyPropertyDescriptor.FromProperty(
+            AnimatedImage.IsLoadingProperty, typeof(AnimatedImage));
+        dpd?.AddValueChanged(BackgroundAnim, (_, _) =>
+        {
+            if (DataContext is MainViewModel vm)
+                vm.IsAnimationLoading = BackgroundAnim.IsLoading;
+        });
+
+        // Wire ContextMenu gamepad navigation
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ContextMenuNavigate = NavigateContextMenu;
+
+            if (BtnGear.ContextMenu is { } ctx)
+            {
+                ctx.Opened += (_, _) =>
+                {
+                    viewModel.IsContextMenuOpen = true;
+                    _menuItems = CollectMenuItems(ctx);
+                    _menuIndex = 0;
+                    if (_menuItems.Count > 0)
+                        HighlightMenuItem(_menuItems[0]);
+                };
+                ctx.Closed += (_, _) =>
+                {
+                    viewModel.IsContextMenuOpen = false;
+                    _menuItems.Clear();
+                    _menuIndex = 0;
+                };
+            }
+        }
+
         Loaded += (_, _) => CompositionTarget.Rendering += OnFpsRendering;
         Closed += (_, _) =>
         {
             CompositionTarget.Rendering -= OnFpsRendering;
             (DataContext as MainViewModel)?.Dispose();
         };
+    }
+
+    // ── ContextMenu gamepad helpers ──────────────────────────────
+
+    private static List<MenuItem> CollectMenuItems(ContextMenu ctx)
+    {
+        var items = new List<MenuItem>();
+        foreach (var item in ctx.Items)
+        {
+            if (item is MenuItem mi)
+                items.Add(mi);
+        }
+        return items;
+    }
+
+    private void NavigateContextMenu(GamepadButton button)
+    {
+        if (_menuItems.Count == 0) return;
+
+        switch (button)
+        {
+            case GamepadButton.DPadUp:
+                _menuIndex = (_menuIndex - 1 + _menuItems.Count) % _menuItems.Count;
+                HighlightMenuItem(_menuItems[_menuIndex]);
+                break;
+
+            case GamepadButton.DPadDown:
+                _menuIndex = (_menuIndex + 1) % _menuItems.Count;
+                HighlightMenuItem(_menuItems[_menuIndex]);
+                break;
+
+            case GamepadButton.A:
+                var mi = _menuItems[_menuIndex];
+                if (mi.Command is { } cmd && cmd.CanExecute(mi.CommandParameter))
+                {
+                    BtnGear.ContextMenu!.IsOpen = false;
+                    cmd.Execute(mi.CommandParameter);
+                }
+                break;
+
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                BtnGear.ContextMenu!.IsOpen = false;
+                break;
+        }
+    }
+
+    private static void HighlightMenuItem(MenuItem target)
+    {
+        target.Focus();
     }
 
     private void OnFpsRendering(object? sender, EventArgs e)
