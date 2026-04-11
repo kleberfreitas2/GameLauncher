@@ -35,6 +35,10 @@ public static class SettingsService
             Current.IgdbClientId = AppSettings.DefaultIgdbClientId;
         if (string.IsNullOrEmpty(Current.IgdbClientSecret))
             Current.IgdbClientSecret = AppSettings.DefaultIgdbClientSecret;
+        if (string.IsNullOrEmpty(Current.XboxClientId))
+            Current.XboxClientId = AppSettings.DefaultXboxClientId;
+        if (string.IsNullOrEmpty(Current.SteamApiKey))
+            Current.SteamApiKey = AppSettings.DefaultSteamApiKey;
     }
 
     public static void Save()

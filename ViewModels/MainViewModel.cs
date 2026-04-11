@@ -65,6 +65,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool HasAvatar   => !string.IsNullOrEmpty(AvatarPath);
     public bool HasNoAvatar => !HasAvatar;
 
+    // ── Xbox Live ───────────────────────────────────────────────
+    private XboxLiveService? _xboxService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsXboxLoggedIn))]
+    [NotifyPropertyChangedFor(nameof(XboxButtonText))]
+    private XboxProfile? xboxProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsXboxLoggedIn))]
+    [NotifyPropertyChangedFor(nameof(XboxButtonText))]
+    private bool xboxConnected;
+
+    public bool IsXboxLoggedIn => XboxConnected && XboxProfile is not null;
+    public string XboxButtonText => IsXboxLoggedIn ? XboxProfile!.Gamertag : "XBOX";
+
+    // ── Steam ───────────────────────────────────────────────────
+    private SteamService? _steamService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSteamConnected))]
+    [NotifyPropertyChangedFor(nameof(SteamButtonText))]
+    private SteamProfile? steamProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSteamConnected))]
+    [NotifyPropertyChangedFor(nameof(SteamButtonText))]
+    private bool steamConnected;
+
+    public bool IsSteamConnected => SteamConnected && SteamProfile is not null;
+    public string SteamButtonText => IsSteamConnected ? SteamProfile!.PersonaName : "STEAM";
+
     private readonly DispatcherTimer _clockTimer;
 
     public ICollectionView GamesView => _gamesView;
@@ -85,6 +117,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         LoadGames();
         _ = RefreshAllAssetsOnStartupAsync();
+        _ = TryRestoreXboxSessionAsync();
+        _ = TryRestoreSteamSessionAsync();
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -133,6 +167,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.Dispose();
         _hwMonitor.Stop();
         _hwMonitor.Dispose();
+        _xboxService?.Dispose();
+        _steamService?.Dispose();
     }
 
     [RelayCommand]
@@ -701,6 +737,359 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         var dialog = new HelpDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
+    }
+
+    // ── Xbox Live Integration ───────────────────────────────────
+
+    private async Task TryRestoreXboxSessionAsync()
+    {
+        var clientId = SettingsService.Current.XboxClientId;
+        if (string.IsNullOrEmpty(clientId) || clientId == "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
+            return;
+
+        _xboxService?.Dispose();
+        _xboxService = new XboxLiveService(clientId);
+
+        var restored = await _xboxService.TrySilentLoginAsync();
+        if (!restored) return;
+
+        var profile = await _xboxService.GetProfileAsync();
+        if (profile is not null)
+        {
+            XboxProfile = profile;
+            XboxConnected = true;
+            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task XboxLogin()
+    {
+        var clientId = SettingsService.Current.XboxClientId;
+
+        if (string.IsNullOrEmpty(clientId) || clientId == AppSettings.DefaultXboxClientId)
+        {
+            // When a real default Client ID is embedded, use it directly;
+            // otherwise prompt the user to enter one manually.
+            if (!string.IsNullOrEmpty(AppSettings.DefaultXboxClientId)
+                && AppSettings.DefaultXboxClientId != "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
+            {
+                clientId = AppSettings.DefaultXboxClientId;
+            }
+            else
+            {
+                var setup = new XboxSetupDialog { Owner = Application.Current.MainWindow };
+                if (setup.ShowDialog() != true) return;
+                SettingsService.Current.XboxClientId = setup.ClientId;
+                SettingsService.Save();
+                clientId = setup.ClientId;
+            }
+        }
+
+        StatusMessage = "Conectando ao Xbox Live...";
+
+        _xboxService?.Dispose();
+        _xboxService = new XboxLiveService(clientId);
+
+        var success = await _xboxService.LoginAsync();
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar ao Xbox Live.";
+            MessageBox.Show(
+                "Não foi possível autenticar com o Xbox Live.\n\n" +
+                "Verifique se o Client ID está correto e se o app Azure possui a permissão Xboxlive.signin.",
+                "Xbox Live", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        StatusMessage = "Carregando perfil Xbox...";
+        var profile = await _xboxService.GetProfileAsync();
+
+        if (profile is not null)
+        {
+            XboxProfile = profile;
+            XboxConnected = true;
+            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+        }
+        else
+        {
+            XboxConnected = true;
+            StatusMessage = "Xbox Live conectado (perfil indisponível).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenXboxProfile()
+    {
+        if (!IsXboxLoggedIn || XboxProfile is null)
+        {
+            await XboxLogin();
+            return;
+        }
+
+        // Importados = jogos Xbox efetivamente instalados no PC e adicionados ao launcher
+        var importedCount = Games.Count(g =>
+            g.InstallDirectory is not null &&
+            g.InstallDirectory.Contains("XboxGames", StringComparison.OrdinalIgnoreCase));
+
+        // Disponíveis = total de jogos na biblioteca Xbox (API), mesmo que não instalados
+        var availableCount = 0;
+        if (_xboxService is not null)
+        {
+            availableCount = await _xboxService.GetLibraryGamesCountAsync();
+        }
+
+        var dialog = new XboxProfileDialog(XboxProfile, importedCount, availableCount)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                if (_xboxService is not null)
+                    await _xboxService.LogoutAsync();
+
+                XboxProfile = null;
+                XboxConnected = false;
+                StatusMessage = "Desconectado do Xbox Live.";
+            }
+            else if (dialog.ImportGamesRequested)
+            {
+                await ImportXboxGames();
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportXboxGames()
+    {
+        if (_xboxService is null)
+        {
+            StatusMessage = "Conecte-se ao Xbox Live primeiro.";
+            return;
+        }
+
+        StatusMessage = "Escaneando jogos Xbox instalados...";
+
+        var xboxGames = await Task.Run(() => _xboxService.ScanXboxInstalledGames());
+
+        if (xboxGames.Count == 0)
+        {
+            StatusMessage = "Nenhum jogo Xbox encontrado nas pastas padrão (XboxGames).";
+            MessageBox.Show(
+                "Nenhum jogo Xbox Game Pass encontrado.\n\n" +
+                "Verifique se há jogos instalados nas pastas XboxGames dos seus discos.",
+                "Xbox Games", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int added = 0;
+        var newGames = new List<Game>();
+
+        foreach (var xg in xboxGames)
+        {
+            if (Games.Any(g => g.ExecutablePath.Equals(xg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            Games.Add(xg);
+            newGames.Add(xg);
+            added++;
+        }
+
+        SaveGames();
+        _gamesView.Refresh();
+        StatusMessage = added > 0
+            ? $"{added} jogo(s) Xbox importado(s)! {Games.Count} jogos na biblioteca."
+            : "Todos os jogos Xbox já estavam na biblioteca.";
+
+        // Auto-fetch assets for newly imported games
+        foreach (var game in newGames)
+        {
+            await AutoFetchAllWithProgressAsync(game);
+        }
+    }
+
+    // ── Steam Integration ────────────────────────────────────────
+
+    private async Task TryRestoreSteamSessionAsync()
+    {
+        var steamId = SettingsService.Current.SteamId;
+
+        // Try to use stored Steam ID, or auto-detect from local installation
+        if (string.IsNullOrEmpty(steamId))
+            steamId = SteamService.DetectLocalSteamId();
+
+        if (string.IsNullOrEmpty(steamId))
+            return;
+
+        _steamService?.Dispose();
+        _steamService = new SteamService();
+
+        var connected = await _steamService.ConnectAsync(steamId);
+        if (!connected) return;
+
+        // Persist the detected Steam ID for future sessions
+        if (string.IsNullOrEmpty(SettingsService.Current.SteamId))
+        {
+            SettingsService.Current.SteamId = steamId;
+            SettingsService.Save();
+        }
+
+        var profile = await _steamService.GetProfileAsync();
+        if (profile is not null)
+        {
+            profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
+            SteamProfile = profile;
+            SteamConnected = true;
+            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SteamLogin()
+    {
+        // Try auto-detect first, then use stored, then ask user
+        var steamId = SteamService.DetectLocalSteamId()
+                      ?? SettingsService.Current.SteamId;
+
+        if (string.IsNullOrEmpty(steamId))
+        {
+            var setup = new SteamSetupDialog
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (setup.ShowDialog() != true) return;
+
+            steamId = setup.SteamIdOrVanity;
+        }
+
+        StatusMessage = "Conectando à Steam...";
+
+        _steamService?.Dispose();
+        _steamService = new SteamService();
+
+        var success = await _steamService.ConnectAsync(steamId);
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar à Steam.";
+            MessageBox.Show(
+                "Não foi possível conectar à Steam.\n\n" +
+                "Verifique se o Steam está instalado e você está logado.",
+                "Steam", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // Persist the Steam ID
+        SettingsService.Current.SteamId = _steamService.SteamId ?? steamId;
+        SettingsService.Save();
+
+        StatusMessage = "Carregando perfil Steam...";
+        var profile = await _steamService.GetProfileAsync();
+
+        if (profile is not null)
+        {
+            profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
+            SteamProfile = profile;
+            SteamConnected = true;
+            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+        }
+        else
+        {
+            SteamConnected = true;
+            StatusMessage = "Steam conectada (perfil indisponível).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenSteamProfile()
+    {
+        if (!IsSteamConnected || SteamProfile is null)
+        {
+            await SteamLogin();
+            return;
+        }
+
+        var importedCount = Games.Count(g =>
+            g.InstallDirectory is not null &&
+            g.InstallDirectory.Contains("steamapps", StringComparison.OrdinalIgnoreCase));
+
+        var availableCount = SteamProfile.OwnedGamesCount;
+
+        var dialog = new SteamProfileDialog(SteamProfile, importedCount, availableCount)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                _steamService?.Disconnect();
+                _steamService?.Dispose();
+                _steamService = null;
+
+                SteamProfile = null;
+                SteamConnected = false;
+                SettingsService.Current.SteamId = string.Empty;
+                SettingsService.Save();
+                StatusMessage = "Desconectado da Steam.";
+            }
+            else if (dialog.ImportGamesRequested)
+            {
+                await ImportSteamGames();
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportSteamGames()
+    {
+        if (_steamService is null)
+        {
+            StatusMessage = "Conecte-se à Steam primeiro.";
+            return;
+        }
+
+        StatusMessage = "Escaneando jogos Steam instalados...";
+
+        var steamGames = await Task.Run(() => _steamService.ScanSteamInstalledGames());
+
+        if (steamGames.Count == 0)
+        {
+            StatusMessage = "Nenhum jogo Steam instalado encontrado.";
+            MessageBox.Show(
+                "Nenhum jogo Steam instalado encontrado.\n\n" +
+                "Verifique se há jogos instalados nas pastas do Steam.",
+                "Steam Games", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int added = 0;
+        var newGames = new List<Game>();
+
+        foreach (var sg in steamGames)
+        {
+            if (Games.Any(g => g.ExecutablePath.Equals(sg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            Games.Add(sg);
+            newGames.Add(sg);
+            added++;
+        }
+
+        SaveGames();
+        _gamesView.Refresh();
+        StatusMessage = added > 0
+            ? $"{added} jogo(s) Steam importado(s)! {Games.Count} jogos na biblioteca."
+            : "Todos os jogos Steam já estavam na biblioteca.";
+
+        foreach (var game in newGames)
+        {
+            await AutoFetchAllWithProgressAsync(game);
+        }
     }
 
     [RelayCommand]

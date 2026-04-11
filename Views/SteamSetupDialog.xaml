@@ -1,0 +1,57 @@
+﻿<Window x:Class="GameLauncher.Views.SteamSetupDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="&#x1f3ae; Conectar &#xe0; Steam"
+        Width="520" Height="280"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="&#x1f3ae; Conectar &#xe0; Steam"
+                       FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                N&#xe3;o foi poss&#xed;vel detectar sua conta Steam automaticamente.
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                Informe seu <Run FontWeight="SemiBold" Foreground="White">Steam ID</Run> (n&#xfa;mero de 17 d&#xed;gitos),
+                <Run FontWeight="SemiBold" Foreground="White">nome personalizado</Run> ou
+                <Run FontWeight="SemiBold" Foreground="White">URL do perfil</Run>
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                Ex: steamcommunity.com/id/<Run FontWeight="SemiBold" Foreground="#66C0F4">seuNome</Run>
+                ou <Run FontWeight="SemiBold" Foreground="#66C0F4">76561198012345678</Run>
+            </TextBlock>
+        </StackPanel>
+
+        <TextBox x:Name="SteamIdBox"
+                 Grid.Row="1"
+                 md:HintAssist.Hint="Steam ID, nome personalizado ou URL do perfil"
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Foreground="White" CaretBrush="White"
+                 FontSize="13" Height="52" Margin="0,0,0,10"
+                 VerticalContentAlignment="Center"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="CONECTAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#66C0F4" FontWeight="Bold"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
