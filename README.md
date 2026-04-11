@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher
+  # GLauncher V.2.5.0 (Beta Teste)
 
   **Launcher de jogos pessoal estilo PS5 — feito com WPF e .NET 8**
 
