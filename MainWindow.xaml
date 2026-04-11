@@ -527,9 +527,9 @@
                 </Border>
             </Border>
 
-<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="1">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
+<Grid Panel.ZIndex="1">
+                <Grid.Style>
+                    <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Games.Count}" Value="0">
@@ -537,11 +537,152 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </StackPanel.Style>
-                <md:PackIcon Kind="GamepadVariantOutline" Width="80" Height="80" Foreground="#2A2A3A" HorizontalAlignment="Center"/>
-                <TextBlock Text="Nenhum jogo adicionado" FontSize="18" Foreground="#555566" HorizontalAlignment="Center" Margin="0,16,0,0"/>
-                <TextBlock Text="Clique em + ADICIONAR JOGO para começar" FontSize="12" Foreground="#445566" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-            </StackPanel>
+                </Grid.Style>
+
+                <Border>
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.5,0.4" RadiusX="0.8" RadiusY="0.9">
+                            <GradientStop Color="#1A1040" Offset="0"/>
+                            <GradientStop Color="#0F0C24" Offset="0.5"/>
+                            <GradientStop Color="#0A0A14" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <Border Opacity="0.12" IsHitTestVisible="False">
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.3,0.3" RadiusX="0.4" RadiusY="0.5">
+                            <GradientStop Color="#7C4DFF" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border Opacity="0.08" IsHitTestVisible="False">
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.75,0.7" RadiusX="0.35" RadiusY="0.45">
+                            <GradientStop Color="#00E676" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+                    <Image Source="Assets/icon.png" Width="72" Height="72" Margin="0,0,0,8"
+                           RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center">
+                        <Image.Effect>
+                            <DropShadowEffect Color="#7C4DFF" BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+                        </Image.Effect>
+                    </Image>
+
+                    <TextBlock HorizontalAlignment="Center" Margin="0,0,0,6">
+                        <Run Text="Bem-vindo ao " FontSize="28" FontWeight="Light" Foreground="#BBBBCC"/>
+                        <Run Text="G" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource AccentGreenBrush}"/>
+                        <Run Text="Launcher" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="2" Opacity="0.7"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+
+                    <TextBlock Text="Sua biblioteca de jogos pessoal — rápida, elegante e pronta para jogar."
+                               FontSize="14" Foreground="#7788AA" HorizontalAlignment="Center"
+                               TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,28"/>
+
+                    <Border Background="#18182A" CornerRadius="16" Padding="32,28" Margin="0,0,0,24"
+                            BorderThickness="1" BorderBrush="#222244">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="4" Opacity="0.4"/>
+                        </Border.Effect>
+                        <StackPanel>
+                            <TextBlock Text="🚀  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="#CCCCDD" HorizontalAlignment="Center" Margin="0,0,0,18"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="#7C4DFF"
+                                        VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock Text="1" FontSize="13" FontWeight="Bold" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Clique no botão abaixo ou em ⚙ → Adicionar Jogo"
+                                           FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="#7C4DFF"
+                                        VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock Text="2" FontSize="13" FontWeight="Bold" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Selecione o executável (.exe) do seu jogo"
+                                           FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Border Width="28" Height="28" CornerRadius="14" Background="#7C4DFF"
+                                        VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock Text="3" FontSize="13" FontWeight="Bold" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Pronto! Aproveite a experiência com capa, fundo e info automáticas"
+                                           FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Command="{Binding AddGameCommand}" Cursor="Hand" HorizontalAlignment="Center"
+                            BorderThickness="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="AddBd" CornerRadius="24" Padding="32,14"
+                                        RenderTransformOrigin="0.5,0.5">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#00E676" Offset="0"/>
+                                            <GradientStop Color="#00C853" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                    </Border.RenderTransform>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#00E676" BlurRadius="20" ShadowDepth="0" Opacity="0.45"/>
+                                    </Border.Effect>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <md:PackIcon Kind="Plus" Width="20" Height="20" Foreground="#0A0A14"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="ADICIONAR MEU PRIMEIRO JOGO" FontSize="14" FontWeight="Bold"
+                                                   FontFamily="Segoe UI" Foreground="#0A0A14" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="AddBd" Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1.06" ScaleY="1.06"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter TargetName="AddBd" Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="28" ShadowDepth="0" Opacity="0.65"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="AddBd" Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <TextBlock Text="💡 Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
+                               FontSize="11" Foreground="#556677" HorizontalAlignment="Center"
+                               TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"/>
+                </StackPanel>
+            </Grid>
 
 <Grid Panel.ZIndex="2">
                 <Grid.Style>
