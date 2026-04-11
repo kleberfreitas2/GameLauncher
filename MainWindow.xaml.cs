@@ -31,6 +31,11 @@ public partial class MainWindow : Window
     private List<MenuItem> _menuItems = [];
     private int _menuIndex;
 
+    private bool _isFullscreen;
+    private WindowStyle _previousWindowStyle;
+    private WindowState _previousWindowState;
+    private ResizeMode _previousResizeMode;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -66,6 +71,8 @@ public partial class MainWindow : Window
                 };
             }
         }
+
+        KeyDown += MainWindow_KeyDown;
 
         Loaded += (_, _) => CompositionTarget.Rendering += OnFpsRendering;
         Closed += (_, _) =>
@@ -171,6 +178,38 @@ public partial class MainWindow : Window
         if (sender is ListBox listBox && listBox.SelectedItem is not null)
         {
             listBox.ScrollIntoView(listBox.SelectedItem);
+        }
+    }
+
+    private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F11)
+        {
+            ToggleFullscreen();
+            e.Handled = true;
+        }
+    }
+
+    private void ToggleFullscreen()
+    {
+        if (!_isFullscreen)
+        {
+            _previousWindowStyle = WindowStyle;
+            _previousWindowState = WindowState;
+            _previousResizeMode = ResizeMode;
+
+            WindowState = WindowState.Normal;
+            WindowStyle = WindowStyle.None;
+            ResizeMode = ResizeMode.NoResize;
+            WindowState = WindowState.Maximized;
+            _isFullscreen = true;
+        }
+        else
+        {
+            WindowStyle = _previousWindowStyle;
+            ResizeMode = _previousResizeMode;
+            WindowState = _previousWindowState;
+            _isFullscreen = false;
         }
     }
 }
