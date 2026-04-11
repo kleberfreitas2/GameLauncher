@@ -24,11 +24,23 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ---
 
+<div align="center">
+
+## ⬇️ Download
+
+### Baixe a última versão do GLauncher na aba Releases:
+
+### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.5.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest) 👈
+
+> **Não precisa instalar!** Basta extrair o `.zip` e executar o `GameLauncher.exe`.
+>
+> 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
+
+</div>
+
+---
+
 ## ✨ Funcionalidades
-
-## 🎮 Baixe a release atual.
-
-https://github.com/kleberfreitas2/GameLauncher/releases/tag/game
 
 ### 🎮 Biblioteca de Jogos
 - Adicionar jogos individualmente ou vários de uma vez via seleção de `.exe`
