@@ -66,6 +66,24 @@ public sealed class XInputService : IDisposable
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
     private static extern uint XInputGetState(uint dwUserIndex, ref XINPUT_STATE pState);
 
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetBatteryInformation")]
+    private static extern uint XInputGetBatteryInformation(uint dwUserIndex, byte devType, ref XINPUT_BATTERY_INFORMATION pBatteryInfo);
+
+    private const byte BATTERY_DEVTYPE_GAMEPAD = 0x00;
+    private const byte BATTERY_TYPE_DISCONNECTED = 0x00;
+    private const byte BATTERY_TYPE_WIRED = 0x01;
+    private const byte BATTERY_LEVEL_EMPTY = 0x00;
+    private const byte BATTERY_LEVEL_LOW = 0x01;
+    private const byte BATTERY_LEVEL_MEDIUM = 0x02;
+    private const byte BATTERY_LEVEL_FULL = 0x03;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct XINPUT_BATTERY_INFORMATION
+    {
+        public byte BatteryType;
+        public byte BatteryLevel;
+    }
+
     // HID P/Invoke for reading PlayStation controllers
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     private static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess,
@@ -194,8 +212,15 @@ public sealed class XInputService : IDisposable
     /// <summary>Fires every poll with the right stick Y-axis value normalized to -1..1 (positive = up). Zero when inside deadzone.</summary>
     public event Action<double>? RightStickY;
 
+    /// <summary>Fires when battery level changes. Value is 0-100 (percentage), or -1 for wired/unknown.</summary>
+    public event Action<int>? BatteryChanged;
+
     public bool IsConnected => _isConnected;
     public string ControllerName { get; private set; } = "";
+    public int BatteryPercent { get; private set; } = -1;
+
+    private int _lastBatteryPoll;
+    private const int BATTERY_POLL_INTERVAL = 50; // ~3 seconds at 60ms poll
 
     public XInputService()
     {
@@ -231,6 +256,7 @@ public sealed class XInputService : IDisposable
             {
                 SetConnected(true, "Xbox Controller");
                 ProcessXInputState(ref state);
+                PollXInputBattery(_activeXInputIndex);
                 return true;
             }
             // Lost connection on this index
@@ -246,6 +272,7 @@ public sealed class XInputService : IDisposable
                 _activeXInputIndex = i;
                 SetConnected(true, "Xbox Controller");
                 ProcessXInputState(ref state);
+                PollXInputBattery(i);
                 return true;
             }
         }
@@ -437,6 +464,76 @@ public sealed class XInputService : IDisposable
                    : 0.0;
         if (rsY != 0.0)
             RightStickY?.Invoke(rsY);
+
+        // Battery level from HID report
+        PollHidBattery(report, off);
+    }
+
+    private void PollXInputBattery(uint index)
+    {
+        _lastBatteryPoll++;
+        if (_lastBatteryPoll < BATTERY_POLL_INTERVAL) return;
+        _lastBatteryPoll = 0;
+
+        var battInfo = new XINPUT_BATTERY_INFORMATION();
+        uint res = XInputGetBatteryInformation(index, BATTERY_DEVTYPE_GAMEPAD, ref battInfo);
+        if (res != ERROR_SUCCESS) return;
+
+        int pct = battInfo.BatteryType switch
+        {
+            BATTERY_TYPE_WIRED => -1,
+            BATTERY_TYPE_DISCONNECTED => -1,
+            _ => battInfo.BatteryLevel switch
+            {
+                BATTERY_LEVEL_EMPTY  => 5,
+                BATTERY_LEVEL_LOW    => 30,
+                BATTERY_LEVEL_MEDIUM => 65,
+                BATTERY_LEVEL_FULL   => 100,
+                _ => -1
+            }
+        };
+
+        if (pct != BatteryPercent)
+        {
+            BatteryPercent = pct;
+            BatteryChanged?.Invoke(pct);
+        }
+    }
+
+    private void PollHidBattery(byte[] report, int off)
+    {
+        _lastBatteryPoll++;
+        if (_lastBatteryPoll < BATTERY_POLL_INTERVAL) return;
+        _lastBatteryPoll = 0;
+
+        // DualSense USB: report[0]=0x01, battery at byte 53
+        // DualSense BT:  report[0]=0x31, battery at byte 54 (off=1)
+        // DualShock 4 USB: report[0]=0x01, battery at byte 30
+        // DualShock 4 BT:  report[0]=0x11, battery at byte 32
+        int batteryByte = -1;
+        if (report.Length >= off + 54 && _hidControllerName.Contains("DualSense", StringComparison.OrdinalIgnoreCase))
+        {
+            batteryByte = off + 53;
+        }
+        else if (report.Length >= 31 && _hidControllerName.Contains("DualShock", StringComparison.OrdinalIgnoreCase))
+        {
+            batteryByte = report[0] == 0x11 ? 32 : 30;
+            if (batteryByte >= report.Length) return;
+        }
+
+        if (batteryByte < 0 || batteryByte >= report.Length) return;
+
+        byte raw = report[batteryByte];
+        // DualSense: lower nibble = level 0-10, bit 4 = charging
+        // DualShock 4: lower nibble = level 0-10, bit 4 = cable connected
+        int level = raw & 0x0F;
+        int pct = Math.Clamp(level * 10, 0, 100);
+
+        if (pct != BatteryPercent)
+        {
+            BatteryPercent = pct;
+            BatteryChanged?.Invoke(pct);
+        }
     }
 
     private void TryOpenHidController()
@@ -532,6 +629,12 @@ public sealed class XInputService : IDisposable
         if (connected == _isConnected && name == ControllerName) return;
         _isConnected = connected;
         ControllerName = name;
+        if (!connected && BatteryPercent != -1)
+        {
+            BatteryPercent = -1;
+            BatteryChanged?.Invoke(-1);
+        }
+        _lastBatteryPoll = BATTERY_POLL_INTERVAL; // force immediate battery read on connect
         ConnectionChanged?.Invoke(connected);
     }
 

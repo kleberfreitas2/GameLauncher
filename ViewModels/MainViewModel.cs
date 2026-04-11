@@ -61,9 +61,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private Game? selectedGame;
     [ObservableProperty] private Game? detailGame;
     [ObservableProperty] private bool showDetailPanel;
-    [ObservableProperty] private bool gamepadConnected;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
+    private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
     [ObservableProperty] private bool isAnimationLoading;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
+    [NotifyPropertyChangedFor(nameof(GamepadBatteryText))]
+    [NotifyPropertyChangedFor(nameof(GamepadBatteryIcon))]
+    private int gamepadBatteryLevel = -1;
+
+    public bool HasGamepadBattery => GamepadBatteryLevel >= 0 && GamepadConnected;
+    public string GamepadBatteryText => GamepadBatteryLevel >= 0 ? $"{GamepadBatteryLevel}%" : "";
+    public string GamepadBatteryIcon => GamepadBatteryLevel switch
+    {
+        >= 80 => "Battery",
+        >= 50 => "Battery70",
+        >= 20 => "Battery40",
+        >= 0  => "Battery10",
+        _     => "BatteryUnknown"
+    };
 
     private bool _isContextMenuOpen;
     public bool IsContextMenuOpen
@@ -161,7 +180,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.ButtonPressed += OnGamepadButton;
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
         _xinput.RightStickY += OnRightStickY;
+        _xinput.BatteryChanged += OnBatteryChanged;
         _xinput.Start();
+
+        SoundService.Initialize();
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
@@ -226,6 +248,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         DetailGame = value;
         ShowDetailPanel = value is not null;
+        if (value is not null)
+            SoundService.PlayNavigate();
     }
 
     private void LoadGames()
@@ -669,6 +693,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
+            SoundService.PlayLaunch();
             Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
@@ -681,6 +706,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
+            SoundService.PlayError();
             StatusMessage = $"Erro ao lançar {game.DisplayName}: {ex.Message}";
         }
     }
@@ -689,6 +715,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ToggleFavorite(Game game)
     {
         game.IsFavorite = !game.IsFavorite;
+        SoundService.PlayFavorite();
         _gamesView.Refresh();
         SaveGames();
         StatusMessage = game.IsFavorite
@@ -765,6 +792,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void ToggleSound()
+    {
+        SettingsService.Current.SoundEnabled = !SettingsService.Current.SoundEnabled;
+        SettingsService.Save();
+        StatusMessage = SettingsService.Current.SoundEnabled
+            ? "Sons ativados 🔊"
+            : "Sons desativados 🔇";
+        if (SettingsService.Current.SoundEnabled)
+            SoundService.PlaySelect();
     }
 
     [RelayCommand]
@@ -1220,6 +1259,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     ? $"🎮 Controle conectado  |  {buttons}"
                     : $"🎮 {name} conectado  |  {buttons}"
                 : "";
+            if (!connected)
+                GamepadBatteryLevel = -1;
             if (connected)
             {
                 ActiveZone = NavZone.Carousel;
@@ -1237,6 +1278,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 FocusedHeaderItem = "";
                 ActiveZone = NavZone.Carousel;
             }
+        });
+    }
+
+    private void OnBatteryChanged(int percent)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            GamepadBatteryLevel = percent;
         });
     }
 
@@ -1281,14 +1330,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     if (ActiveZone == NavZone.Carousel)
                     {
                         var vis = GetVisibleGames();
-                        if (vis.Count > 0) NavigateCarousel(-5, vis);
+                        if (vis.Count > 0) { NavigateCarousel(-5, vis); SoundService.PlayNavigate(); }
                     }
                     return;
                 case GamepadButton.RightShoulder:
                     if (ActiveZone == NavZone.Carousel)
                     {
                         var vis = GetVisibleGames();
-                        if (vis.Count > 0) NavigateCarousel(5, vis);
+                        if (vis.Count > 0) { NavigateCarousel(5, vis); SoundService.PlayNavigate(); }
                     }
                     return;
 
@@ -1342,6 +1391,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (next == current) return;
 
+        SoundService.PlayZoneChange();
         ActiveZone = (NavZone)next;
 
         switch (ActiveZone)
@@ -1373,12 +1423,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case NavZone.Header:
                 HeaderIndex = Math.Clamp(HeaderIndex + direction, 0, HeaderItems.Length - 1);
                 FocusedHeaderItem = HeaderItems[HeaderIndex];
+                SoundService.PlayNavigate();
                 break;
 
             case NavZone.Carousel:
                 var visible = GetVisibleGames();
                 if (visible.Count > 0)
+                {
                     NavigateCarousel(direction, visible);
+                    SoundService.PlayNavigate();
+                }
                 break;
 
             case NavZone.Actions:
@@ -1399,6 +1453,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ActivateCurrentItem()
     {
+        SoundService.PlaySelect();
         switch (ActiveZone)
         {
             case NavZone.Header:
@@ -1444,6 +1499,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void HandleBack()
     {
+        SoundService.PlayBack();
         if (ActiveZone == NavZone.Header)
         {
             ActiveZone = NavZone.Carousel;
@@ -1497,7 +1553,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
 
         string prefix = string.IsNullOrEmpty(name) ? "🎮" : $"🎮 {name}";
-        GamepadStatus = $"{prefix}  |  {hint}";
+        string battery = GamepadBatteryLevel >= 0 ? $"  |  🔋 {GamepadBatteryLevel}%" : "";
+        GamepadStatus = $"{prefix}{battery}  |  {hint}";
     }
 
     private List<Game> GetVisibleGames()

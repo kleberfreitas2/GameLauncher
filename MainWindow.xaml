@@ -309,38 +309,89 @@
                         </Button.Template>
                     </Button>
                     </Border>
-                    <!-- Gamepad connection icon -->
+                    <!-- Gamepad connection icon + battery -->
                     <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
-                        <Grid>
-                            <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#556677" VerticalAlignment="Center">
-                                <md:PackIcon.Style>
-                                    <Style TargetType="md:PackIcon">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </md:PackIcon.Style>
-                            </md:PackIcon>
-                            <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#00E676"
-                           VerticalAlignment="Center">
-                                <md:PackIcon.Style>
-                                    <Style TargetType="md:PackIcon">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </md:PackIcon.Style>
-                                <md:PackIcon.Effect>
-                                    <DropShadowEffect Color="#00E676" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
-                                </md:PackIcon.Effect>
-                            </md:PackIcon>
-                        </Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid>
+                                <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#556677" VerticalAlignment="Center">
+                                    <md:PackIcon.Style>
+                                        <Style TargetType="md:PackIcon">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </md:PackIcon.Style>
+                                </md:PackIcon>
+                                <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#00E676"
+                               VerticalAlignment="Center">
+                                    <md:PackIcon.Style>
+                                        <Style TargetType="md:PackIcon">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GamepadConnected}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </md:PackIcon.Style>
+                                    <md:PackIcon.Effect>
+                                        <DropShadowEffect Color="#00E676" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
+                                    </md:PackIcon.Effect>
+                                </md:PackIcon>
+                            </Grid>
+                            <!-- Battery indicator (visible only when wireless controller connected) -->
+                            <Border Margin="6,0,0,0" CornerRadius="8" Background="#22FFFFFF" Padding="6,2"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding HasGamepadBattery, Converter={StaticResource BoolToVisibility}}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <md:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,3,0">
+                                        <md:PackIcon.Style>
+                                            <Style TargetType="md:PackIcon">
+                                                <Setter Property="Kind" Value="Battery"/>
+                                                <Setter Property="Foreground" Value="#00E676"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery10">
+                                                        <Setter Property="Kind" Value="Battery10"/>
+                                                        <Setter Property="Foreground" Value="#FF5252"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery40">
+                                                        <Setter Property="Kind" Value="Battery40"/>
+                                                        <Setter Property="Foreground" Value="#FFD740"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery70">
+                                                        <Setter Property="Kind" Value="Battery70"/>
+                                                        <Setter Property="Foreground" Value="#69F0AE"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery">
+                                                        <Setter Property="Kind" Value="Battery"/>
+                                                        <Setter Property="Foreground" Value="#00E676"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </md:PackIcon.Style>
+                                    </md:PackIcon>
+                                    <TextBlock Text="{Binding GamepadBatteryText}" FontSize="11" FontWeight="SemiBold"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#00E676"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery10">
+                                                        <Setter Property="Foreground" Value="#FF5252"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GamepadBatteryIcon}" Value="Battery40">
+                                                        <Setter Property="Foreground" Value="#FFD740"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </Border>
                     <Border Margin="0,0,16,0">
                         <Border.Style>
@@ -383,6 +434,11 @@
                                 <MenuItem Header="Tema" Command="{Binding OpenThemeCommand}">
                                     <MenuItem.Icon>
                                         <md:PackIcon Kind="ThemeLightDark" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Sons (Ligar/Desligar)" Command="{Binding ToggleSoundCommand}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="VolumeHigh" Width="16" Height="16"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator/>
@@ -762,23 +818,23 @@
                                                             </BeginStoryboard>
                                                         </Trigger.EnterActions>
                                                         <Trigger.ExitActions>
-                                                            <BeginStoryboard>
+                                                             <BeginStoryboard>
                                                                 <Storyboard>
-                                                                    <DoubleAnimation Storyboard.TargetName="Root"
-                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                                     To="1.0" Duration="0:0:0.2">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-                                                                    </DoubleAnimation>
-                                                                    <DoubleAnimation Storyboard.TargetName="Root"
-                                                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                                     To="1.0" Duration="0:0:0.2">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-                                                                    </DoubleAnimation>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </Trigger.ExitActions>
-                                                    </Trigger>
-                                                    <!-- Selected: scale up + neon glow ring + glass shine -->
+                                                                     <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                                      To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
+                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                     </DoubleAnimation>
+                                                                     <DoubleAnimation Storyboard.TargetName="Root"
+                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                                      To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
+                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                     </DoubleAnimation>
+                                                                 </Storyboard>
+                                                             </BeginStoryboard>
+                                                         </Trigger.ExitActions>
+                                                     </Trigger>
+                                                     <!-- Selected: scale up + neon glow ring + glass shine -->
                                                     <Trigger Property="IsSelected" Value="True">
                                                         <Trigger.EnterActions>
                                                             <BeginStoryboard>
@@ -811,12 +867,12 @@
                                                                 <Storyboard>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                                     To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                                                                                     To="1.0" Duration="0:0:0.2">
+                                                                                     To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Glow"

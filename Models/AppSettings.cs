@@ -19,6 +19,8 @@ public class AppSettings
     public string SteamApiKey           { get; set; } = DefaultSteamApiKey;
     public string SteamId               { get; set; } = string.Empty;
 
+    public bool SoundEnabled            { get; set; } = true;
+
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
     public string BackgroundColor      { get; set; } = "#0D0D0D";
