@@ -165,4 +165,12 @@ public partial class MainWindow : Window
         if (DataContext is MainViewModel vm)
             vm.ChangeAvatarCommand.Execute(null);
     }
+
+    private void GameCarousel_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ListBox listBox && listBox.SelectedItem is not null)
+        {
+            listBox.ScrollIntoView(listBox.SelectedItem);
+        }
+    }
 }

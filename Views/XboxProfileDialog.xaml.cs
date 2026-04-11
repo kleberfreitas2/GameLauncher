@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using GameLauncher.Models;
+using GameLauncher.Services;
 
 namespace GameLauncher.Views;
 
@@ -75,5 +76,16 @@ public partial class XboxProfileDialog : Window
     {
         ImportGamesRequested = true;
         DialogResult = true;
+    }
+
+    public void HandleGamepadInput(GamepadButton button)
+    {
+        switch (button)
+        {
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                DialogResult = false;
+                break;
+        }
     }
 }

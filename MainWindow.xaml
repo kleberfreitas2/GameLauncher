@@ -704,7 +704,9 @@
                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
                      VirtualizingPanel.IsVirtualizing="True"
                      VirtualizingPanel.VirtualizationMode="Recycling"
-                     x:Name="GameCarousel">
+                     x:Name="GameCarousel"
+                     SelectionChanged="GameCarousel_SelectionChanged"
+                     Padding="0,0,20,0">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel Orientation="Horizontal"/>

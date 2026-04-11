@@ -103,6 +103,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public Action<double>? HelpDialogScroll { get; set; }
 
+    private bool _isProfileDialogOpen;
+    public bool IsProfileDialogOpen
+    {
+        get => _isProfileDialogOpen;
+        set => SetProperty(ref _isProfileDialogOpen, value);
+    }
+
+    public Action<GamepadButton>? ProfileDialogNavigate { get; set; }
+
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
     [ObservableProperty]
@@ -930,6 +939,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Owner = Application.Current.MainWindow
         };
 
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
         if (dialog.ShowDialog() == true)
         {
             if (dialog.LogoutRequested)
@@ -946,6 +958,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 await ImportXboxGames();
             }
         }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
     }
 
     [RelayCommand]
@@ -1103,6 +1118,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Owner = Application.Current.MainWindow
         };
 
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
         if (dialog.ShowDialog() == true)
         {
             if (dialog.LogoutRequested)
@@ -1122,6 +1140,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 await ImportSteamGames();
             }
         }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
     }
 
     [RelayCommand]
@@ -1296,6 +1317,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (IsHelpDialogOpen)
             {
                 HelpDialogNavigate?.Invoke(button);
+                return;
+            }
+
+            if (IsProfileDialogOpen)
+            {
+                ProfileDialogNavigate?.Invoke(button);
                 return;
             }
 
