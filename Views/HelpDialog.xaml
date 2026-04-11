@@ -22,7 +22,7 @@
                         <TextBlock Text="&#x1f4d6;" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Manual" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="GLauncher v2.0" FontSize="11" Foreground="#556688"/>
+                    <TextBlock Text="GLauncher v2.5" FontSize="11" Foreground="#556688"/>
                 </StackPanel>
 
 <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
@@ -109,7 +109,11 @@
                                         <TextBlock Text="&#x2022; Informa&#xe7;&#xf5;es do IGDB (sinopse, g&#xea;nero, nota, ano)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Tradu&#xe7;&#xe3;o autom&#xe1;tica para Portugu&#xea;s" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Contador de FPS em tempo real" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="&#x2022; Suporte a controle Xbox/XInput" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Suporte a controle Xbox e PlayStation (DualSense/DualShock)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Navega&#xe7;&#xe3;o completa por zonas com gamepad (Header / A&#xe7;&#xf5;es / Carrossel)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; N&#xed;vel de bateria do controle em tempo real &#x1f50b;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Efeitos sonoros estilo console (navegar, selecionar, favoritar, erro)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Minimiza o launcher ao jogar e restaura ao sair do jogo" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Monitor de CPU, GPU, RAM e temperaturas" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Sistema de favoritos com estrela &#x2b50;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; M&#xfa;ltiplos temas visuais" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
@@ -541,11 +545,50 @@
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Suporte a XInput" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Controles Suportados" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher detecta automaticamente controles Xbox e compat&#xed;veis com XInput.
+                                        O GLauncher detecta automaticamente controles conectados via USB ou Bluetooth.
                                         O &#xed;cone do controle no cabe&#xe7;alho fica verde quando conectado.
                                     </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; Xbox" FontWeight="SemiBold"/> <Run Text="&#x2014; Controles Xbox One, Series X|S e compat&#xed;veis XInput" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; PlayStation" FontWeight="SemiBold"/> <Run Text="&#x2014; DualSense (PS5) e DualShock 4 (PS4) via HID" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="0,10,0,0">
+                                        Os r&#xf3;tulos dos bot&#xf5;es na barra de status se adaptam automaticamente ao tipo de controle 
+                                        (ex: &#x201c;A = Jogar&#x201d; para Xbox, &#x201c;&#x2715; = Jogar&#x201d; para PlayStation).
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f50b; N&#xed;vel de Bateria" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Quando o controle est&#xe1; conectado via Bluetooth, o n&#xed;vel de bateria &#xe9; exibido 
+                                        no cabe&#xe7;alho ao lado do &#xed;cone do controle com percentual e &#xed;cone colorido:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; 80&#x2013;100%" FontWeight="SemiBold"/> <Run Text="&#x2014; Verde (cheio)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#69F0AE" Margin="0,3"><Run Text="&#x2022; 50&#x2013;79%" FontWeight="SemiBold"/> <Run Text="&#x2014; Verde claro" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FFD740" Margin="0,3"><Run Text="&#x2022; 20&#x2013;49%" FontWeight="SemiBold"/> <Run Text="&#x2014; Amarelo (aten&#xe7;&#xe3;o)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FF5252" Margin="0,3"><Run Text="&#x2022; 0&#x2013;19%" FontWeight="SemiBold"/> <Run Text="&#x2014; Vermelho (baixo)" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Navega&#xe7;&#xe3;o por Zonas" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A interface &#xe9; dividida em 3 zonas de navega&#xe7;&#xe3;o. Use D-Pad &#x25b2;&#x25bc; para alternar entre elas.
+                                        A zona ativa &#xe9; indicada por uma borda verde brilhante.
+                                    </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Header" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xf5;es do cabe&#xe7;alho (Xbox, Steam, Ajuda, Config, Adicionar, Tema)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; A&#xe7;&#xf5;es" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xe3;o JOGAR (vis&#xed;vel quando um jogo est&#xe1; selecionado)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Carrossel" FontWeight="SemiBold"/> <Run Text="&#x2014; Navega&#xe7;&#xe3;o entre jogos com D-Pad &#x25c0;&#x25b6; e LB/RB" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
 
@@ -559,9 +602,20 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock FontSize="13" Foreground="#00E676" FontWeight="SemiBold">
                                             <Run Text="D-Pad"/>
+                                            <Run Text=" &#x25b2; &#x25bc;" Foreground="#556688"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="Alternar entre zonas (Header / A&#xe7;&#xf5;es / Carrossel)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock FontSize="13" Foreground="#00E676" FontWeight="SemiBold">
+                                            <Run Text="D-Pad"/>
                                             <Run Text=" &#x25c0; &#x25b6;" Foreground="#556688"/>
                                         </TextBlock>
-                                        <TextBlock Grid.Column="1" Text="Navegar entre jogos" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Grid.Column="1" Text="Navegar entre jogos (Carrossel) ou itens (Header)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
@@ -569,22 +623,22 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="LB / RB" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Navegar 5 jogos por vez (pagina&#xe7;&#xe3;o r&#xe1;pida)" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Grid.Column="1" Text="Pular 5 jogos por vez (pagina&#xe7;&#xe3;o r&#xe1;pida)" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="A (Verde)" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Iniciar / Jogar o jogo selecionado" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="A / &#x2715;" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Confirmar / Jogar / Selecionar item do Header" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Y (Amarelo)" FontSize="13" Foreground="#FFD700" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Y / &#x25b3;" FontSize="13" Foreground="#FFD700" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Alternar favorito &#x2b50;" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
@@ -592,7 +646,7 @@
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="X (Azul)" FontSize="13" Foreground="#4488FF" FontWeight="SemiBold"/>
+                                        <TextBlock Text="X / &#x25a1;" FontSize="13" Foreground="#4488FF" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Buscar capa online" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
@@ -600,10 +654,81 @@
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="B (Vermelho)" FontSize="13" Foreground="#FF5555" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Limpar pesquisa" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="B / &#x25cb;" FontSize="13" Foreground="#FF5555" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Voltar / Limpar pesquisa / Fechar di&#xe1;logos" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Start / Options" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abrir menu de configura&#xe7;&#xf5;es (engrenagem)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Back / Create" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abrir este manual" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Anal&#xf3;gico Direito" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Scroll vertical no manual" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                 </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f50a; Efeitos Sonoros" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        O GLauncher reproduz efeitos sonoros estilo console durante a navega&#xe7;&#xe3;o:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock Text="&#x2022; Navegar &#x2014; Som ao mover entre jogos ou itens" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Selecionar &#x2014; Som ao confirmar a&#xe7;&#xe3;o (A / &#x2715;)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Voltar &#x2014; Som ao pressionar B / &#x25cb;" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Favoritar &#x2014; Som especial ao marcar favorito" FontSize="13" Foreground="#FFD700" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Zona &#x2014; Som ao alternar entre zonas" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Lan&#xe7;ar &#x2014; Som ao iniciar um jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Erro &#x2014; Som ao ocorrer falha" FontSize="13" Foreground="#FF5555" Margin="0,3"/>
+                                    </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="0,8,0,0">
+                                        Os sons podem ser ativados/desativados pelo menu &#x2699;&#xfe0f; &#x2192; &#x201c;Sons (Ligar/Desligar)&#x201d;.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f3ae; Minimizar ao Jogar" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Quando voc&#xea; inicia um jogo pelo controle ou bot&#xe3;o JOGAR, o GLauncher:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock Text="&#x2022; Minimiza a janela automaticamente" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Pausa o polling do controle (libera o gamepad para o jogo)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Quando o jogo fecha, restaura a janela e retoma o controle" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        Di&#xe1;logos como Perfil Xbox, Perfil Steam e este Manual podem ser fechados 
+                                        pressionando B / &#x25cb; no controle. No menu de configura&#xe7;&#xf5;es, use D-Pad &#x25b2;&#x25bc; para navegar 
+                                        e A / &#x2715; para selecionar a op&#xe7;&#xe3;o.
+                                    </TextBlock>
+                                </DockPanel>
                             </Border>
                         </StackPanel>
 
