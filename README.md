@@ -285,7 +285,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🟢 GLauncher    [+ ADICIONAR JOGO] [TEMA] [❓] [🎮] [⚙️] 14:30 [👤]  │  ← Header
+│  🟢 GLauncher    [+ ADICIONAR JOGO] [TEMA] [❓] [🎮] [⚙️] 14:30 [👤]   │  ← Header
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │          ┌─────────────────────────────────────────────┐                 │
@@ -295,19 +295,19 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 │          │    [▶ JOGAR]                                │                 │
 │          └─────────────────────────────────────────────┘                 │
 │                                                                          │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐       │
-│  │ ⭐   │ │      │ │      │ │      │ │      │ │      │ │      │       │  ← Carrossel
-│  │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │       │
-│  │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │       │
-│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘       │
-│                                                                          │
-│  ┌─ Detalhes ────────────────┐  ┌─ Descrição ──────────────────────┐    │
-│  │ Atividade: Há 2 dias      │  │ Sinopse traduzida para PT-BR    │    │
-│  │ Tamanho: 45.2 GB          │  │ Lorem ipsum dolor sit amet...   │    │
-│  │ Gênero: Ação, Aventura    │  │                                 │    │
-│  │ Rating: ⭐ 92/100          │  │                                 │    │
-│  │ Lançamento: 2023           │  │                                 │    │
-│  └────────────────────────────┘  └─────────────────────────────────┘    │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐          │
+│  │ ⭐   │ │      │ │      │ │      │ │      │ │      │ │      │          │  ← Carrossel
+│  │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │           │
+│  │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │           │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘           │
+│                                                                           │
+│  ┌─ Detalhes ────────────────┐  ┌─ Descrição ──────────────────────┐      │
+│  │ Atividade: Há 2 dias      │  │ Sinopse traduzida para PT-BR    │       │
+│  │ Tamanho: 45.2 GB          │  │ Lorem ipsum dolor sit amet...   │       │
+│  │ Gênero: Ação, Aventura    │  │                                 │       │
+│  │ Rating: ⭐ 92/100          │  │                                 │      │
+│  │ Lançamento: 2023           │  │                                 │      │
+│  └────────────────────────────┘  └─────────────────────────────────┘      │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
 │  12 jogos  🎮 Xbox  🔋 85%  CPU: Ryzen 7 5800X  [CPU%][GPU%][CPU°C][GPU°C][RAM] │  ← Footer
