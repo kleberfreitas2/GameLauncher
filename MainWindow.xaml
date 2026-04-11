@@ -409,6 +409,11 @@
                                         <md:PackIcon Kind="VolumeHigh" Width="16" Height="16"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
+                                <MenuItem Header="FPS Overlay no Jogo (Ligar/Desligar)" Command="{Binding ToggleFpsOverlayCommand}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="Speedometer" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <Separator/>
                                 <MenuItem Header="Alternar Favorito"
                           Command="{Binding ToggleFavoriteCommand}"

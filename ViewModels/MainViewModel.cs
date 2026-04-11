@@ -112,6 +112,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public Action<GamepadButton>? ProfileDialogNavigate { get; set; }
 
+    private FpsOverlayWindow? _fpsOverlay;
+
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
     [ObservableProperty]
@@ -228,6 +230,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _hwMonitor.Dispose();
         _xboxService?.Dispose();
         _steamService?.Dispose();
+        _fpsOverlay?.Close();
+        _fpsOverlay = null;
     }
 
     [RelayCommand]
@@ -694,6 +698,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (mainWin is not null)
                 mainWin.WindowState = WindowState.Minimized;
 
+            if (SettingsService.Current.FpsOverlayEnabled)
+            {
+                _fpsOverlay = new FpsOverlayWindow();
+                _fpsOverlay.Show();
+            }
+
             if (proc is not null)
             {
                 _ = Task.Run(() =>
@@ -701,6 +711,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     try { proc.WaitForExit(); } catch { }
                     _dispatcher.BeginInvoke(() =>
                     {
+                        _fpsOverlay?.Close();
+                        _fpsOverlay = null;
+
                         if (mainWin is not null)
                         {
                             mainWin.WindowState = WindowState.Normal;
@@ -718,6 +731,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await Task.Delay(5000);
                     _dispatcher.BeginInvoke(() =>
                     {
+                        _fpsOverlay?.Close();
+                        _fpsOverlay = null;
                         _xinput.Start();
                     });
                 });
@@ -726,9 +741,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             SoundService.PlayError();
+            _fpsOverlay?.Close();
+            _fpsOverlay = null;
             _xinput.Start();
             StatusMessage = $"Erro ao lançar {game.DisplayName}: {ex.Message}";
         }
+    }
+
+    [RelayCommand]
+    private void ToggleFpsOverlay()
+    {
+        SettingsService.Current.FpsOverlayEnabled = !SettingsService.Current.FpsOverlayEnabled;
+        SettingsService.Save();
+        StatusMessage = SettingsService.Current.FpsOverlayEnabled
+            ? "FPS Overlay ativado — será exibido durante os jogos"
+            : "FPS Overlay desativado";
     }
 
     [RelayCommand]

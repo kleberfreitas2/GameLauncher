@@ -776,6 +776,22 @@
                                 </StackPanel>
                             </Border>
 
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f3af; FPS Overlay no Jogo" FontSize="15" FontWeight="SemiBold" Foreground="#00E676" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        O GLauncher pode exibir um overlay de FPS transparente por cima do jogo enquanto voc&#xea; joga.
+                                        O overlay fica no canto superior direito da tela e n&#xe3;o interfere nos cliques (&#xe9; click-through).
+                                    </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock Text="&#x2022; Ative/desative no menu &#x2699;&#xfe0f; &#x2192; &#x201c;FPS Overlay no Jogo (Ligar/Desligar)&#x201d;" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Quando ativado, o overlay aparece automaticamente ao lan&#xe7;ar um jogo" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Quando o jogo fecha, o overlay &#xe9; removido automaticamente" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; As cores mudam conforme o FPS: verde (&#x2265;50), amarelo (&#x2265;30), vermelho (&lt;30)" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
                                 <DockPanel>

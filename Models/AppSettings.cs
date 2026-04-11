@@ -19,6 +19,7 @@ public class AppSettings
     public string SteamId               { get; set; } = string.Empty;
 
     public bool SoundEnabled            { get; set; } = true;
+    public bool FpsOverlayEnabled       { get; set; } = false;
 
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
