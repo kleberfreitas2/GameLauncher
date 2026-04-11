@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using GameLauncher.Services;
 
 namespace GameLauncher.Views;
 
@@ -11,6 +12,34 @@ public partial class HelpDialog : Window
     {
         InitializeComponent();
         _pages = [Page0, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11];
+    }
+
+    public void HandleGamepadInput(GamepadButton button)
+    {
+        switch (button)
+        {
+            case GamepadButton.DPadUp:
+                if (NavList.SelectedIndex > 0)
+                    NavList.SelectedIndex--;
+                break;
+
+            case GamepadButton.DPadDown:
+                if (NavList.SelectedIndex < NavList.Items.Count - 1)
+                    NavList.SelectedIndex++;
+                break;
+
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                Close();
+                break;
+        }
+    }
+
+    public void HandleRightStickScroll(double value)
+    {
+        // value is -1..1 (positive = stick up = scroll up)
+        const double scrollSpeed = 40.0;
+        ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset - value * scrollSpeed);
     }
 
     private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)

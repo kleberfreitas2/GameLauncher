@@ -191,6 +191,9 @@ public sealed class XInputService : IDisposable
     public event Action<GamepadButton>? ButtonPressed;
     public event Action<bool>? ConnectionChanged;
 
+    /// <summary>Fires every poll with the right stick Y-axis value normalized to -1..1 (positive = up). Zero when inside deadzone.</summary>
+    public event Action<double>? RightStickY;
+
     public bool IsConnected => _isConnected;
     public string ControllerName { get; private set; } = "";
 
@@ -295,6 +298,13 @@ public sealed class XInputService : IDisposable
         _prevStickRight = stickRight;
         _prevStickUp = stickUp;
         _prevStickDown = stickDown;
+
+        // Right stick Y-axis for scrolling
+        double rsY = gp.sThumbRY > STICK_DEADZONE || gp.sThumbRY < -STICK_DEADZONE
+            ? gp.sThumbRY / 32767.0
+            : 0.0;
+        if (rsY != 0.0)
+            RightStickY?.Invoke(rsY);
     }
 
     private void PollHid()
@@ -418,6 +428,15 @@ public sealed class XInputService : IDisposable
         if (stickRight && !pStickRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
         if (stickUp && !pStickUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
         if (stickDown && !pStickDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
+
+        // Right stick Y-axis for scrolling (byte 4: 0=up, 128=center, 255=down)
+        byte ry = report.Length > off + 4 ? report[off + 4] : (byte)128;
+        const byte rsDeadLow = 60, rsDeadHigh = 196;
+        double rsY = ry < rsDeadLow ? (128 - ry) / 128.0
+                   : ry > rsDeadHigh ? (128 - ry) / 127.0
+                   : 0.0;
+        if (rsY != 0.0)
+            RightStickY?.Invoke(rsY);
     }
 
     private void TryOpenHidController()

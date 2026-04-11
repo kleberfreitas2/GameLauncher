@@ -75,6 +75,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Delegate set by code-behind to handle gamepad input while ContextMenu is open.</summary>
     public Action<GamepadButton>? ContextMenuNavigate { get; set; }
 
+    private bool _isHelpDialogOpen;
+    public bool IsHelpDialogOpen
+    {
+        get => _isHelpDialogOpen;
+        set => SetProperty(ref _isHelpDialogOpen, value);
+    }
+
+    /// <summary>Delegate to handle gamepad input while HelpDialog is open.</summary>
+    public Action<GamepadButton>? HelpDialogNavigate { get; set; }
+
+    /// <summary>Delegate to handle right stick scrolling while HelpDialog is open.</summary>
+    public Action<double>? HelpDialogScroll { get; set; }
+
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
     [ObservableProperty]
@@ -147,6 +160,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput = new XInputService();
         _xinput.ButtonPressed += OnGamepadButton;
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
+        _xinput.RightStickY += OnRightStickY;
         _xinput.Start();
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
@@ -226,6 +240,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
             _gamesView.Refresh();
+
+            // Auto-select the first game on startup
+            if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
+                SelectedGame = first;
         }
         catch { }
     }
@@ -753,7 +771,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenHelp()
     {
         var dialog = new HelpDialog { Owner = Application.Current.MainWindow };
+        IsHelpDialogOpen = true;
+        HelpDialogNavigate = dialog.HandleGamepadInput;
+        HelpDialogScroll = dialog.HandleRightStickScroll;
         dialog.ShowDialog();
+        IsHelpDialogOpen = false;
+        HelpDialogNavigate = null;
+        HelpDialogScroll = null;
     }
 
     // ── Xbox Live Integration ───────────────────────────────────
@@ -1222,6 +1246,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             if (IsAnimationLoading) return;
 
+            if (IsHelpDialogOpen)
+            {
+                HelpDialogNavigate?.Invoke(button);
+                return;
+            }
+
             if (IsContextMenuOpen)
             {
                 ContextMenuNavigate?.Invoke(button);
@@ -1288,6 +1318,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     OpenHelp();
                     return;
             }
+        });
+    }
+
+    private void OnRightStickY(double value)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            if (IsHelpDialogOpen)
+                HelpDialogScroll?.Invoke(value);
         });
     }
 
