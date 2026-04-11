@@ -1,0 +1,4 @@
+  Determinando os projetos a serem restaurados...
+  Todos os projetos estão atualizados para restauração.
+  GameLauncher -> C:\Users\mcd_s\source\Repositorio\GameLauncher\bin\Release\net8.0-windows\win-x64\GameLauncher.dll
+  GameLauncher -> C:\Users\mcd_s\source\Repositorio\GameLauncher\publish\GLauncher-v1.0.0\

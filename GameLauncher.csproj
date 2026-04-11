@@ -10,6 +10,20 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>GLauncher</AssemblyTitle>
     <Product>GLauncher</Product>
+    <Version>1.0.0</Version>
+    <Authors>Kleber Freitas</Authors>
+    <Description>GLauncher - Game Launcher estilo PS5</Description>
+  </PropertyGroup>
+
+  <!-- Release publish settings: self-contained, single file, optimized -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

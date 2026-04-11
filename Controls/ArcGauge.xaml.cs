@@ -9,6 +9,7 @@ namespace GameLauncher.Controls;
 public partial class ArcGauge : UserControl
 {
     private double _currentValue;
+    private AnimationHelper? _currentAnimation;
 
     public static readonly DependencyProperty ValueProperty =
         DependencyProperty.Register(nameof(Value), typeof(double), typeof(ArcGauge),
@@ -77,10 +78,12 @@ public partial class ArcGauge : UserControl
     private void AnimateToValue(double target)
     {
         target = Math.Clamp(target, 0, 100);
+        _currentAnimation?.Stop();
         var from = _currentValue;
         _currentValue = target;
 
         var helper = new AnimationHelper(this, from, target);
+        _currentAnimation = helper;
         helper.Start();
     }
 
@@ -148,7 +151,9 @@ public partial class ArcGauge : UserControl
                 _ => LerpColor(Color.FromRgb(255, 100, 0), Color.FromRgb(255, 23, 68), (percent - 85) / 15),
             };
         }
-        return new SolidColorBrush(color);
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
     }
 
     private static Color LerpColor(Color a, Color b, double t)
@@ -183,6 +188,7 @@ public partial class ArcGauge : UserControl
         }
 
         public void Start() => _timer.Start();
+        public void Stop() => _timer.Stop();
 
         private void OnTick(object? sender, EventArgs e)
         {
