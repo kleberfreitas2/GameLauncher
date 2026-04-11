@@ -26,6 +26,10 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ## ✨ Funcionalidades
 
+## 🎮 Baixe a release por aqui
+
+https://github.com/kleberfreitas2/GameLauncher/releases/tag/game
+
 ### 🎮 Biblioteca de Jogos
 - Adicionar jogos individualmente ou vários de uma vez via seleção de `.exe`
 - Lançar jogos diretamente pelo launcher com botão **JOGAR** estilo PS5
