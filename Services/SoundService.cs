@@ -1,13 +1,8 @@
 using System.IO;
 using System.Media;
-using GameLauncher.Models;
 
 namespace GameLauncher.Services;
 
-/// <summary>
-/// Console-style sound effects generated programmatically (no external files).
-/// All tones are synthesized as PCM WAV in memory and cached for instant playback.
-/// </summary>
 public static class SoundService
 {
     private static SoundPlayer? _navigate;
@@ -22,9 +17,6 @@ public static class SoundService
 
     public static bool IsEnabled => SettingsService.Current.SoundEnabled;
 
-    /// <summary>
-    /// Pre-generate and cache all sound effects. Call once at startup.
-    /// </summary>
     public static void Initialize()
     {
         if (_initialized) return;
@@ -61,13 +53,11 @@ public static class SoundService
         return player;
     }
 
-    // ── PCM WAV generation ──────────────────────────────────────
 
     private const int SampleRate = 44100;
     private const int BitsPerSample = 16;
     private const int Channels = 1;
 
-    /// <summary>Generate a single-frequency tone with fade-out envelope.</summary>
     private static byte[] GenerateTone(double frequency, double durationSec, double volume)
     {
         int sampleCount = (int)(SampleRate * durationSec);
@@ -86,7 +76,6 @@ public static class SoundService
         return BuildWav(samples);
     }
 
-    /// <summary>Generate a frequency sweep (ascending or descending) with fade-out.</summary>
     private static byte[] GenerateSweep(double startFreq, double endFreq, double durationSec, double volume)
     {
         int sampleCount = (int)(SampleRate * durationSec);
@@ -108,7 +97,6 @@ public static class SoundService
         return BuildWav(samples);
     }
 
-    /// <summary>Wrap raw PCM samples into a valid WAV byte array.</summary>
     private static byte[] BuildWav(short[] samples)
     {
         int byteRate = SampleRate * Channels * BitsPerSample / 8;
@@ -118,12 +106,10 @@ public static class SoundService
         using var ms = new MemoryStream();
         using var bw = new BinaryWriter(ms);
 
-        // RIFF header
         bw.Write("RIFF"u8);
         bw.Write(36 + dataSize);
         bw.Write("WAVE"u8);
 
-        // fmt sub-chunk
         bw.Write("fmt "u8);
         bw.Write(16);              // sub-chunk size
         bw.Write((short)1);       // PCM format
@@ -133,7 +119,6 @@ public static class SoundService
         bw.Write((short)blockAlign);
         bw.Write((short)BitsPerSample);
 
-        // data sub-chunk
         bw.Write("data"u8);
         bw.Write(dataSize);
         foreach (var s in samples)

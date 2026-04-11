@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,7 +28,6 @@ public partial class MainWindow : Window
     private int _frameCount;
     private TimeSpan _lastFpsTime;
 
-    // ── ContextMenu gamepad navigation state ─────────────────────
     private List<MenuItem> _menuItems = [];
     private int _menuIndex;
 
@@ -45,7 +44,6 @@ public partial class MainWindow : Window
                 vm.IsAnimationLoading = BackgroundAnim.IsLoading;
         });
 
-        // Wire ContextMenu gamepad navigation
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.ContextMenuNavigate = NavigateContextMenu;
@@ -77,7 +75,6 @@ public partial class MainWindow : Window
         };
     }
 
-    // ── ContextMenu gamepad helpers ──────────────────────────────
 
     private static List<MenuItem> CollectMenuItems(ContextMenu ctx)
     {

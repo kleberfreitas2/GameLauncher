@@ -19,24 +19,17 @@ public sealed partial class SteamService : IDisposable
     {
     }
 
-    /// <summary>
-    /// Detects the SteamID64 of the currently logged-in Steam user from the local installation.
-    /// Returns null if Steam is not installed or no user is logged in.
-    /// </summary>
     public static string? DetectLocalSteamId()
     {
         try
         {
-            // 1. Try ActiveProcess\ActiveUser from the registry (Steam3 ID, 32-bit)
             using var activeKey = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam\ActiveProcess");
             var activeUser = activeKey?.GetValue("ActiveUser");
             if (activeUser is int uid32 && uid32 > 0)
             {
-                // Convert Steam3 ID → SteamID64
                 return (76561197960265728L + uid32).ToString();
             }
 
-            // 2. Fallback: parse loginusers.vdf from the Steam installation directory
             string? steamPath = null;
             using (var steamKey = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam"))
             {
@@ -60,12 +53,10 @@ public sealed partial class SteamService : IDisposable
             if (!File.Exists(loginUsersPath)) return null;
 
             var content = File.ReadAllText(loginUsersPath);
-            // Find the user with "MostRecent" "1"
             var userBlocks = LoginUserIdRegex().Matches(content);
             foreach (Match block in userBlocks)
             {
                 var steamId64 = block.Groups[1].Value;
-                // Check if this user block has MostRecent = 1
                 var blockStart = block.Index;
                 var nextBlock = content.IndexOf("\n\t\"7656", blockStart + 1);
                 var blockEnd = nextBlock > 0 ? nextBlock : content.Length;
@@ -78,7 +69,6 @@ public sealed partial class SteamService : IDisposable
                 }
             }
 
-            // If no MostRecent found, return the first user
             if (userBlocks.Count > 0)
                 return userBlocks[0].Groups[1].Value;
         }
@@ -87,17 +77,12 @@ public sealed partial class SteamService : IDisposable
         return null;
     }
 
-    /// <summary>
-    /// Connects to Steam using a SteamID64 or vanity URL.
-    /// Validates via the public Steam Community profile (no API key needed).
-    /// </summary>
     public async Task<bool> ConnectAsync(string steamIdOrVanity)
     {
         try
         {
             string steamId;
 
-            // If it's a full profile URL, extract the identifier
             if (steamIdOrVanity.Contains("steamcommunity.com", StringComparison.OrdinalIgnoreCase))
             {
                 var match = ProfileUrlRegex().Match(steamIdOrVanity);
@@ -105,20 +90,17 @@ public sealed partial class SteamService : IDisposable
                     steamIdOrVanity = match.Groups[1].Value;
             }
 
-            // If it looks like a 64-bit Steam ID (17 digits starting with 7656)
             if (steamIdOrVanity.Length >= 15 && steamIdOrVanity.All(char.IsDigit))
             {
                 steamId = steamIdOrVanity;
             }
             else
             {
-                // Try to resolve via public Steam Community XML profile
                 var resolved = await ResolveVanityUrlPublicAsync(steamIdOrVanity);
                 if (resolved is null) return false;
                 steamId = resolved;
             }
 
-            // Validate via public Steam Community XML profile (no API key needed)
             var xml = await FetchPublicProfileXmlAsync(steamId);
             if (xml is null) return false;
 
@@ -143,11 +125,9 @@ public sealed partial class SteamService : IDisposable
 
         try
         {
-            // Use public Steam Community XML profile (no API key needed)
             var xml = await FetchPublicProfileXmlAsync(_steamId);
             if (xml is null)
             {
-                // Fallback to local data from loginusers.vdf
                 return GetProfileFromLocal(_steamId);
             }
 
@@ -169,9 +149,6 @@ public sealed partial class SteamService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets the count of installed Steam games from local .acf manifests.
-    /// </summary>
     public int GetInstalledGamesCount()
     {
         try
@@ -192,9 +169,6 @@ public sealed partial class SteamService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Scans local Steam installation folders for installed games.
-    /// </summary>
     public List<Game> ScanSteamInstalledGames()
     {
         var games = new List<Game>();
@@ -210,7 +184,6 @@ public sealed partial class SteamService : IDisposable
             var commonDir = Path.Combine(steamApps, "common");
             if (!Directory.Exists(commonDir)) continue;
 
-            // Read .acf manifests to get accurate game names
             var manifests = ParseAcfManifests(steamApps);
 
             foreach (var gameDir in Directory.GetDirectories(commonDir))
@@ -249,9 +222,6 @@ public sealed partial class SteamService : IDisposable
         return games;
     }
 
-    /// <summary>
-    /// Resolves a vanity URL to a SteamID64 using the public Steam Community XML profile.
-    /// </summary>
     private async Task<string?> ResolveVanityUrlPublicAsync(string vanityName)
     {
         try
@@ -272,9 +242,6 @@ public sealed partial class SteamService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Fetches the public Steam Community XML profile for a SteamID64.
-    /// </summary>
     private async Task<XDocument?> FetchPublicProfileXmlAsync(string steamId64)
     {
         try
@@ -286,7 +253,6 @@ public sealed partial class SteamService : IDisposable
             var content = await response.Content.ReadAsStringAsync();
             var doc = XDocument.Parse(content);
 
-            // Check if the profile exists (has a steamID element)
             if (doc.Root?.Element("steamID") is null)
                 return null;
 
@@ -298,9 +264,6 @@ public sealed partial class SteamService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets profile info from local loginusers.vdf when the public profile is unavailable.
-    /// </summary>
     private static SteamProfile? GetProfileFromLocal(string steamId)
     {
         try
@@ -320,7 +283,6 @@ public sealed partial class SteamService : IDisposable
 
             var content = File.ReadAllText(loginUsersPath);
 
-            // Find the block for this Steam ID and extract PersonaName
             var idIndex = content.IndexOf($"\"{steamId}\"", StringComparison.Ordinal);
             if (idIndex < 0) return null;
 
@@ -349,7 +311,6 @@ public sealed partial class SteamService : IDisposable
     {
         var folders = new List<string>();
 
-        // Find main Steam path from registry
         string? steamPath = null;
         try
         {
@@ -358,7 +319,6 @@ public sealed partial class SteamService : IDisposable
         }
         catch { }
 
-        // Common fallback paths
         if (string.IsNullOrEmpty(steamPath) || !Directory.Exists(steamPath))
         {
             var candidates = new[]
@@ -374,7 +334,6 @@ public sealed partial class SteamService : IDisposable
 
         folders.Add(steamPath);
 
-        // Parse libraryfolders.vdf for additional library paths
         var vdfPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf");
         if (File.Exists(vdfPath))
         {
@@ -441,7 +400,6 @@ public sealed partial class SteamService : IDisposable
         _http.Dispose();
     }
 
-    // ── Regex ────────────────────────────────────────────────────
 
     [GeneratedRegex(@"steamcommunity\.com/(?:id|profiles)/([^/\s]+)")]
     private static partial Regex ProfileUrlRegex();

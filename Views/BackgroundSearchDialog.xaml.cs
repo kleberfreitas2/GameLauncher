@@ -145,7 +145,6 @@ public partial class BackgroundSearchDialog : Window
         _suppressFilterChange = true;
         PopulateDimensionsForTab();
 
-        // Styles
         CbStyles.Items.Clear();
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Any Style", null));
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Alternate", SteamGridDbStyles.Alternate));
@@ -153,7 +152,6 @@ public partial class BackgroundSearchDialog : Window
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Material", SteamGridDbStyles.Material));
         CbStyles.SelectedIndex = 0;
 
-        // Formats
         CbFormats.Items.Clear();
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("Any File Type", SteamGridDbFormats.All));
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("PNG", SteamGridDbFormats.Png));
@@ -161,7 +159,6 @@ public partial class BackgroundSearchDialog : Window
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("WEBP", SteamGridDbFormats.Webp));
         CbFormats.SelectedIndex = 0;
 
-        // Types
         CbTypes.Items.Clear();
         CbTypes.Items.Add(new FilterItem<SteamGridDbTypes>("All", SteamGridDbTypes.All));
         CbTypes.Items.Add(new FilterItem<SteamGridDbTypes>("Static", SteamGridDbTypes.Static));
@@ -224,7 +221,6 @@ public partial class BackgroundSearchDialog : Window
         _selectedFullUrl = null;
         ApplyButton.IsEnabled = false;
 
-        // Gather filter values
         var dimensions = (CbDimensions.SelectedItem as FilterItem<SteamGridDbDimensions?>)?.Value;
         var styles     = (CbStyles.SelectedItem as FilterItem<SteamGridDbStyles?>)?.Value;
         var formats    = (CbFormats.SelectedItem as FilterItem<SteamGridDbFormats>)?.Value ?? SteamGridDbFormats.All;
@@ -274,7 +270,6 @@ public partial class BackgroundSearchDialog : Window
         StatusText.Visibility = Visibility.Collapsed;
         FooterText.Text       = $"{images.Count} imagem(ns) de {typeLabel} encontrada(s)";
 
-        // Start downloading thumbnails in background
         _thumbnailCts = new CancellationTokenSource();
         _ = LoadThumbnailsAsync(displayItems, _thumbnailCts.Token);
     }

@@ -42,7 +42,6 @@ public sealed class XboxLiveService : IDisposable
             .WithRedirectUri("http://localhost")
             .Build();
 
-        // Persist token cache to disk so sessions survive app restarts
         _msalApp.UserTokenCache.SetBeforeAccess(args =>
         {
             if (File.Exists(TokenCachePath))
@@ -60,9 +59,6 @@ public sealed class XboxLiveService : IDisposable
         return _msalApp;
     }
 
-    /// <summary>
-    /// Tries to restore a previous session silently (no UI). Returns true if successful.
-    /// </summary>
     public async Task<bool> TrySilentLoginAsync()
     {
         try
@@ -100,7 +96,6 @@ public sealed class XboxLiveService : IDisposable
 
             AuthenticationResult? authResult = null;
 
-            // Try silent first
             var accounts = await app.GetAccountsAsync();
             var account = accounts.FirstOrDefault();
             if (account is not null)
@@ -112,7 +107,6 @@ public sealed class XboxLiveService : IDisposable
                 catch (MsalUiRequiredException) { }
             }
 
-            // Interactive login if silent fails
             authResult ??= await app.AcquireTokenInteractive(XboxScopes)
                 .WithPrompt(Prompt.SelectAccount)
                 .ExecuteAsync();
@@ -120,12 +114,10 @@ public sealed class XboxLiveService : IDisposable
             if (string.IsNullOrEmpty(authResult.AccessToken))
                 return false;
 
-            // Exchange MSA token for Xbox Live token
             var xblToken = await GetXblTokenAsync(authResult.AccessToken);
             if (xblToken is null)
                 return false;
 
-            // Exchange XBL token for XSTS token
             var xsts = await GetXstsTokenAsync(xblToken.Token);
             if (xsts is null)
                 return false;
@@ -176,26 +168,18 @@ public sealed class XboxLiveService : IDisposable
             }
         }
 
-        // Remove cached tokens from disk
         try { if (File.Exists(TokenCachePath)) File.Delete(TokenCachePath); } catch { }
     }
 
-    /// <summary>
-    /// Fetches the number of PC games in the user's Xbox library.
-    /// Uses the Xbox Game Collection API (same as the Xbox app "Meus jogos" / "Instalável").
-    /// Falls back to Title Hub if the collection API is unavailable.
-    /// </summary>
     public async Task<int> GetLibraryGamesCountAsync()
     {
         if (!IsLoggedIn || _xuid is null)
             return 0;
 
-        // Primary: Xbox Game Collection API (accurate — matches Xbox app library)
         var count = await TryGetGameCollectionCountAsync();
         if (count >= 0)
             return count;
 
-        // Fallback: Title Hub with PC game filter (may overcount)
         return await GetTitleHubPcGamesCountAsync();
     }
 
@@ -217,7 +201,6 @@ public sealed class XboxLiveService : IDisposable
             var json = await response.Content.ReadAsStringAsync();
             var collection = JsonSerializer.Deserialize<GameCollectionResponse>(json);
 
-            // Try multiple possible count field names
             return collection?.TotalItemsCount
                 ?? collection?.TotalItems
                 ?? collection?.Items?.Count
@@ -337,7 +320,6 @@ public sealed class XboxLiveService : IDisposable
         var games = new List<Game>();
         var foundPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Common Xbox Game Pass install locations
         var xboxFolders = new List<string>();
 
         foreach (var drive in System.IO.DriveInfo.GetDrives())
@@ -360,7 +342,6 @@ public sealed class XboxLiveService : IDisposable
                     var exeFiles = System.IO.Directory.GetFiles(searchDir, "*.exe",
                         System.IO.SearchOption.AllDirectories);
 
-                    // Pick the largest exe as the main game executable
                     var mainExe = exeFiles
                         .Select(f => new System.IO.FileInfo(f))
                         .Where(f => f.Length > 100_000)
@@ -494,7 +475,6 @@ public sealed class XboxLiveService : IDisposable
         _http.Dispose();
     }
 
-    // ── Internal DTOs ────────────────────────────────────────────
 
     private class XblTokenResponse
     {

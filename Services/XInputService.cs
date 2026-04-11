@@ -19,7 +19,6 @@ public sealed class XInputService : IDisposable
     private const int POLL_MS = 60;
     private const int HID_SCAN_INTERVAL_MS = 3000;
 
-    // XInput button masks
     private const ushort XINPUT_GAMEPAD_DPAD_UP = 0x0001;
     private const ushort XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;
     private const ushort XINPUT_GAMEPAD_DPAD_LEFT = 0x0004;
@@ -35,7 +34,6 @@ public sealed class XInputService : IDisposable
     private const ushort XINPUT_GAMEPAD_X = 0x4000;
     private const ushort XINPUT_GAMEPAD_Y = 0x8000;
 
-    // Known HID Vendor/Product IDs for PlayStation controllers
     private static readonly (int Vid, int Pid, string Name)[] KnownHidControllers =
     [
         (0x054C, 0x0CE6, "DualSense"),          // PS5 DualSense
@@ -84,7 +82,6 @@ public sealed class XInputService : IDisposable
         public byte BatteryLevel;
     }
 
-    // HID P/Invoke for reading PlayStation controllers
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     private static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess,
         uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
@@ -192,7 +189,6 @@ public sealed class XInputService : IDisposable
         public ushort NumberFeatureDataIndices;
     }
 
-    // State for HID (PlayStation) controller
     private IntPtr _hidHandle = INVALID_HANDLE;
     private int _hidReportLength;
     private byte[] _prevHidReport = [];
@@ -209,10 +205,8 @@ public sealed class XInputService : IDisposable
     public event Action<GamepadButton>? ButtonPressed;
     public event Action<bool>? ConnectionChanged;
 
-    /// <summary>Fires every poll with the right stick Y-axis value normalized to -1..1 (positive = up). Zero when inside deadzone.</summary>
     public event Action<double>? RightStickY;
 
-    /// <summary>Fires when battery level changes. Value is 0-100 (percentage), or -1 for wired/unknown.</summary>
     public event Action<int>? BatteryChanged;
 
     public bool IsConnected => _isConnected;
@@ -236,11 +230,9 @@ public sealed class XInputService : IDisposable
 
     private void Poll(object? sender, EventArgs e)
     {
-        // Try XInput first (all 4 indices)
         if (TryPollXInput())
             return;
 
-        // Fallback: HID controllers (PlayStation, etc.)
         PollHid();
     }
 
@@ -248,7 +240,6 @@ public sealed class XInputService : IDisposable
     {
         var state = new XINPUT_STATE();
 
-        // If we already have an active index, try it first
         if (_activeXInputIndex < 4)
         {
             uint result = XInputGetState(_activeXInputIndex, ref state);
@@ -259,11 +250,9 @@ public sealed class XInputService : IDisposable
                 PollXInputBattery(_activeXInputIndex);
                 return true;
             }
-            // Lost connection on this index
             _activeXInputIndex = uint.MaxValue;
         }
 
-        // Scan all 4 indices for a connected controller
         for (uint i = 0; i < 4; i++)
         {
             uint result = XInputGetState(i, ref state);
@@ -277,7 +266,6 @@ public sealed class XInputService : IDisposable
             }
         }
 
-        // No XInput controller found
         if (_activeXInputIndex != uint.MaxValue || (!_hidConnected && _isConnected))
         {
             _activeXInputIndex = uint.MaxValue;
@@ -326,7 +314,6 @@ public sealed class XInputService : IDisposable
         _prevStickUp = stickUp;
         _prevStickDown = stickDown;
 
-        // Right stick Y-axis for scrolling
         double rsY = gp.sThumbRY > STICK_DEADZONE || gp.sThumbRY < -STICK_DEADZONE
             ? gp.sThumbRY / 32767.0
             : 0.0;
@@ -338,7 +325,6 @@ public sealed class XInputService : IDisposable
     {
         _hidScanCounter++;
 
-        // Periodically scan for HID controllers
         if (_hidHandle == INVALID_HANDLE)
         {
             if (_hidScanCounter % (HID_SCAN_INTERVAL_MS / POLL_MS) == 0)
@@ -352,12 +338,10 @@ public sealed class XInputService : IDisposable
             }
         }
 
-        // Read HID report
         var report = new byte[_hidReportLength];
         if (!ReadFile(_hidHandle, report, (uint)_hidReportLength, out uint bytesRead, IntPtr.Zero)
             || bytesRead == 0)
         {
-            // Controller disconnected
             CloseHid();
             SetConnected(false, "");
             return;
@@ -377,17 +361,7 @@ public sealed class XInputService : IDisposable
     {
         if (_prevHidReport.Length == 0) return;
 
-        // DualSense and DualShock 4 share a similar HID report structure:
-        // Byte 0: Report ID
-        // Byte 1: Left stick X (0=left, 128=center, 255=right)
-        // Byte 2: Left stick Y (0=up, 128=center, 255=down)
-        // Byte 3: Right stick X
-        // Byte 4: Right stick Y
-        // Byte 5 (low nibble): D-Pad (hat switch: 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW, 8=neutral)
-        // Byte 5 (high nibble): buttons Square(4), Cross(5), Circle(6), Triangle(7)
-        // Byte 6: L1(0), R1(1), L2(2), R2(3), Share/Create(4), Options(5), L3(6), R3(7)
 
-        // Determine offset: DualSense Bluetooth adds 1 byte prefix
         int off = 0;
         if (report.Length > 10 && report[0] == 0x31) off = 1;
 
@@ -402,7 +376,6 @@ public sealed class XInputService : IDisposable
         byte prevLx = _prevHidReport.Length > off + 2 ? _prevHidReport[off + 1] : (byte)128;
         byte prevLy = _prevHidReport.Length > off + 2 ? _prevHidReport[off + 2] : (byte)128;
 
-        // D-Pad (hat switch in low nibble of buttons1)
         byte hat = (byte)(buttons1 & 0x0F);
         byte prevHat = (byte)(prevButtons1 & 0x0F);
 
@@ -423,7 +396,6 @@ public sealed class XInputService : IDisposable
             if (right && !prevRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
         }
 
-        // Face buttons (high nibble of buttons1): Cross=5, Circle=6, Square=4, Triangle=7
         byte face = (byte)(buttons1 >> 4);
         byte prevFace = (byte)(prevButtons1 >> 4);
         byte facePressed = (byte)(face & ~prevFace);
@@ -433,14 +405,12 @@ public sealed class XInputService : IDisposable
         if ((facePressed & 0x01) != 0) ButtonPressed?.Invoke(GamepadButton.X);     // Square
         if ((facePressed & 0x08) != 0) ButtonPressed?.Invoke(GamepadButton.Y);     // Triangle
 
-        // Shoulder buttons and menu (buttons2)
         byte b2Pressed = (byte)(buttons2 & ~prevButtons2);
         if ((b2Pressed & 0x01) != 0) ButtonPressed?.Invoke(GamepadButton.LeftShoulder);  // L1
         if ((b2Pressed & 0x02) != 0) ButtonPressed?.Invoke(GamepadButton.RightShoulder); // R1
         if ((b2Pressed & 0x10) != 0) ButtonPressed?.Invoke(GamepadButton.Back);          // Share/Create
         if ((b2Pressed & 0x20) != 0) ButtonPressed?.Invoke(GamepadButton.Start);         // Options
 
-        // Left stick as digital direction
         const byte deadLow = 60, deadHigh = 196;
         bool stickLeft = lx < deadLow;
         bool stickRight = lx > deadHigh;
@@ -456,7 +426,6 @@ public sealed class XInputService : IDisposable
         if (stickUp && !pStickUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
         if (stickDown && !pStickDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
 
-        // Right stick Y-axis for scrolling (byte 4: 0=up, 128=center, 255=down)
         byte ry = report.Length > off + 4 ? report[off + 4] : (byte)128;
         const byte rsDeadLow = 60, rsDeadHigh = 196;
         double rsY = ry < rsDeadLow ? (128 - ry) / 128.0
@@ -465,7 +434,6 @@ public sealed class XInputService : IDisposable
         if (rsY != 0.0)
             RightStickY?.Invoke(rsY);
 
-        // Battery level from HID report
         PollHidBattery(report, off);
     }
 
@@ -506,10 +474,6 @@ public sealed class XInputService : IDisposable
         if (_lastBatteryPoll < BATTERY_POLL_INTERVAL) return;
         _lastBatteryPoll = 0;
 
-        // DualSense USB: report[0]=0x01, battery at byte 53
-        // DualSense BT:  report[0]=0x31, battery at byte 54 (off=1)
-        // DualShock 4 USB: report[0]=0x01, battery at byte 30
-        // DualShock 4 BT:  report[0]=0x11, battery at byte 32
         int batteryByte = -1;
         if (report.Length >= off + 54 && _hidControllerName.Contains("DualSense", StringComparison.OrdinalIgnoreCase))
         {
@@ -524,8 +488,6 @@ public sealed class XInputService : IDisposable
         if (batteryByte < 0 || batteryByte >= report.Length) return;
 
         byte raw = report[batteryByte];
-        // DualSense: lower nibble = level 0-10, bit 4 = charging
-        // DualShock 4: lower nibble = level 0-10, bit 4 = cable connected
         int level = raw & 0x0F;
         int pct = Math.Clamp(level * 10, 0, 100);
 
@@ -553,7 +515,6 @@ public sealed class XInputService : IDisposable
 
                 for (uint i = 0; SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, i, ref ifData); i++)
                 {
-                    // Get required size
                     SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, IntPtr.Zero, 0, out uint reqSize, IntPtr.Zero);
 
                     var detailData = new SP_DEVICE_INTERFACE_DETAIL_DATA();
@@ -583,7 +544,6 @@ public sealed class XInputService : IDisposable
                         continue;
                     }
 
-                    // Get report length
                     if (HidD_GetPreparsedData(handle, out IntPtr preparsed))
                     {
                         HidP_GetCaps(preparsed, out HIDP_CAPS caps);
@@ -609,7 +569,6 @@ public sealed class XInputService : IDisposable
         }
         catch
         {
-            // Ignore HID enumeration errors
         }
     }
 

@@ -16,30 +16,26 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Cabeçalho -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+<StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="🌐 Buscar Informações — IGDB"
                        FontSize="18" FontWeight="Bold" Foreground="White"/>
             <TextBlock Text="Busque metadados: descrição, rating, gênero e ano de lançamento"
                        FontSize="11" Foreground="#666688" Margin="0,3,0,0"/>
         </StackPanel>
 
-        <!-- Conteúdo: painel esquerdo (busca + lista) + painel direito (detalhes) -->
-        <Grid Grid.Row="1">
+<Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Esquerda: busca + lista de resultados -->
-            <Grid Grid.Column="0" Margin="0,0,12,0">
+<Grid Grid.Column="0" Margin="0,0,12,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Barra de busca -->
-                <Grid Grid.Row="0" Margin="0,0,0,10">
+<Grid Grid.Row="0" Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -62,8 +58,7 @@
                     </Button>
                 </Grid>
 
-                <!-- Lista de resultados -->
-                <Border Grid.Row="1" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
+<Border Grid.Row="1" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
                     <Grid>
                         <TextBlock x:Name="StatusText"
                                    Text="Digite o nome do jogo e clique em 🔍"
@@ -116,11 +111,9 @@
                 </Border>
             </Grid>
 
-            <!-- Direita: detalhes do jogo selecionado -->
-            <Border Grid.Column="1" Background="#0A0A18" CornerRadius="8" Padding="20" ClipToBounds="True">
+<Border Grid.Column="1" Background="#0A0A18" CornerRadius="8" Padding="20" ClipToBounds="True">
                 <Grid>
-                    <!-- Estado vazio -->
-                    <StackPanel x:Name="EmptyDetail"
+<StackPanel x:Name="EmptyDetail"
                                 HorizontalAlignment="Center" VerticalAlignment="Center">
                         <md:PackIcon Kind="InformationOutline" Width="48" Height="48"
                                      Foreground="#222244" HorizontalAlignment="Center"/>
@@ -130,17 +123,13 @@
                                    TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Painel de detalhes -->
-                    <Grid x:Name="DetailPanel" Visibility="Collapsed">
-                        <!-- Informações -->
-                        <StackPanel Margin="0">
-                            <!-- Título -->
-                            <TextBlock x:Name="GameTitle"
+<Grid x:Name="DetailPanel" Visibility="Collapsed">
+<StackPanel Margin="0">
+<TextBlock x:Name="GameTitle"
                                        FontSize="16" FontWeight="Bold" Foreground="White"
                                        TextWrapping="Wrap" Margin="0,0,0,14"/>
 
-                            <!-- Rating -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+<StackPanel Orientation="Horizontal" Margin="0,0,0,7">
                                 <md:PackIcon Kind="Star" Width="14" Height="14"
                                              Foreground="#FFD700" VerticalAlignment="Center"
                                              Margin="0,0,6,0"/>
@@ -150,8 +139,7 @@
                                            Foreground="#FFD700" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <!-- Ano -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+<StackPanel Orientation="Horizontal" Margin="0,0,0,7">
                                 <md:PackIcon Kind="Calendar" Width="14" Height="14"
                                              Foreground="#66AAFF" VerticalAlignment="Center"
                                              Margin="0,0,6,0"/>
@@ -161,8 +149,7 @@
                                            Foreground="#66AAFF" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <!-- Gêneros -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" >
+<StackPanel Orientation="Horizontal" Margin="0,0,0,14" >
                                 <md:PackIcon Kind="TagOutline" Width="14" Height="14"
                                              Foreground="#AA88FF" VerticalAlignment="Center"
                                              Margin="0,0,6,0"/>
@@ -173,8 +160,7 @@
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <!-- Descrição -->
-                            <TextBlock Text="DESCRIÇÃO"
+<TextBlock Text="DESCRIÇÃO"
                                        FontSize="10" FontWeight="SemiBold"
                                        Foreground="#444466" Margin="0,0,0,6"/>
                             <ScrollViewer Height="165" VerticalScrollBarVisibility="Auto"
@@ -189,8 +175,7 @@
             </Border>
         </Grid>
 
-        <!-- Rodapé -->
-        <Grid Grid.Row="2" Margin="0,14,0,0">
+<Grid Grid.Row="2" Margin="0,14,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -218,3 +203,4 @@
         </Grid>
     </Grid>
 </Window>
+

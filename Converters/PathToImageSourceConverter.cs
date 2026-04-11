@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -11,10 +9,6 @@ using SkiaSharp;
 
 namespace GameLauncher.Converters;
 
-/// <summary>
-/// Loads images from local file paths with in-memory caching.
-/// Uses SkiaSharp for WEBP files, WPF native BitmapImage for other formats.
-/// </summary>
 public class PathToImageSourceConverter : IValueConverter
 {
     private static readonly ConcurrentDictionary<string, WeakReference<BitmapSource>> _cache = new();

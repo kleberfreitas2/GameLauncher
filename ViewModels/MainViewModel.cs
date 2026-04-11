@@ -27,7 +27,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
 
-    // ── Gamepad zone navigation ─────────────────────────────────
     public enum NavZone { Header, Actions, Carousel }
 
     private static readonly string[] HeaderItems = ["Xbox", "Steam", "Help", "Settings", "AddGame", "Theme"];
@@ -91,7 +90,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _isContextMenuOpen, value);
     }
 
-    /// <summary>Delegate set by code-behind to handle gamepad input while ContextMenu is open.</summary>
     public Action<GamepadButton>? ContextMenuNavigate { get; set; }
 
     private bool _isHelpDialogOpen;
@@ -101,10 +99,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _isHelpDialogOpen, value);
     }
 
-    /// <summary>Delegate to handle gamepad input while HelpDialog is open.</summary>
     public Action<GamepadButton>? HelpDialogNavigate { get; set; }
 
-    /// <summary>Delegate to handle right stick scrolling while HelpDialog is open.</summary>
     public Action<double>? HelpDialogScroll { get; set; }
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
@@ -117,7 +113,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool HasAvatar   => !string.IsNullOrEmpty(AvatarPath);
     public bool HasNoAvatar => !HasAvatar;
 
-    // ── Xbox Live ───────────────────────────────────────────────
     private XboxLiveService? _xboxService;
 
     [ObservableProperty]
@@ -133,7 +128,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool IsXboxLoggedIn => XboxConnected && XboxProfile is not null;
     public string XboxButtonText => IsXboxLoggedIn ? XboxProfile!.Gamertag : "XBOX";
 
-    // ── Steam ───────────────────────────────────────────────────
     private SteamService? _steamService;
 
     [ObservableProperty]
@@ -265,7 +259,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"{Games.Count} jogos na biblioteca";
             _gamesView.Refresh();
 
-            // Auto-select the first game on startup
             if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
                 SelectedGame = first;
         }
@@ -328,7 +321,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
 
-        // Auto-busca com progresso visual para jogos recém-adicionados
         foreach (var game in newGames)
         {
             await AutoFetchAllWithProgressAsync(game);
@@ -345,7 +337,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Passo 1/6 — Ícone (0→15%)
             progressDialog.UpdateProgress(0, "Buscando ícone...");
             var apiKey = SettingsService.Current.SteamGridDbApiKey;
             SteamGridDbService? svc = null;
@@ -377,7 +368,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(15, "Ícone concluído!");
 
-            // Passo 2/6 — Logo (15→30%)
             progressDialog.UpdateProgress(18, "Buscando logo...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.LogoPath))
             {
@@ -390,7 +380,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(30, "Logo concluído!");
 
-            // Passo 3/6 — Capa (30→50%)
             progressDialog.UpdateProgress(33, "Buscando capa...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.CustomImagePath))
             {
@@ -403,7 +392,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(50, "Capa concluída!");
 
-            // Passo 4/6 — Fundo (50→65%)
             progressDialog.UpdateProgress(53, "Buscando fundo...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.BackgroundImagePath))
             {
@@ -418,7 +406,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             SaveGames();
 
-            // Passo 5/6 — IGDB info (65→85%)
             progressDialog.UpdateProgress(68, "Buscando descrição e informações (IGDB)...");
             var clientId     = SettingsService.Current.IgdbClientId;
             var clientSecret = SettingsService.Current.IgdbClientSecret;
@@ -451,14 +438,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             SaveGames();
 
-            // Passo 6/6 — Finalizado (90→100%)
             progressDialog.UpdateProgress(100, "Tudo pronto!");
             StatusMessage = $"'{game.DisplayName}' adicionado com sucesso!";
 
             await Task.Delay(600); // pequena pausa para o usuário ver 100%
             progressDialog.Finish();
 
-            // Força atualização da tela de detalhes e lista
             _gamesView.Refresh();
             if (SelectedGame == game)
             {
@@ -476,7 +461,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task RefreshAllAssetsOnStartupAsync()
     {
-        // 1. Visuais — SteamGridDB (logo, capa, fundo, ícone)
         var apiKey = SettingsService.Current.SteamGridDbApiKey;
         if (!string.IsNullOrEmpty(apiKey))
         {
@@ -494,7 +478,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
-        // 2. Texto — IGDB (sinopse, gêneros, nota, ano) + tradução PT-BR
         var clientId     = SettingsService.Current.IgdbClientId;
         var clientSecret = SettingsService.Current.IgdbClientSecret;
         if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
@@ -510,7 +493,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await AutoFetchIgdbAsync(game);
             }
 
-            // 3. Re-traduzir descrições que ficaram em inglês
             var untranslated = Games
                 .Where(g => g.HasIgdbInfo && !string.IsNullOrEmpty(g.Summary) && !g.IsSummaryTranslated)
                 .ToList();
@@ -549,7 +531,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             var sgdbId = games[0].Id;
 
-            // Ícone
             if (string.IsNullOrEmpty(game.IconPath) || !System.IO.File.Exists(game.IconPath))
             {
                 StatusMessage = $"Buscando ícone de '{game.DisplayName}'...";
@@ -561,7 +542,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Logo
             if (string.IsNullOrEmpty(game.LogoPath))
             {
                 StatusMessage = $"Buscando logo de '{game.DisplayName}'...";
@@ -573,7 +553,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Capa (Grid)
             if (string.IsNullOrEmpty(game.CustomImagePath))
             {
                 StatusMessage = $"Buscando capa de '{game.DisplayName}'...";
@@ -585,7 +564,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Fundo (Hero)
             if (string.IsNullOrEmpty(game.BackgroundImagePath))
             {
                 StatusMessage = $"Buscando fundo de '{game.DisplayName}'...";
@@ -629,7 +607,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             var igdbGame = results[0];
 
-            // Traduz descrição para PT-BR
             var summary = igdbGame.Summary;
             if (!string.IsNullOrEmpty(summary))
             {
@@ -643,7 +620,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.ReleaseYear = igdbGame.ReleaseYear;
             game.IsSummaryTranslated = true;
 
-            // Traduz gêneros para PT-BR
             var genres = igdbGame.GenreNames;
             game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
 
@@ -694,7 +670,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             SoundService.PlayLaunch();
-            Process.Start(new ProcessStartInfo
+            var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
                 UseShellExecute = true,
@@ -703,10 +679,45 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.LastPlayed = DateTime.Now;
             SaveGames();
             StatusMessage = $"Lançando {game.DisplayName}...";
+
+            _xinput.Stop();
+            var mainWin = Application.Current.MainWindow;
+            if (mainWin is not null)
+                mainWin.WindowState = WindowState.Minimized;
+
+            if (proc is not null)
+            {
+                _ = Task.Run(() =>
+                {
+                    try { proc.WaitForExit(); } catch { }
+                    _dispatcher.BeginInvoke(() =>
+                    {
+                        if (mainWin is not null)
+                        {
+                            mainWin.WindowState = WindowState.Normal;
+                            mainWin.Activate();
+                        }
+                        _xinput.Start();
+                        StatusMessage = $"{Games.Count} jogos na biblioteca";
+                    });
+                });
+            }
+            else
+            {
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    _dispatcher.BeginInvoke(() =>
+                    {
+                        _xinput.Start();
+                    });
+                });
+            }
         }
         catch (Exception ex)
         {
             SoundService.PlayError();
+            _xinput.Start();
             StatusMessage = $"Erro ao lançar {game.DisplayName}: {ex.Message}";
         }
     }
@@ -819,7 +830,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HelpDialogScroll = null;
     }
 
-    // ── Xbox Live Integration ───────────────────────────────────
 
     private async Task TryRestoreXboxSessionAsync()
     {
@@ -849,8 +859,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (string.IsNullOrEmpty(clientId) || clientId == AppSettings.DefaultXboxClientId)
         {
-            // When a real default Client ID is embedded, use it directly;
-            // otherwise prompt the user to enter one manually.
             if (!string.IsNullOrEmpty(AppSettings.DefaultXboxClientId)
                 && AppSettings.DefaultXboxClientId != "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
             {
@@ -907,12 +915,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Importados = jogos Xbox efetivamente instalados no PC e adicionados ao launcher
         var importedCount = Games.Count(g =>
             g.InstallDirectory is not null &&
             g.InstallDirectory.Contains("XboxGames", StringComparison.OrdinalIgnoreCase));
 
-        // Disponíveis = total de jogos na biblioteca Xbox (API), mesmo que não instalados
         var availableCount = 0;
         if (_xboxService is not null)
         {
@@ -984,20 +990,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
             ? $"{added} jogo(s) Xbox importado(s)! {Games.Count} jogos na biblioteca."
             : "Todos os jogos Xbox já estavam na biblioteca.";
 
-        // Auto-fetch assets for newly imported games
         foreach (var game in newGames)
         {
             await AutoFetchAllWithProgressAsync(game);
         }
     }
 
-    // ── Steam Integration ────────────────────────────────────────
 
     private async Task TryRestoreSteamSessionAsync()
     {
         var steamId = SettingsService.Current.SteamId;
 
-        // Try to use stored Steam ID, or auto-detect from local installation
         if (string.IsNullOrEmpty(steamId))
             steamId = SteamService.DetectLocalSteamId();
 
@@ -1010,7 +1013,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var connected = await _steamService.ConnectAsync(steamId);
         if (!connected) return;
 
-        // Persist the detected Steam ID for future sessions
         if (string.IsNullOrEmpty(SettingsService.Current.SteamId))
         {
             SettingsService.Current.SteamId = steamId;
@@ -1030,7 +1032,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task SteamLogin()
     {
-        // Try auto-detect first, then use stored, then ask user
         var steamId = SteamService.DetectLocalSteamId()
                       ?? SettingsService.Current.SteamId;
 
@@ -1062,7 +1063,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Persist the Steam ID
         SettingsService.Current.SteamId = _steamService.SteamId ?? steamId;
         SettingsService.Save();
 
@@ -1214,7 +1214,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
 
-            // Auto-busca visuais do SteamGridDB (logo, capa, fundo)
             await AutoFetchSteamGridDbAssetsAsync(game);
 
             SaveGames();
@@ -1243,7 +1242,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             LaunchGame(DetailGame);
     }
 
-    // ── Gamepad Navigation ──────────────────────────────────────
 
     private void OnGamepadConnectionChanged(bool connected)
     {
@@ -1309,7 +1307,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             switch (button)
             {
-                // Zone switching (Up/Down)
                 case GamepadButton.DPadUp:
                     SwitchZone(-1);
                     return;
@@ -1317,7 +1314,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     SwitchZone(1);
                     return;
 
-                // Within-zone navigation (Left/Right)
                 case GamepadButton.DPadLeft:
                     NavigateInZone(-1);
                     return;
@@ -1325,7 +1321,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     NavigateInZone(1);
                     return;
 
-                // Page navigation in carousel
                 case GamepadButton.LeftShoulder:
                     if (ActiveZone == NavZone.Carousel)
                     {
@@ -1341,12 +1336,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     }
                     return;
 
-                // Activate
                 case GamepadButton.A:
                     ActivateCurrentItem();
                     return;
 
-                // Context actions
                 case GamepadButton.Y:
                     if (SelectedGame is not null)
                         ToggleFavorite(SelectedGame);
@@ -1359,7 +1352,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     HandleBack();
                     return;
 
-                // Menu shortcuts
                 case GamepadButton.Start:
                     OpenSettingsMenu();
                     return;
@@ -1385,7 +1377,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         int current = (int)ActiveZone;
         int next = Math.Clamp(current + direction, 0, zones.Length - 1);
 
-        // Skip Actions zone if no game is selected
         if ((NavZone)next == NavZone.Actions && !ShowDetailPanel)
             next = Math.Clamp(next + direction, 0, zones.Length - 1);
 
@@ -1436,7 +1427,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 break;
 
             case NavZone.Actions:
-                // Single action for now (JOGAR), could expand later
                 break;
         }
     }
@@ -1519,7 +1509,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OpenSettingsMenu()
     {
-        // Programmatically open the gear context menu
         _dispatcher.BeginInvoke(() =>
         {
             var mainWindow = Application.Current.MainWindow;
@@ -1569,5 +1558,4 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     }
-
 

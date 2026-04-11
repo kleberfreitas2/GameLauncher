@@ -26,8 +26,7 @@
                    FontSize="11" Foreground="#9999BB" TextWrapping="Wrap"
                    Margin="0,0,0,20"/>
 
-        <!-- Grade de temas: Grid fixo 2 linhas x 3 colunas -->
-        <Grid Grid.Row="2" x:Name="ThemeGrid">
+<Grid Grid.Row="2" x:Name="ThemeGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
@@ -39,8 +38,7 @@
             </Grid.ColumnDefinitions>
         </Grid>
 
-        <!-- Fechar -->
-        <Button Grid.Row="3"
+<Button Grid.Row="3"
                 Content="FECHAR"
                 Style="{StaticResource MaterialDesignFlatButton}"
                 Foreground="#9999BB"
@@ -49,3 +47,4 @@
                 Click="Close_Click"/>
     </Grid>
 </Window>
+

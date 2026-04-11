@@ -37,7 +37,6 @@ public partial class HelpDialog : Window
 
     public void HandleRightStickScroll(double value)
     {
-        // value is -1..1 (positive = stick up = scroll up)
         const double scrollSpeed = 40.0;
         ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset - value * scrollSpeed);
     }

@@ -15,11 +15,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Left: Navigation sidebar -->
-        <Border Background="#0A0E1A" BorderBrush="#1A2040" BorderThickness="0,0,1,0">
+<Border Background="#0A0E1A" BorderBrush="#1A2040" BorderThickness="0,0,1,0">
             <DockPanel>
-                <!-- Header -->
-                <StackPanel DockPanel.Dock="Top" Margin="16,20,16,16">
+<StackPanel DockPanel.Dock="Top" Margin="16,20,16,16">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <TextBlock Text="&#x1f4d6;" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Manual" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
@@ -27,8 +25,7 @@
                     <TextBlock Text="GLauncher v2.0" FontSize="11" Foreground="#556688"/>
                 </StackPanel>
 
-                <!-- Nav items -->
-                <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
+<ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
                          SelectionChanged="NavList_SelectionChanged"
                          SelectedIndex="0"
                          Padding="8,0">
@@ -76,8 +73,7 @@
             </DockPanel>
         </Border>
 
-        <!-- Right: Content area -->
-        <Border Grid.Column="1" Padding="28,20">
+<Border Grid.Column="1" Padding="28,20">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -86,8 +82,7 @@
 
                 <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid>
-                        <!-- Page 0: Início -->
-                        <StackPanel x:Name="Page0">
+<StackPanel x:Name="Page0">
                             <TextBlock Text="Bem-vindo ao GLauncher!" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,0,0,6"/>
                             <TextBlock FontSize="14" Foreground="#00E676" Margin="0,0,0,20"><Run Text="Seu launcher de jogos estilo "/><Run Language="pt-br" Text="console"/></TextBlock>
 
@@ -124,8 +119,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 1: Adicionar Jogos -->
-                        <StackPanel x:Name="Page1" Visibility="Collapsed">
+<StackPanel x:Name="Page1" Visibility="Collapsed">
                             <TextBlock Text="&#x2795; Adicionar Jogos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -185,8 +179,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 2: Steam -->
-                        <StackPanel x:Name="Page2" Visibility="Collapsed">
+<StackPanel x:Name="Page2" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Integra&#xe7;&#xe3;o Steam" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -252,8 +245,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 3: Xbox Live -->
-                        <StackPanel x:Name="Page3" Visibility="Collapsed">
+<StackPanel x:Name="Page3" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Integra&#xe7;&#xe3;o Xbox Live" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -322,8 +314,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 4: Biblioteca e Carrossel -->
-                        <StackPanel x:Name="Page4" Visibility="Collapsed">
+<StackPanel x:Name="Page4" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -364,8 +355,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 5: Menu de Opções -->
-                        <StackPanel x:Name="Page5" Visibility="Collapsed">
+<StackPanel x:Name="Page5" Visibility="Collapsed">
                             <TextBlock Text="&#x2699;&#xfe0f; Menu de Op&#xe7;&#xf5;es" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -441,8 +431,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 6: Capas e Fundos -->
-                        <StackPanel x:Name="Page6" Visibility="Collapsed">
+<StackPanel x:Name="Page6" Visibility="Collapsed">
                             <TextBlock Text="&#x1f5bc;&#xfe0f; Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -492,8 +481,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 7: Info IGDB -->
-                        <StackPanel x:Name="Page7" Visibility="Collapsed">
+<StackPanel x:Name="Page7" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4ca; Informa&#xe7;&#xf5;es IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -524,8 +512,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 8: Temas -->
-                        <StackPanel x:Name="Page8" Visibility="Collapsed">
+<StackPanel x:Name="Page8" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3a8; Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -549,8 +536,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 9: Controle (Gamepad) -->
-                        <StackPanel x:Name="Page9" Visibility="Collapsed">
+<StackPanel x:Name="Page9" Visibility="Collapsed">
                             <TextBlock Text="&#x1f579;&#xfe0f; Controle (Gamepad)" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -621,8 +607,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 10: Monitor de Hardware -->
-                        <StackPanel x:Name="Page10" Visibility="Collapsed">
+<StackPanel x:Name="Page10" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4c8; Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -678,8 +663,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 11: Atalhos -->
-                        <StackPanel x:Name="Page11" Visibility="Collapsed">
+<StackPanel x:Name="Page11" Visibility="Collapsed">
                             <TextBlock Text="&#x2328;&#xfe0f; Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -791,8 +775,7 @@
                     </Grid>
                 </ScrollViewer>
 
-                <!-- Footer -->
-                <Border Grid.Row="1" Margin="0,14,0,0" Padding="0,10,0,0"
+<Border Grid.Row="1" Margin="0,14,0,0" Padding="0,10,0,0"
                         BorderBrush="#1A2040" BorderThickness="0,1,0,0">
                     <TextBlock Text="GLauncher &#x2014; Desenvolvido por Kleber Freitas"
                                FontSize="11" Foreground="#445566" HorizontalAlignment="Center"/>
@@ -801,3 +784,4 @@
         </Border>
     </Grid>
 </Window>
+

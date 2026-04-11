@@ -2,7 +2,6 @@ namespace GameLauncher.Models;
 
 public class AppSettings
 {
-    // Default API credentials — used when no user-configured keys exist
     internal const string DefaultSteamGridDbApiKey  = "REPLACE_WITH_YOUR_STEAMGRIDDB_API_KEY";
     internal const string DefaultIgdbClientId       = "REPLACE_WITH_YOUR_IGDB_CLIENT_ID";
     internal const string DefaultIgdbClientSecret   = "REPLACE_WITH_YOUR_IGDB_CLIENT_SECRET";

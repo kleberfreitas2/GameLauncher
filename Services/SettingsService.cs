@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -28,7 +27,6 @@ public static class SettingsService
         }
         catch { Current = new AppSettings(); }
 
-        // Fill in default credentials when user hasn't configured their own
         if (string.IsNullOrEmpty(Current.SteamGridDbApiKey))
             Current.SteamGridDbApiKey = AppSettings.DefaultSteamGridDbApiKey;
         if (string.IsNullOrEmpty(Current.IgdbClientId))

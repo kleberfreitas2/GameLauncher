@@ -46,7 +46,6 @@ public partial class Game : ObservableObject
     public bool HasLogo   => !string.IsNullOrEmpty(LogoPath);
     public bool HasNoLogo => !HasLogo;
 
-    // ── Metadados IGDB ──────────────────────────────────────
     public int?    IgdbId      { get; set; }
 
     [ObservableProperty]

@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace GameLauncher.Services;
@@ -12,7 +8,6 @@ public static class TranslationService
 {
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
 
-    // Dicionário de gêneros EN → PT-BR
     private static readonly Dictionary<string, string> GenreMap = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Action"]                = "Ação",
@@ -76,9 +71,6 @@ public static class TranslationService
         ["Wrestling"]             = "Luta Livre",
     };
 
-    /// <summary>
-    /// Traduz os gêneros usando o dicionário local. Gêneros não mapeados são mantidos como estão.
-    /// </summary>
     public static string TranslateGenres(string genres)
     {
         if (string.IsNullOrWhiteSpace(genres) || genres == "—")
@@ -89,11 +81,6 @@ public static class TranslationService
         return string.Join(", ", translated);
     }
 
-    /// <summary>
-    /// Traduz texto de EN para PT-BR usando a API gratuita MyMemory.
-    /// Divide textos longos em pedaços ≤ 450 caracteres para respeitar o limite da API.
-    /// Retorna o texto original em caso de falha.
-    /// </summary>
     public static async Task<string> TranslateToPortugueseAsync(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -101,11 +88,9 @@ public static class TranslationService
 
         const int maxChunkLength = 450;
 
-        // Texto curto — traduz direto
         if (text.Length <= maxChunkLength)
             return await TranslateChunkAsync(text);
 
-        // Texto longo — divide em sentenças e agrupa em pedaços
         var chunks = SplitIntoChunks(text, maxChunkLength);
         var translatedParts = new List<string>();
 
@@ -128,7 +113,6 @@ public static class TranslationService
         for (int i = 0; i < sentences.Length; i++)
         {
             var sentence = sentences[i];
-            // Restaura o separador (exceto último segmento)
             var separator = i < sentences.Length - 1 ? ". " : "";
             var candidate = string.IsNullOrEmpty(current)
                 ? sentence + separator
@@ -169,7 +153,6 @@ public static class TranslationService
                 .GetProperty("translatedText")
                 .GetString();
 
-            // MyMemory retorna em CAPS quando excede cota — detecta e retorna original
             if (translated is not null &&
                 !string.Equals(translated, text, StringComparison.Ordinal) &&
                 translated != translated.ToUpperInvariant())

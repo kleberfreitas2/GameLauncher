@@ -17,8 +17,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Instruções -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+<StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="🎮 Configure o acesso ao Xbox Live"
                        FontSize="14" FontWeight="SemiBold" Foreground="White"/>
             <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
@@ -40,8 +39,7 @@
             </TextBlock>
         </StackPanel>
 
-        <!-- Client ID -->
-        <TextBox x:Name="ClientIdBox"
+<TextBox x:Name="ClientIdBox"
                  Grid.Row="1"
                  md:HintAssist.Hint="Application (Client) ID"
                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -49,8 +47,7 @@
                  FontSize="13" Height="52" Margin="0,0,0,10"
                  VerticalContentAlignment="Center"/>
 
-        <!-- Botões -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal"
+<StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,14,0,0">
             <Button Content="CANCELAR" IsCancel="True"
                     Style="{StaticResource MaterialDesignFlatButton}"
@@ -63,3 +60,4 @@
         </StackPanel>
     </Grid>
 </Window>
+
