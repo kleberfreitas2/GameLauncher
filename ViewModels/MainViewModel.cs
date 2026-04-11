@@ -206,9 +206,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
             _gamesView.Refresh();
-            var first = _gamesView.Cast<Game>().FirstOrDefault();
-            if (first is not null)
-                SelectedGame = first;
         }
         catch { }
     }
