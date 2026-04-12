@@ -31,6 +31,8 @@ public sealed class DiscordService : IDisposable
     public bool IsLoggedIn => _accessToken is not null;
     public string? AccessToken => _accessToken;
 
+    public static bool HasCachedToken() => File.Exists(TokenCachePath);
+
     public DiscordService(string clientId, string clientSecret)
     {
         _clientId = clientId;

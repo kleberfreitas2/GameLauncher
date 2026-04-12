@@ -1367,6 +1367,20 @@
                 </StackPanel>
             </Grid>
         </Border>
-    </Grid>
-</Window>
+            <!-- Discord loading overlay -->
+            <Border Grid.Row="0" Grid.RowSpan="4" Background="#CC1A1A2E" Panel.ZIndex="1000"
+                    Visibility="{Binding IsDiscordLoading, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <md:PackIcon Kind="MessageText" Width="48" Height="48" Foreground="#7289DA"
+                                 HorizontalAlignment="Center" Margin="0,0,0,18"/>
+                    <TextBlock Text="Carregando dados Discord..."
+                               Foreground="White" FontSize="20" FontWeight="SemiBold"
+                               FontFamily="Segoe UI" HorizontalAlignment="Center"
+                               Margin="0,0,0,18"/>
+                    <ProgressBar IsIndeterminate="True" Width="320" Height="6"
+                                 Foreground="#7289DA" Background="#33FFFFFF"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Window>
 

@@ -65,6 +65,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
     [ObservableProperty] private bool isAnimationLoading;
+    [ObservableProperty] private bool isDiscordLoading;
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
@@ -1366,6 +1367,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task TryRestoreDiscordSessionAsync()
     {
+        if (!DiscordService.HasCachedToken())
+            return;
+
         var clientId = SettingsService.Current.DiscordClientId;
         if (string.IsNullOrEmpty(clientId))
             clientId = AppSettings.DefaultDiscordClientId;
@@ -1377,22 +1381,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
             return;
 
-        _discordService?.Dispose();
-        _discordService = new DiscordService(clientId, clientSecret);
-
-        var restored = await _discordService.TrySilentLoginAsync();
-        if (!restored) return;
-
-        var profile = await _discordService.GetProfileAsync();
-        if (profile is not null)
+        IsDiscordLoading = true;
+        try
         {
-            DiscordProfile = profile;
-            DiscordConnected = true;
-            StatusMessage = $"Discord: {profile.DisplayName}";
+            _discordService?.Dispose();
+            _discordService = new DiscordService(clientId, clientSecret);
 
-            var rid = SettingsService.Current.DiscordClientId;
-            if (string.IsNullOrEmpty(rid)) rid = AppSettings.DefaultDiscordClientId;
-            if (!string.IsNullOrEmpty(rid)) InitDiscordRpcPanel(rid);
+            var restored = await _discordService.TrySilentLoginAsync();
+            if (!restored) return;
+
+            var profile = await _discordService.GetProfileAsync();
+            if (profile is not null)
+            {
+                DiscordProfile = profile;
+                DiscordConnected = true;
+                StatusMessage = $"Discord: {profile.DisplayName}";
+
+                var rid = SettingsService.Current.DiscordClientId;
+                if (string.IsNullOrEmpty(rid)) rid = AppSettings.DefaultDiscordClientId;
+                if (!string.IsNullOrEmpty(rid)) InitDiscordRpcPanel(rid);
+            }
+        }
+        finally
+        {
+            IsDiscordLoading = false;
         }
     }
 
