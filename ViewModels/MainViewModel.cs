@@ -68,6 +68,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
+    private GpuCapabilities? _gpuCaps;
+    [ObservableProperty] private ObservableCollection<TechCompatItem> techCompatItems = [];
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
     [NotifyPropertyChangedFor(nameof(GamepadBatteryText))]
@@ -212,7 +215,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (!string.IsNullOrEmpty(m.CpuName) && string.IsNullOrEmpty(CpuName))
                 CpuName = m.CpuName;
             if (!string.IsNullOrEmpty(m.GpuName) && string.IsNullOrEmpty(GpuName))
+            {
                 GpuName = m.GpuName;
+                _gpuCaps = GpuCapabilityService.Detect(m.GpuName);
+                if (DetailGame is not null)
+                    ScanGameTech(DetailGame);
+            }
             if (!string.IsNullOrEmpty(m.RamTotal) && string.IsNullOrEmpty(RamTotal))
                 RamTotal = m.RamTotal;
             if (m.StorageDrives.Count > 0 && StorageDrives.Count == 0)
@@ -234,6 +242,86 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _steamService?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
+    }
+
+    private void ScanGameTech(Game game)
+    {
+        if (game.TechInfo is null)
+        {
+            game.TechInfo = GameTechDetectorService.Scan(game.GameRootDirectory);
+            if (game.TechInfo.HasAnyTech)
+                SaveGames();
+        }
+
+        TechCompatItems.Clear();
+        var tech = game.TechInfo;
+        if (!tech.HasAnyTech) return;
+
+        var gpu = _gpuCaps;
+
+        if (!string.IsNullOrEmpty(tech.DirectXVersion))
+            AddTechItem("DirectX", tech.DirectXVersion, gpu?.SupportsDirectX12 == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Gpu");
+
+        if (tech.HasVulkan)
+            AddTechItem("Vulkan", "Sim", gpu?.SupportsVulkan == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Gpu");
+
+        if (tech.HasRayTracing)
+            AddTechItem("Ray Tracing", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsRayTracing ? CompatStatus.Compatible : CompatStatus.Incompatible, "FlashOutline");
+
+        if (tech.HasDLSS)
+            AddTechItem("DLSS", tech.DlssVersion ?? "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsDLSS ? CompatStatus.Compatible : CompatStatus.Incompatible, "NvidiaShield");
+
+        if (tech.HasFSR)
+            AddTechItem("AMD FSR", tech.FsrVersion ?? "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsFSR ? CompatStatus.Compatible : CompatStatus.Incompatible, "Gpu");
+
+        if (tech.HasXeSS)
+            AddTechItem("Intel XeSS", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsXeSS ? CompatStatus.Compatible : CompatStatus.Incompatible, "IntelligenceOutline");
+
+        if (tech.HasFrameGeneration)
+            AddTechItem("Frame Generation", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsFrameGeneration ? CompatStatus.Compatible : CompatStatus.Incompatible, "MotionPlayOutline");
+
+        if (tech.HasHDR)
+            AddTechItem("HDR", "Sim", gpu?.SupportsHDR == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Brightness7");
+    }
+
+    private void AddTechItem(string name, string detail, CompatStatus status, string icon)
+    {
+        TechCompatItems.Add(new TechCompatItem
+        {
+            TechName = name,
+            Detail = detail,
+            Status = status,
+            IconKind = icon,
+            StatusText = status switch
+            {
+                CompatStatus.Compatible => "✓ Compatível",
+                CompatStatus.Incompatible => "✗ Não suportado",
+                _ => "? Desconhecido"
+            },
+            StatusColor = status switch
+            {
+                CompatStatus.Compatible => "#00E676",
+                CompatStatus.Incompatible => "#FF5252",
+                _ => "#FFD740"
+            }
+        });
+    }
+
+    [RelayCommand]
+    private void RescanGameTech()
+    {
+        if (DetailGame is null) return;
+        DetailGame.TechInfo = null;
+        ScanGameTech(DetailGame);
+        StatusMessage = $"Tecnologias de '{DetailGame.DisplayName}' re-escaneadas";
     }
 
     [RelayCommand]
@@ -258,7 +346,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         DetailGame = value;
         ShowDetailPanel = value is not null;
         if (value is not null)
+        {
             SoundService.PlayNavigate();
+            ScanGameTech(value);
+        }
+        else
+        {
+            TechCompatItems.Clear();
+        }
     }
 
     private void LoadGames()
@@ -362,7 +457,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 svc = new SteamGridDbService(apiKey);
                 var sgdbGames = await svc.SearchGamesAsync(game.DisplayName);
-                if (sgdbGames.Count > 0)
+                if (sgdbGames.Count == 0 && IsUnauthorizedError(svc.LastError))
+                {
+                    SettingsService.Current.SteamGridDbApiKey = string.Empty;
+                    SettingsService.Save();
+                    svc = null;
+                }
+                else if (sgdbGames.Count > 0)
                 {
                     sgdbId = sgdbGames[0].Id;
                     hasSteamGridDb = true;
@@ -542,6 +643,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             var svc = new SteamGridDbService(apiKey);
             var games = await svc.SearchGamesAsync(game.DisplayName);
+            if (games.Count == 0 && IsUnauthorizedError(svc.LastError))
+            {
+                SettingsService.Current.SteamGridDbApiKey = string.Empty;
+                SettingsService.Save();
+                StatusMessage = "API Key do SteamGridDB inválida — configure uma nova nas configurações.";
+                return;
+            }
             if (games.Count == 0) return;
 
             var sgdbId = games[0].Id;
@@ -1613,6 +1721,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 list.Add(g);
         }
         return list;
+    }
+
+    private static bool IsUnauthorizedError(string? error)
+    {
+        return error is not null &&
+               (error.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("API key", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("401", StringComparison.Ordinal));
     }
 
     }

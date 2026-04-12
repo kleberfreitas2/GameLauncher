@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GameLauncher.Models;
@@ -67,6 +68,11 @@ public partial class Game : ObservableObject
     private int? releaseYear;
 
     public bool    IsSummaryTranslated { get; set; }
+
+    public GameTechInfo? TechInfo { get; set; }
+
+    [JsonIgnore]
+    public bool HasTechInfo => TechInfo is not null && TechInfo.HasAnyTech;
 
     public bool HasIgdbInfo => !string.IsNullOrEmpty(Summary) || IgdbRating.HasValue;
 

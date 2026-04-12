@@ -2,9 +2,9 @@ namespace GameLauncher.Models;
 
 public class AppSettings
 {
-    internal const string DefaultSteamGridDbApiKey  = "REPLACE_WITH_YOUR_STEAMGRIDDB_API_KEY";
-    internal const string DefaultIgdbClientId       = "REPLACE_WITH_YOUR_IGDB_CLIENT_ID";
-    internal const string DefaultIgdbClientSecret   = "REPLACE_WITH_YOUR_IGDB_CLIENT_SECRET";
+    internal const string DefaultSteamGridDbApiKey  = "ff16d3eb3d9146c2d4046915a9fd2b55";
+    internal const string DefaultIgdbClientId       = "2uvzi4sq1glaz1uz09w1qo48fg68kf";
+    internal const string DefaultIgdbClientSecret   = "lpv5tjr4pdk15xpmxl097pgtqg3x5n";
     internal const string DefaultXboxClientId       = "2faf5e10-92f6-4ea6-838a-f84fb41facc3";
     internal const string DefaultSteamApiKey        = "STUEF87H4RCNKN78";
 

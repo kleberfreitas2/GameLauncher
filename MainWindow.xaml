@@ -432,6 +432,12 @@
                                 <MenuItem Header="Buscar Info IGDB"
                           Command="{Binding FetchIgdbInfoCommand}"
                           CommandParameter="{Binding DetailGame}"/>
+                                <MenuItem Header="Re-escanear Tecnologias"
+                          Command="{Binding RescanGameTechCommand}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="Gpu" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <MenuItem Header="Renomear"
                           Command="{Binding RenameGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
@@ -1010,7 +1016,9 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
@@ -1092,6 +1100,99 @@
                                 <TextBlock Text="{Binding DetailGame.SummaryDisplay}" FontSize="13"
                            Foreground="#AABBCC" TextWrapping="Wrap" LineHeight="20"
                            MaxHeight="160" TextTrimming="CharacterEllipsis"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Tecnologias / GPU" FontSize="15" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <Button Grid.Column="1" Command="{Binding RescanGameTechCommand}"
+                                        Cursor="Hand" BorderThickness="0" Background="Transparent"
+                                        Padding="0" ToolTip="Re-escanear tecnologias" VerticalAlignment="Center">
+                                    <md:PackIcon Kind="Refresh" Width="16" Height="16" Foreground="#556677"/>
+                                </Button>
+                            </Grid>
+                            <Border Background="#88161622" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <TextBlock FontSize="11" Foreground="#556677" Margin="0,0,0,8"
+                                               Text="{Binding GpuName, StringFormat='GPU: {0}'}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <ItemsControl ItemsSource="{Binding TechCompatItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <md:PackIcon Kind="{Binding IconKind}" Width="16" Height="16"
+                                                                 Foreground="#8899AA" VerticalAlignment="Center"
+                                                                 Margin="0,0,8,0"/>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding TechName}" FontSize="12"
+                                                                   FontWeight="SemiBold" Foreground="#CCDDEE"/>
+                                                        <TextBlock Text="{Binding Detail}" FontSize="10"
+                                                                   Foreground="#778899"/>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" CornerRadius="8" Padding="8,3"
+                                                            VerticalAlignment="Center">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#33FFD740"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding StatusColor}" Value="#00E676">
+                                                                        <Setter Property="Background" Value="#3300E676"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding StatusColor}" Value="#FF5252">
+                                                                        <Setter Property="Background" Value="#33FF5252"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="10"
+                                                                   FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="#FFD740"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding StatusColor}" Value="#00E676">
+                                                                            <Setter Property="Foreground" Value="#00E676"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding StatusColor}" Value="#FF5252">
+                                                                            <Setter Property="Foreground" Value="#FF5252"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock FontSize="12" Foreground="#556677" HorizontalAlignment="Center"
+                                               Margin="0,4,0,0"
+                                               Text="Nenhuma tecnologia detectada">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding TechCompatItems.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </Grid>

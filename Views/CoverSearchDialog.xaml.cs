@@ -9,7 +9,7 @@ namespace GameLauncher.Views;
 
 public partial class CoverSearchDialog : Window
 {
-    private readonly SteamGridDbService _service;
+    private SteamGridDbService _service;
     private readonly string _gameName;
     private string? _selectedImageUrl;
     private Border? _selectedBorder;
@@ -46,6 +46,18 @@ public partial class CoverSearchDialog : Window
         SelectedText.Text = "Nenhuma capa selecionada";
 
         var games = await _service.SearchGamesAsync(term);
+        if (games.Count == 0 && IsUnauthorizedError())
+        {
+            SetLoading(false);
+            if (PromptNewApiKey())
+            {
+                await DoSearchAsync(term);
+                return;
+            }
+            StatusText.Text = "API Key inválida. Configure uma chave válida em steamgriddb.com/profile/preferences/api";
+            StatusText.Visibility = Visibility.Visible;
+            return;
+        }
         if (games.Count == 0)
         {
             SetLoading(false);
@@ -150,5 +162,23 @@ public partial class CoverSearchDialog : Window
     {
         LoadingBar.Visibility = loading ? Visibility.Visible : Visibility.Collapsed;
         if (loading) StatusText.Visibility = Visibility.Collapsed;
+    }
+
+    private bool IsUnauthorizedError()
+    {
+        return _service.LastError is not null &&
+               (_service.LastError.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("API key", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("401", StringComparison.Ordinal));
+    }
+
+    private bool PromptNewApiKey()
+    {
+        var keyDialog = new ApiKeyDialog { Owner = this };
+        if (keyDialog.ShowDialog() != true) return false;
+        SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+        SettingsService.Save();
+        _service = new SteamGridDbService(keyDialog.ApiKey);
+        return true;
     }
 }

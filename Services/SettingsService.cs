@@ -23,21 +23,25 @@ public static class SettingsService
             var json = File.ReadAllText(SettingsPath);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
             if (Current.SteamGridDbApiKey.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                Current.SteamGridDbApiKey = string.Empty;
+                Current.SteamGridDbApiKey = AppSettings.DefaultSteamGridDbApiKey;
         }
         catch { Current = new AppSettings(); }
 
-        if (string.IsNullOrEmpty(Current.SteamGridDbApiKey))
+        if (IsInvalidKey(Current.SteamGridDbApiKey))
             Current.SteamGridDbApiKey = AppSettings.DefaultSteamGridDbApiKey;
-        if (string.IsNullOrEmpty(Current.IgdbClientId))
+        if (IsInvalidKey(Current.IgdbClientId))
             Current.IgdbClientId = AppSettings.DefaultIgdbClientId;
-        if (string.IsNullOrEmpty(Current.IgdbClientSecret))
+        if (IsInvalidKey(Current.IgdbClientSecret))
             Current.IgdbClientSecret = AppSettings.DefaultIgdbClientSecret;
-        if (string.IsNullOrEmpty(Current.XboxClientId))
+        if (IsInvalidKey(Current.XboxClientId))
             Current.XboxClientId = AppSettings.DefaultXboxClientId;
-        if (string.IsNullOrEmpty(Current.SteamApiKey))
+        if (IsInvalidKey(Current.SteamApiKey))
             Current.SteamApiKey = AppSettings.DefaultSteamApiKey;
     }
+
+    private static bool IsInvalidKey(string? value) =>
+        string.IsNullOrWhiteSpace(value) ||
+        value.StartsWith("REPLACE_WITH_", StringComparison.OrdinalIgnoreCase);
 
     public static void Save()
     {

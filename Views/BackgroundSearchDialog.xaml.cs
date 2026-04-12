@@ -13,7 +13,7 @@ namespace GameLauncher.Views;
 
 public partial class BackgroundSearchDialog : Window
 {
-    private readonly SteamGridDbService _service;
+    private SteamGridDbService _service;
     private readonly string _gameName;
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
     private int _sgdbGameId;
@@ -200,10 +200,24 @@ public partial class BackgroundSearchDialog : Window
         SetLoading(true);
 
         var games = await _service.SearchGamesAsync(_gameName);
+        if (games.Count == 0 && IsUnauthorizedError())
+        {
+            SetLoading(false);
+            if (PromptNewApiKey())
+            {
+                await LoadImagesAsync();
+                return;
+            }
+            StatusText.Text       = "API Key inválida. Configure uma chave válida em steamgriddb.com/profile/preferences/api";
+            StatusText.Visibility = Visibility.Visible;
+            return;
+        }
         if (games.Count == 0)
         {
             SetLoading(false);
-            StatusText.Text       = $"Nenhum jogo encontrado no SteamGridDB para \"{_gameName}\".";
+            StatusText.Text       = _service.LastError is not null
+                ? $"Erro: {_service.LastError}"
+                : $"Nenhum jogo encontrado no SteamGridDB para \"{_gameName}\".";
             StatusText.Visibility = Visibility.Visible;
             return;
         }
@@ -447,5 +461,23 @@ public partial class BackgroundSearchDialog : Window
             foreach (var item in items)
                 item.Dispose();
         }
+    }
+
+    private bool IsUnauthorizedError()
+    {
+        return _service.LastError is not null &&
+               (_service.LastError.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("API key", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("401", StringComparison.Ordinal));
+    }
+
+    private bool PromptNewApiKey()
+    {
+        var keyDialog = new ApiKeyDialog { Owner = this };
+        if (keyDialog.ShowDialog() != true) return false;
+        SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+        SettingsService.Save();
+        _service = new SteamGridDbService(keyDialog.ApiKey);
+        return true;
     }
 }
