@@ -18,7 +18,8 @@ public sealed class DiscordService : IDisposable
     private const string TokenUrl = "https://discord.com/api/oauth2/token";
     private const string UserMeUrl = "https://discord.com/api/users/@me";
     private const string RedirectUri = "http://localhost:9547/callback";
-    private const string Scope = "identify";
+    private const string BaseScope = "identify";
+    private const string FullScope = "identify dm_channels.read";
 
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
     private readonly string _clientId;
@@ -27,9 +28,11 @@ public sealed class DiscordService : IDisposable
     private string? _accessToken;
     private string? _refreshToken;
     private DateTime _expiresAt;
+    private string _grantedScope = BaseScope;
 
     public bool IsLoggedIn => _accessToken is not null;
     public string? AccessToken => _accessToken;
+    public bool HasDmScope => _grantedScope.Contains("dm_channels.read");
 
     public static bool HasCachedToken() => File.Exists(TokenCachePath);
 
@@ -50,6 +53,8 @@ public sealed class DiscordService : IDisposable
             var cache = JsonSerializer.Deserialize<TokenCache>(json);
             if (cache is null || string.IsNullOrEmpty(cache.RefreshToken))
                 return false;
+
+            _grantedScope = !string.IsNullOrEmpty(cache.Scope) ? cache.Scope : BaseScope;
 
             if (!string.IsNullOrEmpty(cache.AccessToken) && cache.ExpiresAt > DateTime.UtcNow.AddMinutes(5))
             {
@@ -76,13 +81,13 @@ public sealed class DiscordService : IDisposable
         try
         {
             var state = Guid.NewGuid().ToString("N");
-            var authUrl = $"{AuthorizeUrl}?client_id={_clientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
-                          $"&response_type=code&scope={Scope}&state={state}&prompt=none";
+            var scopeToUse = FullScope;
 
             using var listener = new HttpListener();
             listener.Prefixes.Add("http://localhost:9547/");
             listener.Start();
 
+            var authUrl = BuildAuthUrl(scopeToUse, state, prompt: null);
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
             var contextTask = listener.GetContextAsync();
@@ -96,7 +101,30 @@ public sealed class DiscordService : IDisposable
             var context = contextTask.Result;
             var query = context.Request.QueryString;
             var code = query["code"];
+            var error = query["error"];
             var returnedState = query["state"];
+
+            // If Discord returned an error (e.g. invalid_scope), fallback to basic scope
+            if (string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(error) && scopeToUse != BaseScope)
+            {
+                scopeToUse = BaseScope;
+                var fallbackUrl = BuildAuthUrl(scopeToUse, state, prompt: "none");
+                context.Response.Redirect(fallbackUrl);
+                context.Response.Close();
+
+                contextTask = listener.GetContextAsync();
+                completed = await Task.WhenAny(contextTask, Task.Delay(TimeSpan.FromMinutes(3)));
+                if (completed != contextTask)
+                {
+                    listener.Stop();
+                    return false;
+                }
+
+                context = contextTask.Result;
+                query = context.Request.QueryString;
+                code = query["code"];
+                returnedState = query["state"];
+            }
 
             var responseHtml = "<html><body style='background:#0D0D0D;color:white;font-family:Segoe UI;display:flex;justify-content:center;align-items:center;height:100vh;margin:0'>" +
                                "<div style='text-align:center'><h2>✅ Discord conectado!</h2><p>Pode fechar esta aba e voltar ao GLauncher.</p></div></body></html>";
@@ -111,6 +139,7 @@ public sealed class DiscordService : IDisposable
                 return false;
             }
 
+            _grantedScope = scopeToUse;
             await WriteResponse(context.Response, responseHtml);
             listener.Stop();
 
@@ -120,6 +149,15 @@ public sealed class DiscordService : IDisposable
         {
             return false;
         }
+    }
+
+    private string BuildAuthUrl(string scope, string state, string? prompt = null)
+    {
+        var url = $"{AuthorizeUrl}?client_id={_clientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
+                  $"&response_type=code&scope={Uri.EscapeDataString(scope)}&state={state}";
+        if (!string.IsNullOrEmpty(prompt))
+            url += $"&prompt={prompt}";
+        return url;
     }
 
     private async Task<bool> ExchangeCodeAsync(string code)
@@ -238,7 +276,8 @@ public sealed class DiscordService : IDisposable
         {
             AccessToken = _accessToken ?? string.Empty,
             RefreshToken = _refreshToken ?? string.Empty,
-            ExpiresAt = _expiresAt
+            ExpiresAt = _expiresAt,
+            Scope = _grantedScope
         };
 
         Directory.CreateDirectory(CacheDir);
@@ -255,9 +294,104 @@ public sealed class DiscordService : IDisposable
         response.Close();
     }
 
+    public async Task<(List<DiscordDmChannel> Channels, string? Error)> GetDmChannelsAsync()
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+            return ([], "Token não disponível");
+
+        if (!HasDmScope)
+            return ([], "no_dm_scope");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/users/@me/channels");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var status = (int)response.StatusCode;
+                if (status == 401 || status == 403)
+                    return ([], "scope_missing");
+                return ([], $"Erro HTTP {status}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var channels = JsonSerializer.Deserialize<List<DmChannelResponse>>(json) ?? [];
+            var result = new List<DiscordDmChannel>();
+
+            foreach (var ch in channels)
+            {
+                if (ch.Type is not (1 or 3)) continue;
+
+                var dm = new DiscordDmChannel
+                {
+                    ChannelId = ch.Id ?? "",
+                    IsGroup = ch.Type == 3,
+                    GroupName = ch.Name
+                };
+
+                if (ch.Recipients is not null)
+                {
+                    foreach (var r in ch.Recipients)
+                    {
+                        dm.Recipients.Add(new DiscordDmRecipient
+                        {
+                            Id = r.Id ?? "",
+                            Username = r.Username ?? "",
+                            GlobalName = r.GlobalName ?? "",
+                            AvatarHash = r.Avatar
+                        });
+                    }
+                }
+
+                result.Add(dm);
+            }
+
+            return (result, null);
+        }
+        catch (Exception ex)
+        {
+            return ([], ex.Message);
+        }
+    }
+
     public void Dispose()
     {
         _http.Dispose();
+    }
+
+    private sealed class DmChannelResponse
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("type")]
+        public int Type { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("recipients")]
+        public List<DmRecipientResponse>? Recipients { get; set; }
+
+        [JsonPropertyName("last_message_id")]
+        public string? LastMessageId { get; set; }
+    }
+
+    private sealed class DmRecipientResponse
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("username")]
+        public string? Username { get; set; }
+
+        [JsonPropertyName("global_name")]
+        public string? GlobalName { get; set; }
+
+        [JsonPropertyName("avatar")]
+        public string? Avatar { get; set; }
     }
 
     private sealed class TokenResponse
@@ -301,5 +435,6 @@ public sealed class DiscordService : IDisposable
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
+        public string Scope { get; set; } = string.Empty;
     }
 }

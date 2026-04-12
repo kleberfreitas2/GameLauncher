@@ -1504,7 +1504,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var dialog = new DiscordPanelDialog(_discordRpcPanel)
+        var dialog = new DiscordPanelDialog(_discordRpcPanel, _discordService)
         {
             Owner = Application.Current.MainWindow
         };
@@ -1516,6 +1516,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         IsProfileDialogOpen = false;
         ProfileDialogNavigate = null;
+
+        if (dialog.LogoutRequested && _discordService is not null)
+        {
+            await _discordService.LogoutAsync();
+            _discordRpcPanel?.Dispose();
+            _discordRpcPanel = null;
+            DiscordProfile = null;
+            DiscordConnected = false;
+            StatusMessage = "Discord desconectado.";
+        }
     }
 
     private void SetDiscordRichPresence(string gameName)

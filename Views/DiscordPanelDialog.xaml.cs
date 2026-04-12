@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using GameLauncher.Models;
 using GameLauncher.Services;
 
 namespace GameLauncher.Views;
@@ -9,6 +11,7 @@ namespace GameLauncher.Views;
 public partial class DiscordPanelDialog : Window
 {
     private readonly DiscordRpcService? _rpc;
+    private readonly DiscordService? _discordService;
     private readonly string _webhookUrl;
     private readonly List<string> _quickMessages;
 
@@ -16,16 +19,20 @@ public partial class DiscordPanelDialog : Window
     private readonly Border[] _tabs;
     private readonly Grid[] _panels;
 
+    public bool LogoutRequested { get; private set; }
+
     private List<DiscordGuild> _guilds = [];
     private List<DiscordVoiceChannel> _channels = [];
     private readonly ObservableCollection<DiscordVoiceUser> _voiceUsers = [];
     private readonly ObservableCollection<NotificationItem> _notifications = [];
+    private readonly ObservableCollection<DiscordDmChannel> _dmChannels = [];
 
-    public DiscordPanelDialog(DiscordRpcService? rpc)
+    public DiscordPanelDialog(DiscordRpcService? rpc, DiscordService? discordService = null)
     {
         InitializeComponent();
 
         _rpc = rpc;
+        _discordService = discordService;
         _webhookUrl = SettingsService.Current.DiscordWebhookUrl;
         _quickMessages = new List<string>(SettingsService.Current.DiscordQuickMessages);
 
@@ -34,6 +41,7 @@ public partial class DiscordPanelDialog : Window
 
         VoiceUsersList.ItemsSource = _voiceUsers;
         NotificationsList.ItemsSource = _notifications;
+        DmChannelsList.ItemsSource = _dmChannels;
         QuickMessagesList.ItemsSource = _quickMessages;
         WebhookUrlBox.Text = _webhookUrl;
 
@@ -58,6 +66,7 @@ public partial class DiscordPanelDialog : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         LoadRpcData();
+        _ = LoadDmChannelsAsync();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -123,7 +132,60 @@ public partial class DiscordPanelDialog : Window
         NoUsersText.Visibility = _voiceUsers.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private async Task LoadDmChannelsAsync()
+    {
+        if (_discordService is null || !_discordService.IsLoggedIn)
+        {
+            DmStatusText.Text = "Faça login no Discord para ver suas DMs";
+            DmStatusText.Visibility = Visibility.Visible;
+            DmLoadingBar.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        DmLoadingBar.Visibility = Visibility.Visible;
+        DmStatusText.Text = "";
+        DmStatusText.Visibility = Visibility.Collapsed;
+
+        var (channels, error) = await _discordService.GetDmChannelsAsync();
+
+        DmLoadingBar.Visibility = Visibility.Collapsed;
+
+        _dmChannels.Clear();
+        foreach (var ch in channels)
+            _dmChannels.Add(ch);
+
+        if (_dmChannels.Count == 0)
+        {
+            DmStatusText.Text = error switch
+            {
+                "no_dm_scope" =>
+                    "O scope 'dm_channels.read' não foi autorizado.\n\n" +
+                    "Para ver suas DMs:\n" +
+                    "1. Acesse discord.com/developers → seu app → OAuth2\n" +
+                    "2. Adicione o scope 'dm_channels.read'\n" +
+                    "3. Faça logout e login novamente no GLauncher",
+                "scope_missing" =>
+                    "Permissão insuficiente para acessar DMs.\n" +
+                    "Faça logout e login novamente para\n" +
+                    "autorizar o acesso às mensagens.",
+                not null => $"Erro ao carregar DMs: {error}",
+                _ => "Nenhuma DM encontrada."
+            };
+            DmStatusText.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            DmStatusText.Visibility = Visibility.Collapsed;
+        }
+    }
+
     // Button handlers
+    private void BtnLogout_Click(object sender, RoutedEventArgs e)
+    {
+        LogoutRequested = true;
+        DialogResult = true;
+    }
+
     private void BtnJoin_Click(object sender, RoutedEventArgs e) => JoinSelectedChannel();
     private void BtnLeave_Click(object sender, RoutedEventArgs e) => LeaveChannel();
     private void BtnMute_Click(object sender, RoutedEventArgs e) => ToggleMute();
@@ -382,7 +444,7 @@ public partial class DiscordPanelDialog : Window
         ListBox? list = _activeTab switch
         {
             0 => ChannelList,
-            1 => QuickMessagesList,
+            1 => DmChannelsList.Items.Count > 0 ? DmChannelsList : QuickMessagesList,
             _ => null
         };
 
