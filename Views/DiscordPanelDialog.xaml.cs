@@ -158,16 +158,11 @@ public partial class DiscordPanelDialog : Window
         {
             DmStatusText.Text = error switch
             {
-                "no_dm_scope" =>
-                    "O scope 'dm_channels.read' não foi autorizado.\n\n" +
-                    "Para ver suas DMs:\n" +
-                    "1. Acesse discord.com/developers → seu app → OAuth2\n" +
-                    "2. Adicione o scope 'dm_channels.read'\n" +
-                    "3. Faça logout e login novamente no GLauncher",
-                "scope_missing" =>
-                    "Permissão insuficiente para acessar DMs.\n" +
-                    "Faça logout e login novamente para\n" +
-                    "autorizar o acesso às mensagens.",
+                "dm_not_available" =>
+                    "O Discord não permite leitura de DMs\n" +
+                    "para aplicações não verificadas.\n\n" +
+                    "Use a seção 'Envio Rápido' abaixo\n" +
+                    "para enviar mensagens via Webhook.",
                 not null => $"Erro ao carregar DMs: {error}",
                 _ => "Nenhuma DM encontrada."
             };

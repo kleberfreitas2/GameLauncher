@@ -1450,22 +1450,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        StatusMessage = "Carregando perfil Discord...";
-        var profile = await _discordService.GetProfileAsync();
-
-        if (profile is not null)
+        IsDiscordLoading = true;
+        try
         {
-            DiscordProfile = profile;
-            DiscordConnected = true;
-            StatusMessage = $"Discord: {profile.DisplayName}";
-        }
-        else
-        {
-            DiscordConnected = true;
-            StatusMessage = "Discord conectado (perfil indisponível).";
-        }
+            StatusMessage = "Carregando perfil Discord...";
+            var profile = await _discordService.GetProfileAsync();
 
-        InitDiscordRpcPanel(clientId);
+            if (profile is not null)
+            {
+                DiscordProfile = profile;
+                DiscordConnected = true;
+                StatusMessage = $"Discord: {profile.DisplayName}";
+            }
+            else
+            {
+                DiscordConnected = true;
+                StatusMessage = "Discord conectado (perfil indisponível).";
+            }
+
+            InitDiscordRpcPanel(clientId);
+        }
+        finally
+        {
+            IsDiscordLoading = false;
+        }
     }
 
     private void InitDiscordRpcPanel(string clientId)
