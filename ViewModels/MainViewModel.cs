@@ -161,6 +161,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private DiscordService? _discordService;
     private DiscordRichPresenceService? _discordRpc;
+    private DiscordRpcService? _discordRpcPanel;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDiscordConnected))]
@@ -259,6 +260,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _steamService?.Dispose();
         _discordService?.Dispose();
         _discordRpc?.Dispose();
+        _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
     }
@@ -1387,6 +1389,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DiscordProfile = profile;
             DiscordConnected = true;
             StatusMessage = $"Discord: {profile.DisplayName}";
+
+            var rid = SettingsService.Current.DiscordClientId;
+            if (string.IsNullOrEmpty(rid)) rid = AppSettings.DefaultDiscordClientId;
+            if (!string.IsNullOrEmpty(rid)) InitDiscordRpcPanel(rid);
         }
     }
 
@@ -1446,6 +1452,35 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DiscordConnected = true;
             StatusMessage = "Discord conectado (perfil indisponível).";
         }
+
+        InitDiscordRpcPanel(clientId);
+    }
+
+    private void InitDiscordRpcPanel(string clientId)
+    {
+        try
+        {
+            _discordRpcPanel?.Dispose();
+            _discordRpcPanel = new DiscordRpcService(clientId);
+
+            if (!_discordRpcPanel.TryConnect())
+            {
+                _discordRpcPanel = null;
+                return;
+            }
+
+            var token = _discordService?.AccessToken;
+            if (!string.IsNullOrEmpty(token))
+            {
+                if (_discordRpcPanel.Authenticate(token))
+                    _discordRpcPanel.SubscribeNotifications();
+            }
+        }
+        catch
+        {
+            _discordRpcPanel?.Dispose();
+            _discordRpcPanel = null;
+        }
     }
 
     [RelayCommand]
@@ -1457,7 +1492,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var dialog = new DiscordProfileDialog(DiscordProfile)
+        var dialog = new DiscordPanelDialog(_discordRpcPanel)
         {
             Owner = Application.Current.MainWindow
         };
@@ -1465,18 +1500,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsProfileDialogOpen = true;
         ProfileDialogNavigate = dialog.HandleGamepadInput;
 
-        if (dialog.ShowDialog() == true)
-        {
-            if (dialog.LogoutRequested)
-            {
-                if (_discordService is not null)
-                    await _discordService.LogoutAsync();
-
-                DiscordProfile = null;
-                DiscordConnected = false;
-                StatusMessage = "Desconectado do Discord.";
-            }
-        }
+        dialog.ShowDialog();
 
         IsProfileDialogOpen = false;
         ProfileDialogNavigate = null;

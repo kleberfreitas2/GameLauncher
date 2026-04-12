@@ -29,6 +29,7 @@ public sealed class DiscordService : IDisposable
     private DateTime _expiresAt;
 
     public bool IsLoggedIn => _accessToken is not null;
+    public string? AccessToken => _accessToken;
 
     public DiscordService(string clientId, string clientSecret)
     {
