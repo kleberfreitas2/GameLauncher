@@ -10,6 +10,7 @@
   ![C#](https://img.shields.io/badge/C%23-12.0-239120?style=flat-square&logo=csharp)
   ![SkiaSharp](https://img.shields.io/badge/SkiaSharp-3.119-0B8AC9?style=flat-square)
   ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square)
+  ![Discord](https://img.shields.io/badge/Discord-Integration-5865F2?style=flat-square&logo=discord&logoColor=white)
   ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 </div>
@@ -18,7 +19,7 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
 
 
 <div align="center">
@@ -83,6 +84,26 @@ Busca automática de metadados via **IGDB** (Internet Game Database):
 - **Ano de lançamento**
 - Busca manual: menu ⚙️ → "Buscar Info IGDB"
 - Credenciais IGDB já embutidas — **funciona sem configuração**
+
+### 💬 Integração Discord
+Login com conta Discord via **OAuth2** e **Rich Presence** automático ao jogar:
+
+**Login Discord (OAuth2)**
+- Autenticação via **Authorization Code Grant** com redirecionamento local
+- Exibição do perfil: **avatar**, **nome de exibição** e **@username**
+- Sessão persistida e restaurada automaticamente ao reabrir o app
+- Botão **DISCORD** no cabeçalho (roxo 💜) — clique para login ou ver perfil
+- Credenciais Discord já embutidas — **funciona sem configuração**
+
+**Rich Presence (Status no Discord)**
+- Ao iniciar um jogo, o Discord exibe automaticamente:
+  - 🎮 **"Jogando [Nome do Jogo]"**
+  - 📝 **"via GLauncher"**
+  - ⏱️ **Tempo de jogo** (contador desde o início)
+- Implementação via **IPC Named Pipes** (zero dependências externas)
+- O status é limpo automaticamente quando o jogo fecha
+
+> 💡 Basta ter o Discord aberto no PC — o Rich Presence é detectado automaticamente.
 
 ### 🖥️ Monitor de Hardware
 Gauges circulares em tempo real no rodapé + descrições do hardware:
@@ -170,7 +191,7 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 | Remover Jogo | Remove da biblioteca (não desinstala) |
 
 ### 📖 Manual Integrado
-- Manual interativo com **12 páginas** acessível pelo ícone ❓ no cabeçalho
+- Manual interativo com **13 páginas** acessível pelo ícone ❓ no cabeçalho
 - Navegação lateral com sidebar
 - Navegável por gamepad (D-Pad ▲▼ + B para fechar, analógico direito para scroll)
 - Cobre todas as funcionalidades do launcher
@@ -196,8 +217,11 @@ GameLauncher/
 │   └── UrlToImageSourceConverter.cs   # URL → ImageSource para previews
 ├── Models/
 │   ├── AppSettings.cs            # Configurações + credenciais padrão
+│   ├── DiscordProfile.cs         # Modelo de perfil Discord (avatar, username)
 │   └── Game.cs                   # Modelo de jogo (ObservableObject)
 ├── Services/
+│   ├── DiscordRichPresenceService.cs # Rich Presence via IPC Named Pipes
+│   ├── DiscordService.cs         # Discord OAuth2 (login, perfil, token cache)
 │   ├── GameScanner.cs            # Scanner de pasta por executáveis
 │   ├── HardwareMonitorService.cs # CPU/GPU/RAM + WMI para storage
 │   ├── IconExtractor.cs          # Extração de ícone de .exe
@@ -215,7 +239,9 @@ GameLauncher/
 │   ├── ApiKeyDialog.xaml          # Cadastro de API Key SteamGridDB
 │   ├── BackgroundSearchDialog.xaml # Busca e preview de fundos animados
 │   ├── CoverSearchDialog.xaml     # Busca e seleção de capas online
-│   ├── HelpDialog.xaml            # Manual interativo (12 páginas)
+│   ├── DiscordProfileDialog.xaml   # Perfil Discord (avatar, nome, logout)
+│   ├── DiscordSetupDialog.xaml    # Configuração Discord Client ID
+│   ├── HelpDialog.xaml            # Manual interativo (13 páginas)
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
 │   ├── RenameDialog.xaml          # Renomear jogo
@@ -267,7 +293,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 ### Primeiro uso
 
-1. O launcher abre e já está pronto — **credenciais de API já estão embutidas** (SteamGridDB + IGDB)
+1. O launcher abre e já está pronto — **credenciais de API já estão embutidas** (SteamGridDB + IGDB + Discord)
 2. Clique em **`+ ADICIONAR JOGO`** e selecione o(s) `.exe` do(s) jogo(s)
 3. O GLauncher busca automaticamente: ícone, capa, logo, fundo animado, sinopse, gênero, nota e ano
 4. Descrições são traduzidas automaticamente para **Português**
@@ -277,6 +303,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 8. Para ajuda: clique no ícone ❓ azul para abrir o manual integrado
 9. Conecte um **controle Xbox ou PlayStation** para navegar com gamepad
 10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
+11. Clique em **`DISCORD`** no cabeçalho para login — o **Rich Presence** mostra o jogo no Discord automaticamente
 
 ---
 
@@ -284,7 +311,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🟢 GLauncher    [+ ADICIONAR JOGO] [TEMA] [❓] [🎮] [⚙️] 14:30 [👤]   │  ← Header
+│  🟢 GLauncher  [+ ADICIONAR JOGO] [TEMA] [XBOX] [STEAM] [DISCORD] [❓] [⚙️] 14:30 [👤] │  ← Header
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │          ┌─────────────────────────────────────────────┐                 │
@@ -325,6 +352,7 @@ Todos os dados são salvos em `%AppData%\GameLauncher\`:
 %AppData%\GameLauncher\
 ├── games.json       # Biblioteca de jogos (paths, favoritos, metadados IGDB)
 ├── settings.json    # Configurações, tema, avatar, nome do jogador
+├── discord_token.json # Token de sessão Discord (OAuth2 refresh token)
 ├── icons/           # Cache de ícones extraídos (.png)
 ├── covers/          # Capas e logos baixados do SteamGridDB
 └── backgrounds/     # Fundos animados (WEBP/GIF)

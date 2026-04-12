@@ -1,0 +1,59 @@
+<Window x:Class="GameLauncher.Views.DiscordSetupDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="🎮 Configurar Discord"
+        Width="520" Height="340"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="💬 Configure o acesso ao Discord"
+                       FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                1. Acesse o
+                <Hyperlink NavigateUri="https://discord.com/developers/applications"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="#7C9DFF">Discord Developer Portal</Hyperlink>
+                e crie um novo aplicativo
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                2. Em <Run FontStyle="Italic">OAuth2</Run>, adicione o redirect URI:
+                <Run FontWeight="SemiBold" Foreground="#00E676">http://localhost:9547/callback</Run>
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                3. Copie o <Run FontWeight="SemiBold" Foreground="White">Application ID (Client ID)</Run> e cole abaixo
+            </TextBlock>
+        </StackPanel>
+
+        <TextBox x:Name="ClientIdBox"
+                 Grid.Row="1"
+                 md:HintAssist.Hint="Application ID (Client ID)"
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Foreground="White" CaretBrush="White"
+                 FontSize="13" Height="52" Margin="0,0,0,10"
+                 VerticalContentAlignment="Center"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="SALVAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#5865F2" FontWeight="Bold"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
