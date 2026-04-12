@@ -29,6 +29,9 @@ public sealed class DiscordService : IDisposable
     private DateTime _expiresAt;
 
     public bool IsLoggedIn => _accessToken is not null;
+    public string? AccessToken => _accessToken;
+
+    public static bool HasCachedToken() => File.Exists(TokenCachePath);
 
     public DiscordService(string clientId, string clientSecret)
     {
@@ -73,13 +76,13 @@ public sealed class DiscordService : IDisposable
         try
         {
             var state = Guid.NewGuid().ToString("N");
-            var authUrl = $"{AuthorizeUrl}?client_id={_clientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
-                          $"&response_type=code&scope={Scope}&state={state}&prompt=none";
 
             using var listener = new HttpListener();
             listener.Prefixes.Add("http://localhost:9547/");
             listener.Start();
 
+            var authUrl = $"{AuthorizeUrl}?client_id={_clientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
+                          $"&response_type=code&scope={Uri.EscapeDataString(Scope)}&state={state}&prompt=consent";
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
             var contextTask = listener.GetContextAsync();
@@ -252,9 +255,101 @@ public sealed class DiscordService : IDisposable
         response.Close();
     }
 
+    public async Task<(List<DiscordDmChannel> Channels, string? Error)> GetDmChannelsAsync()
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+            return ([], "Token não disponível");
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/users/@me/channels");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var status = (int)response.StatusCode;
+                if (status == 401 || status == 403)
+                    return ([], "dm_not_available");
+                return ([], $"Erro HTTP {status}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var channels = JsonSerializer.Deserialize<List<DmChannelResponse>>(json) ?? [];
+            var result = new List<DiscordDmChannel>();
+
+            foreach (var ch in channels)
+            {
+                if (ch.Type is not (1 or 3)) continue;
+
+                var dm = new DiscordDmChannel
+                {
+                    ChannelId = ch.Id ?? "",
+                    IsGroup = ch.Type == 3,
+                    GroupName = ch.Name
+                };
+
+                if (ch.Recipients is not null)
+                {
+                    foreach (var r in ch.Recipients)
+                    {
+                        dm.Recipients.Add(new DiscordDmRecipient
+                        {
+                            Id = r.Id ?? "",
+                            Username = r.Username ?? "",
+                            GlobalName = r.GlobalName ?? "",
+                            AvatarHash = r.Avatar
+                        });
+                    }
+                }
+
+                result.Add(dm);
+            }
+
+            return (result, null);
+        }
+        catch (Exception ex)
+        {
+            return ([], ex.Message);
+        }
+    }
+
     public void Dispose()
     {
         _http.Dispose();
+    }
+
+    private sealed class DmChannelResponse
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("type")]
+        public int Type { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("recipients")]
+        public List<DmRecipientResponse>? Recipients { get; set; }
+
+        [JsonPropertyName("last_message_id")]
+        public string? LastMessageId { get; set; }
+    }
+
+    private sealed class DmRecipientResponse
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("username")]
+        public string? Username { get; set; }
+
+        [JsonPropertyName("global_name")]
+        public string? GlobalName { get; set; }
+
+        [JsonPropertyName("avatar")]
+        public string? Avatar { get; set; }
     }
 
     private sealed class TokenResponse

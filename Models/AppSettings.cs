@@ -25,6 +25,17 @@ public class AppSettings
     public bool SoundEnabled            { get; set; } = true;
     public bool FpsOverlayEnabled       { get; set; } = false;
 
+    public string DiscordWebhookUrl      { get; set; } = string.Empty;
+    public List<string> DiscordQuickMessages { get; set; } =
+    [
+        "Bora jogar!",
+        "Já volto, 5 min",
+        "GG!",
+        "Tô online no GLauncher",
+        "Quem tá aí?",
+        "Vou sair, até mais!"
+    ];
+
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
     public string BackgroundColor      { get; set; } = "#0D0D0D";
