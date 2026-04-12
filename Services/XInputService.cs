@@ -120,6 +120,28 @@ public sealed class XInputService : IDisposable
     [DllImport("setupapi.dll")]
     private static extern bool SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
 
+    [DllImport("setupapi.dll", SetLastError = true)]
+    private static extern bool SetupDiEnumDeviceInfo(IntPtr deviceInfoSet,
+        uint memberIndex, ref SP_DEVINFO_DATA deviceInfoData);
+
+    [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool SetupDiGetDevicePropertyW(IntPtr deviceInfoSet,
+        ref SP_DEVINFO_DATA deviceInfoData, ref DEVPROPKEY propertyKey,
+        out uint propertyType, [Out] byte[] propertyBuffer, uint propertyBufferSize,
+        out uint requiredSize, uint flags);
+
+    [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool SetupDiGetDeviceInstanceIdW(IntPtr deviceInfoSet,
+        ref SP_DEVINFO_DATA deviceInfoData, [Out] char[] deviceInstanceId,
+        uint deviceInstanceIdSize, out uint requiredSize);
+
+    [DllImport("CfgMgr32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint CM_Locate_DevNodeW(out uint pdnDevInst, string pDeviceID, uint ulFlags);
+
+    [DllImport("CfgMgr32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint CM_Get_DevNode_PropertyW(uint dnDevInst, ref DEVPROPKEY propertyKey,
+        out uint propertyType, [Out] byte[] propertyBuffer, ref uint propertyBufferSize, uint ulFlags);
+
     [DllImport("hid.dll")]
     private static extern bool HidD_GetAttributes(IntPtr hidDeviceObject, ref HIDD_ATTRIBUTES attributes);
 
@@ -134,6 +156,11 @@ public sealed class XInputService : IDisposable
 
     private const uint DIGCF_PRESENT = 0x02;
     private const uint DIGCF_DEVICEINTERFACE = 0x10;
+    private const uint DIGCF_ALLCLASSES = 0x04;
+    private const uint DEVPROP_TYPE_BYTE = 0x00000003;
+    private const uint DEVPROP_TYPE_STRING = 0x00000012;
+    private const uint CM_LOCATE_DEVNODE_NORMAL = 0x00000000;
+    private const uint CR_SUCCESS = 0;
     private const uint GENERIC_READ = 0x80000000;
     private const uint FILE_SHARE_READ = 0x01;
     private const uint FILE_SHARE_WRITE = 0x02;
@@ -189,6 +216,40 @@ public sealed class XInputService : IDisposable
         public ushort NumberFeatureDataIndices;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SP_DEVINFO_DATA
+    {
+        public int cbSize;
+        public Guid ClassGuid;
+        public uint DevInst;
+        public IntPtr Reserved;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DEVPROPKEY
+    {
+        public Guid fmtid;
+        public uint pid;
+    }
+
+    private static readonly DEVPROPKEY DEVPKEY_Device_BatteryLevel = new()
+    {
+        fmtid = new Guid(0x104EA319, 0x6EE2, 0x4701, 0xBD, 0x47, 0x8D, 0xDB, 0xF4, 0x25, 0xBB, 0xE5),
+        pid = 2
+    };
+
+    private static readonly DEVPROPKEY DEVPKEY_Device_FriendlyName = new()
+    {
+        fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
+        pid = 14
+    };
+
+    private static readonly DEVPROPKEY DEVPKEY_Device_DeviceDesc = new()
+    {
+        fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
+        pid = 2
+    };
+
     private IntPtr _hidHandle = INVALID_HANDLE;
     private int _hidReportLength;
     private byte[] _prevHidReport = [];
@@ -215,6 +276,9 @@ public sealed class XInputService : IDisposable
 
     private int _lastBatteryPoll;
     private const int BATTERY_POLL_INTERVAL = 50; // ~3 seconds at 60ms poll
+    private const int BT_SEARCH_INTERVAL = 10;    // search every ~30s (10 * 3s)
+    private string? _btBatteryDeviceId;
+    private int _btBatterySearchCooldown;
 
     public XInputService()
     {
@@ -443,6 +507,17 @@ public sealed class XInputService : IDisposable
         if (_lastBatteryPoll < BATTERY_POLL_INTERVAL) return;
         _lastBatteryPoll = 0;
 
+        int btPct = TryReadBluetoothBattery();
+        if (btPct >= 0)
+        {
+            if (btPct != BatteryPercent)
+            {
+                BatteryPercent = btPct;
+                BatteryChanged?.Invoke(btPct);
+            }
+            return;
+        }
+
         var battInfo = new XINPUT_BATTERY_INFORMATION();
         uint res = XInputGetBatteryInformation(index, BATTERY_DEVTYPE_GAMEPAD, ref battInfo);
         if (res != ERROR_SUCCESS) return;
@@ -496,6 +571,122 @@ public sealed class XInputService : IDisposable
             BatteryPercent = pct;
             BatteryChanged?.Invoke(pct);
         }
+    }
+
+    private int TryReadBluetoothBattery()
+    {
+        if (_btBatteryDeviceId != null)
+        {
+            int pct = ReadBatteryFromDeviceId(_btBatteryDeviceId);
+            if (pct >= 0) return pct;
+            _btBatteryDeviceId = null;
+        }
+
+        _btBatterySearchCooldown++;
+        if (_btBatterySearchCooldown < BT_SEARCH_INTERVAL) return -1;
+        _btBatterySearchCooldown = 0;
+
+        FindBluetoothBatteryDevice();
+        return _btBatteryDeviceId != null ? ReadBatteryFromDeviceId(_btBatteryDeviceId) : -1;
+    }
+
+    private int ReadBatteryFromDeviceId(string deviceId)
+    {
+        try
+        {
+            if (CM_Locate_DevNodeW(out uint devInst, deviceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
+                return -1;
+
+            var key = DEVPKEY_Device_BatteryLevel;
+            uint bufSize = 4;
+            byte[] buf = new byte[4];
+            if (CM_Get_DevNode_PropertyW(devInst, ref key, out uint propType, buf, ref bufSize, 0) != CR_SUCCESS)
+                return -1;
+
+            if (propType == DEVPROP_TYPE_BYTE && bufSize >= 1)
+                return Math.Clamp((int)buf[0], 0, 100);
+        }
+        catch { }
+        return -1;
+    }
+
+    private void FindBluetoothBatteryDevice()
+    {
+        try
+        {
+            Guid btGuid = new("e0cbf06c-cd8b-4647-bb8a-263b43f0f974");
+            if (SearchBatteryDeviceInClass(btGuid)) return;
+
+            Guid hidGuid = new("745a17a0-74d3-11d0-b6fe-00a0c90f57da");
+            if (SearchBatteryDeviceInClass(hidGuid)) return;
+
+            Guid empty = Guid.Empty;
+            SearchBatteryDeviceInClass(empty, allClasses: true);
+        }
+        catch { }
+    }
+
+    private bool SearchBatteryDeviceInClass(Guid classGuid, bool allClasses = false)
+    {
+        uint flags = DIGCF_PRESENT;
+        if (allClasses) flags |= DIGCF_ALLCLASSES;
+
+        IntPtr devInfo = SetupDiGetClassDevs(ref classGuid, IntPtr.Zero, IntPtr.Zero, flags);
+        if (devInfo == INVALID_HANDLE) return false;
+
+        try
+        {
+            var devData = new SP_DEVINFO_DATA { cbSize = Marshal.SizeOf<SP_DEVINFO_DATA>() };
+
+            for (uint i = 0; SetupDiEnumDeviceInfo(devInfo, i, ref devData); i++)
+            {
+                var key = DEVPKEY_Device_BatteryLevel;
+                byte[] valBuf = new byte[4];
+                if (!SetupDiGetDevicePropertyW(devInfo, ref devData, ref key,
+                    out uint propType, valBuf, (uint)valBuf.Length, out _, 0))
+                    continue;
+
+                if (propType != DEVPROP_TYPE_BYTE) continue;
+
+                string name = GetDeviceName(devInfo, ref devData);
+                if (!name.Contains("Xbox", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                char[] idBuf = new char[512];
+                if (SetupDiGetDeviceInstanceIdW(devInfo, ref devData, idBuf, 512, out uint idLen) && idLen > 1)
+                {
+                    _btBatteryDeviceId = new string(idBuf, 0, (int)idLen - 1);
+                    return true;
+                }
+            }
+        }
+        finally
+        {
+            SetupDiDestroyDeviceInfoList(devInfo);
+        }
+
+        return false;
+    }
+
+    private static string GetDeviceName(IntPtr devInfo, ref SP_DEVINFO_DATA devData)
+    {
+        string name = ReadDeviceStringProperty(devInfo, ref devData, DEVPKEY_Device_FriendlyName);
+        if (name.Length == 0)
+            name = ReadDeviceStringProperty(devInfo, ref devData, DEVPKEY_Device_DeviceDesc);
+        return name;
+    }
+
+    private static string ReadDeviceStringProperty(IntPtr devInfo, ref SP_DEVINFO_DATA devData, DEVPROPKEY key)
+    {
+        byte[] buf = new byte[512];
+        if (!SetupDiGetDevicePropertyW(devInfo, ref devData, ref key,
+            out uint propType, buf, (uint)buf.Length, out uint size, 0))
+            return "";
+
+        if (propType == DEVPROP_TYPE_STRING && size > 0)
+            return System.Text.Encoding.Unicode.GetString(buf, 0, (int)size).TrimEnd('\0');
+
+        return "";
     }
 
     private void TryOpenHidController()
@@ -593,6 +784,8 @@ public sealed class XInputService : IDisposable
             BatteryPercent = -1;
             BatteryChanged?.Invoke(-1);
         }
+        _btBatteryDeviceId = null;
+        _btBatterySearchCooldown = BT_SEARCH_INTERVAL;
         _lastBatteryPoll = BATTERY_POLL_INTERVAL; // force immediate battery read on connect
         ConnectionChanged?.Invoke(connected);
     }
