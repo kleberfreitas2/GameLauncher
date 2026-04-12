@@ -459,8 +459,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 var sgdbGames = await svc.SearchGamesAsync(game.DisplayName);
                 if (sgdbGames.Count == 0 && IsUnauthorizedError(svc.LastError))
                 {
-                    SettingsService.Current.SteamGridDbApiKey = string.Empty;
-                    SettingsService.Save();
                     svc = null;
                 }
                 else if (sgdbGames.Count > 0)
@@ -645,9 +643,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var games = await svc.SearchGamesAsync(game.DisplayName);
             if (games.Count == 0 && IsUnauthorizedError(svc.LastError))
             {
-                SettingsService.Current.SteamGridDbApiKey = string.Empty;
-                SettingsService.Save();
-                StatusMessage = "API Key do SteamGridDB inválida — configure uma nova nas configurações.";
+                StatusMessage = "Erro temporário ao acessar SteamGridDB.";
                 return;
             }
             if (games.Count == 0) return;
@@ -982,7 +978,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task TryRestoreXboxSessionAsync()
     {
         var clientId = SettingsService.Current.XboxClientId;
-        if (string.IsNullOrEmpty(clientId) || clientId == "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
+        if (string.IsNullOrEmpty(clientId) || clientId.StartsWith("REPLACE_WITH_", StringComparison.OrdinalIgnoreCase))
             return;
 
         _xboxService?.Dispose();
