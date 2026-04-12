@@ -7,6 +7,8 @@ public class AppSettings
     internal const string DefaultIgdbClientSecret   = "lpv5tjr4pdk15xpmxl097pgtqg3x5n";
     internal const string DefaultXboxClientId       = "2faf5e10-92f6-4ea6-838a-f84fb41facc3";
     internal const string DefaultSteamApiKey        = "STUEF87H4RCNKN78";
+    internal const string DefaultDiscordClientId      = "1492859640827088896";
+    internal const string DefaultDiscordClientSecret  = "A6lzAthuKWdSrGrcDK0RYjbdh2uQkgpL";
 
     public string SteamGridDbApiKey    { get; set; } = DefaultSteamGridDbApiKey;
     public string IgdbClientId         { get; set; } = DefaultIgdbClientId;
@@ -17,6 +19,8 @@ public class AppSettings
     public string XboxClientId          { get; set; } = DefaultXboxClientId;
     public string SteamApiKey           { get; set; } = DefaultSteamApiKey;
     public string SteamId               { get; set; } = string.Empty;
+    public string DiscordClientId       { get; set; } = DefaultDiscordClientId;
+    public string DiscordClientSecret   { get; set; } = DefaultDiscordClientSecret;
 
     public bool SoundEnabled            { get; set; } = true;
     public bool FpsOverlayEnabled       { get; set; } = false;

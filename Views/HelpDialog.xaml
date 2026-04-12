@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="&#x1f4d6; Manual do GLauncher"
-        Width="820" Height="620"
+        Width="820" Height="720"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterOwner"
         Background="#0F1527"
@@ -61,6 +61,7 @@
                     <ListBoxItem Content="&#x2795;  Adicionar Jogos"/>
                     <ListBoxItem Content="&#x1f3ae;  Steam"/>
                     <ListBoxItem Content="&#x1f3ae;  Xbox Live"/>
+                    <ListBoxItem Content="&#x1f4ac;  Discord"/>
                     <ListBoxItem Content="&#x1f3ae;  Biblioteca e Carrossel"/>
                     <ListBoxItem Content="&#x2699;&#xfe0f;  Menu de Op&#xe7;&#xf5;es"/>
                     <ListBoxItem Content="&#x1f5bc;&#xfe0f;  Capas e Fundos"/>
@@ -319,6 +320,86 @@
                         </StackPanel>
 
 <StackPanel x:Name="Page4" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f4ac; Integra&#xe7;&#xe3;o Discord" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Login e Perfil" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A integra&#xe7;&#xe3;o com o Discord permite fazer login com sua conta Discord
+                                        via OAuth2. Ap&#xf3;s autorizar, o GLauncher exibe seu nome e avatar
+                                        do Discord no cabe&#xe7;alho.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Como conectar" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        <Run FontWeight="SemiBold" Foreground="#5865F2">1.</Run> Clique no bot&#xe3;o <Run FontWeight="SemiBold" Foreground="#5865F2">DISCORD</Run> (roxo) no cabe&#xe7;alho
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        <Run FontWeight="SemiBold" Foreground="#5865F2">2.</Run> O navegador abre para voc&#xea; autorizar o acesso
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        <Run FontWeight="SemiBold" Foreground="#5865F2">3.</Run> Ap&#xf3;s autorizar, o bot&#xe3;o muda para seu nome do Discord
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        <Run FontWeight="SemiBold" Foreground="#5865F2">4.</Run> Clique no bot&#xe3;o novamente para ver seu perfil completo
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Perfil Discord" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ap&#xf3;s conectar, o bot&#xe3;o Discord no cabe&#xe7;alho exibe seu nome.
+                                        Clicando nele, abre um di&#xe1;logo com:
+                                    </TextBlock>
+                                    <StackPanel Margin="8,8,0,0">
+                                        <TextBlock Text="&#x2022; Avatar do Discord" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Nome de exibi&#xe7;&#xe3;o (Global Name)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Username (@usuario)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para desconectar" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Rich Presence (Jogando via GLauncher)" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Quando voc&#xea; lan&#xe7;a um jogo pelo GLauncher, o Discord mostra
+                                        automaticamente no seu perfil o que voc&#xea; est&#xe1; jogando:
+                                    </TextBlock>
+                                    <Border Background="#0A0E1A" CornerRadius="8" Padding="14,10" Margin="0,10,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="&#x1f3ae; Jogando Grand Theft Auto V" FontSize="13" Foreground="White" FontWeight="SemiBold"/>
+                                            <TextBlock Text="   via GLauncher &#x2014; 2h 34min" FontSize="12" Foreground="#8899AA" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,10,0,0">
+                                        O status &#xe9; removido automaticamente quando o jogo fecha.
+                                        Funciona se o Discord estiver aberto no PC &#x2014; n&#xe3;o precisa de login.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1535" CornerRadius="10" Padding="16,12" Margin="0,0,0,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        A sess&#xe3;o do Discord &#xe9; restaurada automaticamente ao reabrir o GLauncher
+                                        (n&#xe3;o precisa fazer login toda vez).
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page5" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -359,7 +440,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page5" Visibility="Collapsed">
+<StackPanel x:Name="Page6" Visibility="Collapsed">
                             <TextBlock Text="&#x2699;&#xfe0f; Menu de Op&#xe7;&#xf5;es" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -435,7 +516,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page6" Visibility="Collapsed">
+<StackPanel x:Name="Page7" Visibility="Collapsed">
                             <TextBlock Text="&#x1f5bc;&#xfe0f; Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -485,7 +566,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page7" Visibility="Collapsed">
+<StackPanel x:Name="Page8" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4ca; Informa&#xe7;&#xf5;es IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -516,7 +597,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page8" Visibility="Collapsed">
+<StackPanel x:Name="Page9" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3a8; Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -540,7 +621,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page9" Visibility="Collapsed">
+<StackPanel x:Name="Page10" Visibility="Collapsed">
                             <TextBlock Text="&#x1f579;&#xfe0f; Controle (Gamepad)" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -585,7 +666,7 @@
                                         A zona ativa &#xe9; indicada por uma borda verde brilhante.
                                     </TextBlock>
                                     <StackPanel Margin="12,10,0,0">
-                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Header" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xf5;es do cabe&#xe7;alho (Xbox, Steam, Ajuda, Config, Adicionar, Tema)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Header" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xf5;es do cabe&#xe7;alho (Xbox, Steam, Discord, Ajuda, Config, Adicionar, Tema)" Foreground="#AABBCC"/></TextBlock>
                                         <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; A&#xe7;&#xf5;es" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xe3;o JOGAR (vis&#xed;vel quando um jogo est&#xe1; selecionado)" Foreground="#AABBCC"/></TextBlock>
                                         <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Carrossel" FontWeight="SemiBold"/> <Run Text="&#x2014; Navega&#xe7;&#xe3;o entre jogos com D-Pad &#x25c0;&#x25b6; e LB/RB" Foreground="#AABBCC"/></TextBlock>
                                     </StackPanel>
@@ -732,7 +813,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page10" Visibility="Collapsed">
+<StackPanel x:Name="Page11" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4c8; Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -804,7 +885,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page11" Visibility="Collapsed">
+<StackPanel x:Name="Page12" Visibility="Collapsed">
                             <TextBlock Text="&#x2328;&#xfe0f; Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -841,6 +922,14 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="STEAM" FontSize="13" Foreground="#66C0F4" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Conectar Steam / Perfil / Importar jogos Steam" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="DISCORD" FontSize="13" Foreground="#5865F2" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Login Discord / Perfil / Rich Presence ao jogar" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
@@ -908,7 +997,7 @@
                                         <TextBlock Text="&#x2022; Dados s&#xe3;o salvos em %AppData%/GameLauncher/games.json" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                         <TextBlock Text="&#x2022; Assets visuais s&#xe3;o baixados automaticamente na inicializa&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                         <TextBlock Text="&#x2022; Descri&#xe7;&#xf5;es s&#xe3;o traduzidas automaticamente para PT-BR" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Sess&#xf5;es Steam e Xbox s&#xe3;o restauradas automaticamente ao abrir o app" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Sess&#xf5;es Steam, Xbox e Discord s&#xe3;o restauradas automaticamente ao abrir o app" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

@@ -29,7 +29,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public enum NavZone { Header, Actions, Carousel }
 
-    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Help", "Settings", "AddGame", "Theme"];
+    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Discord", "Help", "Settings", "AddGame", "Theme"];
 
     [ObservableProperty] private NavZone activeZone = NavZone.Carousel;
     [ObservableProperty] private int headerIndex;
@@ -159,6 +159,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool IsSteamConnected => SteamConnected && SteamProfile is not null;
     public string SteamButtonText => IsSteamConnected ? SteamProfile!.PersonaName : "STEAM";
 
+    private DiscordService? _discordService;
+    private DiscordRichPresenceService? _discordRpc;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDiscordConnected))]
+    [NotifyPropertyChangedFor(nameof(DiscordButtonText))]
+    private DiscordProfile? discordProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDiscordConnected))]
+    [NotifyPropertyChangedFor(nameof(DiscordButtonText))]
+    private bool discordConnected;
+
+    public bool IsDiscordConnected => DiscordConnected && DiscordProfile is not null;
+    public string DiscordButtonText => IsDiscordConnected ? DiscordProfile!.DisplayName : "DISCORD";
+
     private readonly DispatcherTimer _clockTimer;
 
     public ICollectionView GamesView => _gamesView;
@@ -181,6 +197,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _ = RefreshAllAssetsOnStartupAsync();
         _ = TryRestoreXboxSessionAsync();
         _ = TryRestoreSteamSessionAsync();
+        _ = TryRestoreDiscordSessionAsync();
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -240,6 +257,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _hwMonitor.Dispose();
         _xboxService?.Dispose();
         _steamService?.Dispose();
+        _discordService?.Dispose();
+        _discordRpc?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
     }
@@ -799,6 +818,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"Lançando {game.DisplayName}...";
 
+            SetDiscordRichPresence(game.DisplayName);
+
             _xinput.Stop();
             var mainWin = Application.Current.MainWindow;
             if (mainWin is not null)
@@ -817,6 +838,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     try { proc.WaitForExit(); } catch { }
                     _dispatcher.BeginInvoke(() =>
                     {
+                        ClearDiscordRichPresence();
+
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
 
@@ -837,6 +860,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await Task.Delay(5000);
                     _dispatcher.BeginInvoke(() =>
                     {
+                        ClearDiscordRichPresence();
+
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
                         _xinput.Start();
@@ -847,6 +872,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             SoundService.PlayError();
+            ClearDiscordRichPresence();
             _fpsOverlay?.Close();
             _fpsOverlay = null;
             _xinput.Start();
@@ -972,6 +998,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsHelpDialogOpen = false;
         HelpDialogNavigate = null;
         HelpDialogScroll = null;
+    }
+
+    [RelayCommand]
+    private void OpenDonation()
+    {
+        var dialog = new PixDonationDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
     }
 
 
@@ -1328,6 +1361,153 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+
+    private async Task TryRestoreDiscordSessionAsync()
+    {
+        var clientId = SettingsService.Current.DiscordClientId;
+        if (string.IsNullOrEmpty(clientId))
+            clientId = AppSettings.DefaultDiscordClientId;
+
+        var clientSecret = SettingsService.Current.DiscordClientSecret;
+        if (string.IsNullOrEmpty(clientSecret))
+            clientSecret = AppSettings.DefaultDiscordClientSecret;
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            return;
+
+        _discordService?.Dispose();
+        _discordService = new DiscordService(clientId, clientSecret);
+
+        var restored = await _discordService.TrySilentLoginAsync();
+        if (!restored) return;
+
+        var profile = await _discordService.GetProfileAsync();
+        if (profile is not null)
+        {
+            DiscordProfile = profile;
+            DiscordConnected = true;
+            StatusMessage = $"Discord: {profile.DisplayName}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DiscordLogin()
+    {
+        var clientId = SettingsService.Current.DiscordClientId;
+
+        if (string.IsNullOrEmpty(clientId) || clientId == AppSettings.DefaultDiscordClientId)
+        {
+            if (!string.IsNullOrEmpty(AppSettings.DefaultDiscordClientId))
+            {
+                clientId = AppSettings.DefaultDiscordClientId;
+            }
+            else
+            {
+                var setup = new DiscordSetupDialog { Owner = Application.Current.MainWindow };
+                if (setup.ShowDialog() != true) return;
+                clientId = setup.ClientId;
+                SettingsService.Current.DiscordClientId = clientId;
+                SettingsService.Save();
+            }
+        }
+
+        StatusMessage = "Conectando ao Discord...";
+
+        var clientSecret = SettingsService.Current.DiscordClientSecret;
+        if (string.IsNullOrEmpty(clientSecret))
+            clientSecret = AppSettings.DefaultDiscordClientSecret;
+
+        _discordService?.Dispose();
+        _discordService = new DiscordService(clientId, clientSecret);
+
+        var success = await _discordService.LoginAsync();
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar ao Discord.";
+            MessageBox.Show(
+                "Não foi possível autenticar com o Discord.\n\n" +
+                "Verifique se o Client ID está correto e se o redirect URI\n" +
+                "http://localhost:9547/callback está configurado no app.",
+                "Discord", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        StatusMessage = "Carregando perfil Discord...";
+        var profile = await _discordService.GetProfileAsync();
+
+        if (profile is not null)
+        {
+            DiscordProfile = profile;
+            DiscordConnected = true;
+            StatusMessage = $"Discord: {profile.DisplayName}";
+        }
+        else
+        {
+            DiscordConnected = true;
+            StatusMessage = "Discord conectado (perfil indisponível).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenDiscordProfile()
+    {
+        if (!IsDiscordConnected || DiscordProfile is null)
+        {
+            await DiscordLogin();
+            return;
+        }
+
+        var dialog = new DiscordProfileDialog(DiscordProfile)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                if (_discordService is not null)
+                    await _discordService.LogoutAsync();
+
+                DiscordProfile = null;
+                DiscordConnected = false;
+                StatusMessage = "Desconectado do Discord.";
+            }
+        }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
+    }
+
+    private void SetDiscordRichPresence(string gameName)
+    {
+        try
+        {
+            var clientId = SettingsService.Current.DiscordClientId;
+            if (string.IsNullOrEmpty(clientId))
+                clientId = AppSettings.DefaultDiscordClientId;
+
+            if (string.IsNullOrEmpty(clientId))
+                return;
+
+            _discordRpc ??= new DiscordRichPresenceService(clientId);
+            _discordRpc.SetActivity(gameName, DateTimeOffset.UtcNow);
+        }
+        catch { }
+    }
+
+    private void ClearDiscordRichPresence()
+    {
+        try
+        {
+            _discordRpc?.ClearActivity();
+        }
+        catch { }
+    }
+
     [RelayCommand]
     private async Task FetchIgdbInfo(Game game)
     {
@@ -1633,6 +1813,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 break;
             case "Steam":
                 OpenSteamProfileCommand.Execute(null);
+                break;
+            case "Discord":
+                OpenDiscordProfileCommand.Execute(null);
                 break;
             case "Help":
                 OpenHelp();

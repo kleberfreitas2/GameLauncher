@@ -1,0 +1,110 @@
+<Window x:Class="GameLauncher.Views.PixDonationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="&#x1f3ae; Apoie o GLauncher"
+        Width="460" Height="580"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#0A0A12"
+        TextElement.Foreground="White"
+        TextElement.FontFamily="Segoe UI">
+    <Grid>
+        <!-- Background glow -->
+        <Border VerticalAlignment="Top" Height="180">
+            <Border.Background>
+                <RadialGradientBrush Center="0.5,0.8" RadiusX="0.8" RadiusY="1.2">
+                    <GradientStop Color="#2200E676" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,24,0,0">
+            <!-- Trophy icon -->
+            <Grid HorizontalAlignment="Center" Margin="0,0,0,8">
+                <Ellipse Width="56" Height="56" Fill="#14FFB300">
+                    <Ellipse.Effect>
+                        <DropShadowEffect Color="#FFB300" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
+                    </Ellipse.Effect>
+                </Ellipse>
+                <TextBlock Text="&#x1f3c6;" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Title -->
+            <TextBlock Text="APOIE O PROJETO" FontSize="20" FontWeight="Bold" Foreground="White"
+                       HorizontalAlignment="Center" Margin="0,4,0,2">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="#00E676" BlurRadius="20" ShadowDepth="0" Opacity="0.5"/>
+                </TextBlock.Effect>
+            </TextBlock>
+            <TextBlock Text="Sua doação mantém o GLauncher vivo!" FontSize="12" Foreground="#88AACC"
+                       HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+            <!-- QR Code container -->
+            <Border Background="#FFFFFF" CornerRadius="14" Padding="10" HorizontalAlignment="Center"
+                    Margin="0,0,0,14">
+                <Border.Effect>
+                    <DropShadowEffect Color="#00E676" BlurRadius="24" ShadowDepth="0" Opacity="0.35"/>
+                </Border.Effect>
+                <Image x:Name="QrCodeImage" Width="220" Height="220" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+            </Border>
+
+            <!-- PIX label -->
+            <Border Background="#151B2E" CornerRadius="10" Padding="14,10" HorizontalAlignment="Center"
+                    Margin="0,0,0,10" MinWidth="300">
+                <StackPanel HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="&#x1f4b3;" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="PIX (QR Code)" FontSize="14" FontWeight="Bold" Foreground="#00E676"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="Escaneie com o app do seu banco" FontSize="11" Foreground="#667788"
+                               HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Copy key button -->
+            <Button x:Name="CopyButton" Click="CopyKey_Click" Cursor="Hand"
+                    HorizontalAlignment="Center" Margin="0,0,0,10">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CopyBd" Background="#1A2040" CornerRadius="22" Padding="28,10"
+                                BorderBrush="#2A3060" BorderThickness="1" MinWidth="240">
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon Kind="ContentCopy" Width="16" Height="16" Foreground="#88AACC"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="CopyText" Text="Copiar chave PIX" FontSize="12"
+                                           FontWeight="SemiBold" Foreground="#AABBDD" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CopyBd" Property="Background" Value="#222B50"/>
+                                <Setter TargetName="CopyBd" Property="BorderBrush" Value="#00E676"/>
+                                <Setter TargetName="CopyText" Property="Foreground" Value="#00E676"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CopyBd" Property="Background" Value="#1A2540"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Key display -->
+            <TextBlock Text="freitas.kleber@uol.com.br" FontSize="11" Foreground="#556677"
+                       HorizontalAlignment="Center" Margin="0,0,0,4" FontFamily="Consolas"/>
+
+            <!-- Thank you -->
+            <Border Background="#0E1420" CornerRadius="8" Padding="12,8" HorizontalAlignment="Center"
+                    Margin="0,10,0,0" MinWidth="300">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="&#x2764;&#xfe0f;" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Obrigado por apoiar um dev indie!" FontSize="12" Foreground="#AABBCC"
+                               FontStyle="Italic" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</Window>
