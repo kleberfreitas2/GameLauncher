@@ -1000,6 +1000,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         HelpDialogScroll = null;
     }
 
+    [RelayCommand]
+    private void OpenDonation()
+    {
+        var dialog = new PixDonationDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
+    }
+
 
     private async Task TryRestoreXboxSessionAsync()
     {
