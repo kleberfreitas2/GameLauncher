@@ -175,7 +175,6 @@ public class AnimatedImage : Image
             var frameCount = codec.FrameCount;
             var progress = new Progress<int>(pct => LoadingProgress = pct);
 
-            // Decode all frames in background
             var (framePixels, cumulative, total) = await Task.Run(() =>
             {
                 var pixels = new List<byte[]>(frameCount);

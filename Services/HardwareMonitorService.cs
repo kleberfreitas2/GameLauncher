@@ -1,4 +1,3 @@
-using System;
 using System.Management;
 using System.Timers;
 using LibreHardwareMonitor.Hardware;

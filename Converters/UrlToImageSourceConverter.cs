@@ -3,15 +3,10 @@ using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Windows.Data;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace GameLauncher.Converters;
 
-/// <summary>
-/// Downloads image bytes and decodes via System.Drawing (GDI+) which supports WEBP on Windows 10+.
-/// Use with IsAsync=True on the Binding so the HTTP call runs off the UI thread.
-/// </summary>
 public class UrlToImageSourceConverter : IValueConverter
 {
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };

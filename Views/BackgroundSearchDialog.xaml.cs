@@ -13,7 +13,7 @@ namespace GameLauncher.Views;
 
 public partial class BackgroundSearchDialog : Window
 {
-    private readonly SteamGridDbService _service;
+    private SteamGridDbService _service;
     private readonly string _gameName;
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
     private int _sgdbGameId;
@@ -145,7 +145,6 @@ public partial class BackgroundSearchDialog : Window
         _suppressFilterChange = true;
         PopulateDimensionsForTab();
 
-        // Styles
         CbStyles.Items.Clear();
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Any Style", null));
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Alternate", SteamGridDbStyles.Alternate));
@@ -153,7 +152,6 @@ public partial class BackgroundSearchDialog : Window
         CbStyles.Items.Add(new FilterItem<SteamGridDbStyles?>("Material", SteamGridDbStyles.Material));
         CbStyles.SelectedIndex = 0;
 
-        // Formats
         CbFormats.Items.Clear();
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("Any File Type", SteamGridDbFormats.All));
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("PNG", SteamGridDbFormats.Png));
@@ -161,7 +159,6 @@ public partial class BackgroundSearchDialog : Window
         CbFormats.Items.Add(new FilterItem<SteamGridDbFormats>("WEBP", SteamGridDbFormats.Webp));
         CbFormats.SelectedIndex = 0;
 
-        // Types
         CbTypes.Items.Clear();
         CbTypes.Items.Add(new FilterItem<SteamGridDbTypes>("All", SteamGridDbTypes.All));
         CbTypes.Items.Add(new FilterItem<SteamGridDbTypes>("Static", SteamGridDbTypes.Static));
@@ -203,10 +200,24 @@ public partial class BackgroundSearchDialog : Window
         SetLoading(true);
 
         var games = await _service.SearchGamesAsync(_gameName);
+        if (games.Count == 0 && IsUnauthorizedError())
+        {
+            SetLoading(false);
+            if (PromptNewApiKey())
+            {
+                await LoadImagesAsync();
+                return;
+            }
+            StatusText.Text       = "API Key inválida. Configure uma chave válida em steamgriddb.com/profile/preferences/api";
+            StatusText.Visibility = Visibility.Visible;
+            return;
+        }
         if (games.Count == 0)
         {
             SetLoading(false);
-            StatusText.Text       = $"Nenhum jogo encontrado no SteamGridDB para \"{_gameName}\".";
+            StatusText.Text       = _service.LastError is not null
+                ? $"Erro: {_service.LastError}"
+                : $"Nenhum jogo encontrado no SteamGridDB para \"{_gameName}\".";
             StatusText.Visibility = Visibility.Visible;
             return;
         }
@@ -224,7 +235,6 @@ public partial class BackgroundSearchDialog : Window
         _selectedFullUrl = null;
         ApplyButton.IsEnabled = false;
 
-        // Gather filter values
         var dimensions = (CbDimensions.SelectedItem as FilterItem<SteamGridDbDimensions?>)?.Value;
         var styles     = (CbStyles.SelectedItem as FilterItem<SteamGridDbStyles?>)?.Value;
         var formats    = (CbFormats.SelectedItem as FilterItem<SteamGridDbFormats>)?.Value ?? SteamGridDbFormats.All;
@@ -274,7 +284,6 @@ public partial class BackgroundSearchDialog : Window
         StatusText.Visibility = Visibility.Collapsed;
         FooterText.Text       = $"{images.Count} imagem(ns) de {typeLabel} encontrada(s)";
 
-        // Start downloading thumbnails in background
         _thumbnailCts = new CancellationTokenSource();
         _ = LoadThumbnailsAsync(displayItems, _thumbnailCts.Token);
     }
@@ -340,63 +349,86 @@ public partial class BackgroundSearchDialog : Window
             try
             {
                 if (ct.IsCancellationRequested) return;
-                var url = item.Source.ThumbnailUrl ?? item.Source.Url;
-                var bytes = await _http.GetByteArrayAsync(url, ct);
+
+                var thumbUrl = !string.IsNullOrEmpty(item.Source.ThumbnailUrl)
+                    ? item.Source.ThumbnailUrl
+                    : null;
+                var fullUrl = item.Source.Url;
+
+                byte[]? bytes = null;
+                if (thumbUrl is not null)
+                    try { bytes = await _http.GetByteArrayAsync(thumbUrl, ct); } catch { }
+                if (bytes is null || bytes.Length == 0)
+                    bytes = await _http.GetByteArrayAsync(fullUrl, ct);
+
                 if (ct.IsCancellationRequested) return;
 
-                using var skData = SKData.CreateCopy(bytes);
-                using var codec = SKCodec.Create(skData);
-                if (codec is null) return;
-
-                var info = new SKImageInfo(codec.Info.Width, codec.Info.Height,
-                    SKColorType.Bgra8888, SKAlphaType.Premul);
-
-                if (codec.FrameCount > 1)
+                await Task.Run(() =>
                 {
-                    var framePixels = new List<byte[]>(codec.FrameCount);
-                    var delays = new List<int>(codec.FrameCount);
-                    var skBitmaps = new List<SKBitmap>(codec.FrameCount);
+                    using var skData = SKData.CreateCopy(bytes);
+                    using var codec = SKCodec.Create(skData);
+                    if (codec is null) return;
 
-                    for (int i = 0; i < codec.FrameCount; i++)
+                    var info = new SKImageInfo(codec.Info.Width, codec.Info.Height,
+                        SKColorType.Bgra8888, SKAlphaType.Premul);
+
+                    if (codec.FrameCount > 1)
                     {
-                        var fi = codec.FrameInfo[i];
-                        var frameBmp = new SKBitmap(info);
+                        var framePixels = new List<byte[]>(codec.FrameCount);
+                        var delays = new List<int>(codec.FrameCount);
+                        var skBitmaps = new List<SKBitmap>(codec.FrameCount);
+                        int actualStride = 0;
 
-                        if (fi.RequiredFrame >= 0 && fi.RequiredFrame < skBitmaps.Count)
-                            skBitmaps[fi.RequiredFrame].CopyTo(frameBmp);
+                        try
+                        {
+                            for (int i = 0; i < codec.FrameCount; i++)
+                            {
+                                ct.ThrowIfCancellationRequested();
 
-                        codec.GetPixels(info, frameBmp.GetPixels(), new SKCodecOptions(i));
-                        skBitmaps.Add(frameBmp);
+                                var fi = codec.FrameInfo[i];
+                                var frameBmp = new SKBitmap(info);
 
-                        var pixels = new byte[frameBmp.RowBytes * frameBmp.Height];
-                        Marshal.Copy(frameBmp.GetPixels(), pixels, 0, pixels.Length);
-                        framePixels.Add(pixels);
-                        delays.Add(fi.Duration > 0 ? fi.Duration : 100);
-                    }
+                                if (fi.RequiredFrame >= 0 && fi.RequiredFrame < skBitmaps.Count)
+                                    skBitmaps[fi.RequiredFrame].CopyTo(frameBmp);
 
-                    foreach (var b in skBitmaps) b.Dispose();
-                    if (ct.IsCancellationRequested) return;
+                                codec.GetPixels(info, frameBmp.GetPixels(), new SKCodecOptions(i));
+                                skBitmaps.Add(frameBmp);
 
-                    Dispatcher.Invoke(() =>
-                    {
+                                actualStride = frameBmp.RowBytes;
+                                var pixels = new byte[frameBmp.RowBytes * frameBmp.Height];
+                                Marshal.Copy(frameBmp.GetPixels(), pixels, 0, pixels.Length);
+                                framePixels.Add(pixels);
+                                delays.Add(fi.Duration > 0 ? fi.Duration : 100);
+                            }
+                        }
+                        finally
+                        {
+                            foreach (var b in skBitmaps) b.Dispose();
+                        }
+
                         if (ct.IsCancellationRequested) return;
-                        item.StartAnimation(framePixels, delays, info.Width, info.Height, info.RowBytes);
-                    });
-                }
-                else
-                {
-                    using var bmp = new SKBitmap(info);
-                    codec.GetPixels(info, bmp.GetPixels());
 
-                    var pixels = new byte[bmp.RowBytes * bmp.Height];
-                    Marshal.Copy(bmp.GetPixels(), pixels, 0, pixels.Length);
-                    if (ct.IsCancellationRequested) return;
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (ct.IsCancellationRequested) return;
+                            item.StartAnimation(framePixels, delays, info.Width, info.Height, actualStride);
+                        });
+                    }
+                    else
+                    {
+                        using var bmp = new SKBitmap(info);
+                        codec.GetPixels(info, bmp.GetPixels());
 
-                    var bs = BitmapSource.Create(info.Width, info.Height, 96, 96,
-                        PixelFormats.Pbgra32, null, pixels, bmp.RowBytes);
-                    bs.Freeze();
-                    Dispatcher.Invoke(() => item.Thumbnail = bs);
-                }
+                        var pixels = new byte[bmp.RowBytes * bmp.Height];
+                        Marshal.Copy(bmp.GetPixels(), pixels, 0, pixels.Length);
+                        if (ct.IsCancellationRequested) return;
+
+                        var bs = BitmapSource.Create(info.Width, info.Height, 96, 96,
+                            PixelFormats.Pbgra32, null, pixels, bmp.RowBytes);
+                        bs.Freeze();
+                        Dispatcher.Invoke(() => item.Thumbnail = bs);
+                    }
+                }, ct);
             }
             catch { }
             finally { semaphore.Release(); }
@@ -429,5 +461,23 @@ public partial class BackgroundSearchDialog : Window
             foreach (var item in items)
                 item.Dispose();
         }
+    }
+
+    private bool IsUnauthorizedError()
+    {
+        return _service.LastError is not null &&
+               (_service.LastError.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("API key", StringComparison.OrdinalIgnoreCase) ||
+                _service.LastError.Contains("401", StringComparison.Ordinal));
+    }
+
+    private bool PromptNewApiKey()
+    {
+        var keyDialog = new ApiKeyDialog { Owner = this };
+        if (keyDialog.ShowDialog() != true) return false;
+        SettingsService.Current.SteamGridDbApiKey = keyDialog.ApiKey;
+        SettingsService.Save();
+        _service = new SteamGridDbService(keyDialog.ApiKey);
+        return true;
     }
 }

@@ -17,14 +17,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Título -->
-        <TextBlock Grid.Row="0"
+<TextBlock Grid.Row="0"
                    Text="🖼️ Buscar Capa"
                    FontSize="18" FontWeight="Bold" Foreground="White"
                    Margin="0,0,0,16"/>
 
-        <!-- Barra de busca -->
-        <Grid Grid.Row="1" Margin="0,0,0,16">
+<Grid Grid.Row="1" Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -47,8 +45,7 @@
                     Click="Search_Click"/>
         </Grid>
 
-        <!-- Área de resultados -->
-        <Border Grid.Row="2" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
+<Border Grid.Row="2" Background="#0A0A18" CornerRadius="8" ClipToBounds="True">
             <Grid>
                 <TextBlock x:Name="StatusText"
                            Text="Digite o nome do jogo e clique em BUSCAR"
@@ -70,8 +67,7 @@
             </Grid>
         </Border>
 
-        <!-- Rodapé -->
-        <Grid Grid.Row="3" Margin="0,14,0,0">
+<Grid Grid.Row="3" Margin="0,14,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -100,3 +96,4 @@
         </Grid>
     </Grid>
 </Window>
+

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="📖 Manual do GLauncher"
+        Title="&#x1f4d6; Manual do GLauncher"
         Width="820" Height="620"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterOwner"
@@ -15,20 +15,17 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Left: Navigation sidebar -->
-        <Border Background="#0A0E1A" BorderBrush="#1A2040" BorderThickness="0,0,1,0">
+<Border Background="#0A0E1A" BorderBrush="#1A2040" BorderThickness="0,0,1,0">
             <DockPanel>
-                <!-- Header -->
-                <StackPanel DockPanel.Dock="Top" Margin="16,20,16,16">
+<StackPanel DockPanel.Dock="Top" Margin="16,20,16,16">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                        <TextBlock Text="📖" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="&#x1f4d6;" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Manual" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="GLauncher v1.0" FontSize="11" Foreground="#556688"/>
+                    <TextBlock Text="GLauncher v2.5" FontSize="11" Foreground="#556688"/>
                 </StackPanel>
 
-                <!-- Nav items -->
-                <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
+<ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
                          SelectionChanged="NavList_SelectionChanged"
                          SelectedIndex="0"
                          Padding="8,0">
@@ -60,124 +57,276 @@
                             </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
-                    <ListBoxItem Content="🏠  Início"/>
-                    <ListBoxItem Content="➕  Adicionar Jogos"/>
-                    <ListBoxItem Content="🎮  Biblioteca e Carrossel"/>
-                    <ListBoxItem Content="⚙️  Menu de Opções"/>
-                    <ListBoxItem Content="🖼️  Capas e Fundos"/>
-                    <ListBoxItem Content="📊  Info IGDB"/>
-                    <ListBoxItem Content="🎨  Temas"/>
-                    <ListBoxItem Content="🕹️  Controle (Gamepad)"/>
-                    <ListBoxItem Content="📈  Monitor de Hardware"/>
-                    <ListBoxItem Content="⌨️  Atalhos"/>
+                    <ListBoxItem Content="&#x1f3e0;  In&#xed;cio"/>
+                    <ListBoxItem Content="&#x2795;  Adicionar Jogos"/>
+                    <ListBoxItem Content="&#x1f3ae;  Steam"/>
+                    <ListBoxItem Content="&#x1f3ae;  Xbox Live"/>
+                    <ListBoxItem Content="&#x1f3ae;  Biblioteca e Carrossel"/>
+                    <ListBoxItem Content="&#x2699;&#xfe0f;  Menu de Op&#xe7;&#xf5;es"/>
+                    <ListBoxItem Content="&#x1f5bc;&#xfe0f;  Capas e Fundos"/>
+                    <ListBoxItem Content="&#x1f4ca;  Info IGDB"/>
+                    <ListBoxItem Content="&#x1f3a8;  Temas"/>
+                    <ListBoxItem Content="&#x1f579;&#xfe0f;  Controle (Gamepad)"/>
+                    <ListBoxItem Content="&#x1f4c8;  Monitor de Hardware"/>
+                    <ListBoxItem Content="&#x2328;&#xfe0f;  Atalhos"/>
                 </ListBox>
             </DockPanel>
         </Border>
 
-        <!-- Right: Content area -->
-        <Border Grid.Column="1" Padding="28,20">
+<Border Grid.Column="1" Padding="28,20">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid>
-                        <!-- Page 0: Início -->
-                        <StackPanel x:Name="Page0">
+<StackPanel x:Name="Page0">
                             <TextBlock Text="Bem-vindo ao GLauncher!" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,0,0,6"/>
-                            <TextBlock Text="Seu launcher de jogos estilo PS5" FontSize="14" Foreground="#00E676" Margin="0,0,0,20"/>
+                            <TextBlock FontSize="14" Foreground="#00E676" Margin="0,0,0,20"><Run Text="Seu launcher de jogos estilo "/><Run Language="pt-br" Text="console"/></TextBlock>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="O que é o GLauncher?" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
+                                    <TextBlock Text="O que &#xe9; o GLauncher?" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher é um launcher de jogos para PC com interface inspirada no PlayStation 5.
+                                        O GLauncher &#xe9; um launcher de jogos para PC com interface inspirada no PlayStation 5.
                                         Ele organiza sua biblioteca, busca automaticamente capas, logos, fundos animados
-                                        e informações dos seus jogos, além de monitorar hardware em tempo real.
+                                        e informa&#xe7;&#xf5;es dos seus jogos, al&#xe9;m de monitorar hardware em tempo real.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="✨ Principais Recursos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x2728; Principais Recursos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <StackPanel Margin="8,0,0,0">
-                                        <TextBlock Text="• Interface estilo PS5 com carrossel horizontal" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Fundos animados (WEBP/GIF) para cada jogo" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Busca automática de capas, logos e fundos (SteamGridDB)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Informações do IGDB (sinopse, gênero, nota, ano)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Tradução automática para Português" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Suporte a controle Xbox/XInput" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Monitor de CPU, GPU, RAM e temperaturas" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Sistema de favoritos com estrela ⭐" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Múltiplos temas visuais" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="• Avatar personalizável" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Interface estilo PS5 com carrossel horizontal" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Integra&#xe7;&#xe3;o com Steam &#x2014; detecta sua conta automaticamente e importa jogos" FontSize="13" Foreground="#66C0F4" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Integra&#xe7;&#xe3;o com Xbox Live &#x2014; login com conta Microsoft e importa&#xe7;&#xe3;o de jogos" FontSize="13" Foreground="#107C10" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Fundos animados (WEBP/GIF) para cada jogo" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Busca autom&#xe1;tica de capas, logos e fundos (SteamGridDB)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Informa&#xe7;&#xf5;es do IGDB (sinopse, g&#xea;nero, nota, ano)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Tradu&#xe7;&#xe3;o autom&#xe1;tica para Portugu&#xea;s" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Contador de FPS em tempo real" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Suporte a controle Xbox e PlayStation (DualSense/DualShock)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Navega&#xe7;&#xe3;o completa por zonas com gamepad (Header / A&#xe7;&#xf5;es / Carrossel)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; N&#xed;vel de bateria do controle em tempo real &#x1f50b;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Efeitos sonoros estilo console (navegar, selecionar, favoritar, erro)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Minimiza o launcher ao jogar e restaura ao sair do jogo" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Monitor de CPU, GPU, RAM e temperaturas" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Sistema de favoritos com estrela &#x2b50;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; M&#xfa;ltiplos temas visuais" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Avatar personaliz&#xe1;vel" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 1: Adicionar Jogos -->
-                        <StackPanel x:Name="Page1" Visibility="Collapsed">
-                            <TextBlock Text="➕ Adicionar Jogos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page1" Visibility="Collapsed">
+                            <TextBlock Text="&#x2795; Adicionar Jogos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Como adicionar jogos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Adicionar manualmente" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        1. Clique no botão "+ ADICIONAR JOGO" no cabeçalho superior
+                                        1. Clique no bot&#xe3;o &#x201c;+ ADICIONAR JOGO&#x201d; no cabe&#xe7;alho superior
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
-                                        2. Selecione o arquivo .exe do jogo (é possível selecionar vários de uma vez)
+                                        2. Selecione o arquivo .exe do jogo (&#xe9; poss&#xed;vel selecionar v&#xe1;rios de uma vez)
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
-                                        3. Para cada executável, uma caixa de diálogo será exibida para você digitar o nome correto do jogo
+                                        3. Para cada execut&#xe1;vel, uma caixa de di&#xe1;logo ser&#xe1; exibida para voc&#xea; digitar o nome correto do jogo
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="20,4,0,0" FontStyle="Italic">
-                                        Exemplo: o executável é re9.exe, você digita "Resident Evil Requiem" para pesquisar corretamente nas bases.
+                                        Exemplo: o execut&#xe1;vel &#xe9; re9.exe, voc&#xea; digita &#x201c;Resident Evil Requiem&#x201d; para pesquisar corretamente nas bases.
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
-                                        4. Ao clicar em OK, um indicador de progresso (0 a 100%) será exibido enquanto o GLauncher busca automaticamente:
+                                        4. Ao clicar em OK, um indicador de progresso (0 a 100%) ser&#xe1; exibido enquanto o GLauncher busca automaticamente:
                                     </TextBlock>
                                     <StackPanel Margin="20,6,0,0">
-                                        <TextBlock Text="• Ícone do jogo no SteamGridDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Logo do jogo" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Capa (grid) para o carrossel" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Fundo (hero) animado ou estático" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Sinopse, gênero, nota e ano no IGDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Tradução automática da descrição para Português" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; &#xcd;cone do jogo no SteamGridDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Logo do jogo" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Capa (grid) para o carrossel" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Fundo (hero) animado ou est&#xe1;tico" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Sinopse, g&#xea;nero, nota e ano no IGDB" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Tradu&#xe7;&#xe3;o autom&#xe1;tica da descri&#xe7;&#xe3;o para Portugu&#xea;s" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
                                     </StackPanel>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
-                                        5. Ao finalizar, todas as informações são carregadas automaticamente na tela
+                                        5. Ao finalizar, todas as informa&#xe7;&#xf5;es s&#xe3;o carregadas automaticamente na tela
                                     </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Importar da Steam ou Xbox" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Voc&#xea; tamb&#xe9;m pode importar jogos instalados automaticamente atrav&#xe9;s das integra&#xe7;&#xf5;es:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#66C0F4" Margin="0,3" TextWrapping="Wrap"><Run Text="&#x2022; Steam" FontWeight="SemiBold"/> <Run Text="&#x2014; Clique no bot&#xe3;o STEAM no cabe&#xe7;alho. Detecta sua conta automaticamente e importa os jogos instalados." Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#107C10" Margin="0,3" TextWrapping="Wrap"><Run Text="&#x2022; Xbox" FontWeight="SemiBold"/> <Run Text="&#x2014; Clique no bot&#xe3;o XBOX no cabe&#xe7;alho. Fa&#xe7;a login com sua conta Microsoft e importe os jogos instalados." Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14" Margin="0,0,0,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
                                 <DockPanel>
-                                    <TextBlock Text="💡" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        Dica: Se clicar em "PULAR" na caixa de nome, o GLauncher usará o nome do executável 
-                                        (que pode não ser encontrado nas bases). Para melhores resultados, sempre digite o nome real do jogo.
+                                        Dica: Se clicar em &#x201c;PULAR&#x201d; na caixa de nome, o GLauncher usar&#xe1; o nome do execut&#xe1;vel 
+                                        (que pode n&#xe3;o ser encontrado nas bases). Para melhores resultados, sempre digite o nome real do jogo.
                                     </TextBlock>
                                 </DockPanel>
                             </Border>
+                        </StackPanel>
 
-                            </StackPanel>
+<StackPanel x:Name="Page2" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f3ae; Integra&#xe7;&#xe3;o Steam" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
-                        <!-- Page 2: Biblioteca e Carrossel -->
-                        <StackPanel x:Name="Page2" Visibility="Collapsed">
-                            <TextBlock Text="🎮 Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Como funciona" FontSize="15" FontWeight="SemiBold" Foreground="#66C0F4" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A integra&#xe7;&#xe3;o com a Steam &#xe9; totalmente autom&#xe1;tica. N&#xe3;o &#xe9; necess&#xe1;rio configurar API Key, 
+                                        Steam ID ou qualquer outro dado. Basta ter o Steam instalado e estar logado.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Passo a passo" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        1. Clique no bot&#xe3;o <Run FontWeight="SemiBold" Foreground="#66C0F4">STEAM</Run> no cabe&#xe7;alho
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        2. O GLauncher detecta automaticamente sua conta Steam logada no PC
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        3. Seu perfil &#xe9; carregado com nome, avatar e n&#xfa;mero de jogos instalados
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        4. Na tela de perfil, clique em <Run FontWeight="SemiBold" Foreground="#66C0F4">IMPORTAR JOGOS STEAM</Run>
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        5. Todos os jogos instalados s&#xe3;o detectados e adicionados &#xe0; biblioteca
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        6. Capas, logos, fundos e informa&#xe7;&#xf5;es s&#xe3;o buscadas automaticamente para cada jogo importado
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Perfil Steam" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ap&#xf3;s conectar, o bot&#xe3;o Steam no cabe&#xe7;alho exibe seu nome e a quantidade de jogos.
+                                        Clicando nele, voc&#xea; abre o perfil com:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock Text="&#x2022; Avatar e nome do perfil Steam" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Total de jogos instalados" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Quantidade j&#xe1; importada e dispon&#xed;vel" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para importar jogos" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para desconectar" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        A conex&#xe3;o &#xe9; restaurada automaticamente ao abrir o GLauncher. Se o Steam estiver 
+                                        rodando e logado, voc&#xea; j&#xe1; ver&#xe1; seu perfil no cabe&#xe7;alho sem precisar clicar em nada.
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page3" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f3ae; Integra&#xe7;&#xe3;o Xbox Live" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Como funciona" FontSize="15" FontWeight="SemiBold" Foreground="#107C10" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A integra&#xe7;&#xe3;o com o Xbox Live permite que voc&#xea; fa&#xe7;a login com sua conta Microsoft
+                                        e importe os jogos Xbox/Game Pass instalados no seu PC.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Passo a passo" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        1. Clique no bot&#xe3;o <Run FontWeight="SemiBold" Foreground="#00E676">XBOX</Run> no cabe&#xe7;alho
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        2. Uma janela de login da Microsoft ser&#xe1; aberta no navegador
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        3. Fa&#xe7;a login com sua conta Microsoft/Xbox
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        4. Seu perfil Xbox &#xe9; carregado com Gamertag, Gamerscore e avatar
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        5. Na tela de perfil, clique em <Run FontWeight="SemiBold" Foreground="#00E676">IMPORTAR JOGOS XBOX</Run>
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        6. Os jogos Xbox/Game Pass instalados no PC s&#xe3;o adicionados &#xe0; biblioteca
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        7. Capas, logos, fundos e informa&#xe7;&#xf5;es s&#xe3;o buscadas automaticamente
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Perfil Xbox" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ap&#xf3;s conectar, o bot&#xe3;o Xbox no cabe&#xe7;alho exibe sua Gamertag e Gamerscore.
+                                        Clicando nele, voc&#xea; abre o perfil com:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock Text="&#x2022; Avatar e Gamertag" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Gamerscore total" FontSize="13" Foreground="#FFD700" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Jogos na biblioteca Xbox e importados" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para importar jogos" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para desconectar" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        O login do Xbox &#xe9; restaurado automaticamente ao reabrir o GLauncher 
+                                        (n&#xe3;o precisa fazer login toda vez).
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page4" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f3ae; Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Carrossel de Jogos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
                                         A biblioteca exibe seus jogos em um carrossel horizontal estilo PS5.
-                                        Clique em um jogo para selecioná-lo e ver seus detalhes.
+                                        Clique em um jogo para selecion&#xe1;-lo e ver seus detalhes.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -189,50 +338,50 @@
                                         Ao selecionar um jogo, o painel inferior exibe:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
-                                        <TextBlock Text="• Fundo animado (WEBP/GIF) ou estático" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Logo ou nome do jogo" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Botão JOGAR para iniciar" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Detalhes: atividade recente, tamanho, gênero, nota, ano" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
-                                        <TextBlock Text="• Descrição traduzida para Português" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Fundo animado (WEBP/GIF) ou est&#xe1;tico" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Logo ou nome do jogo" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o JOGAR para iniciar" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Detalhes: atividade recente, tamanho, g&#xea;nero, nota, ano" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Descri&#xe7;&#xe3;o traduzida para Portugu&#xea;s" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
+                                        <TextBlock Text="&#x2022; Contador de FPS no canto superior direito" FontSize="13" Foreground="#88AACC" Margin="0,2"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="⭐ Favoritos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x2b50; Favoritos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Jogos favoritos aparecem primeiro no carrossel e exibem uma estrela dourada ⭐ 
+                                        Jogos favoritos aparecem primeiro no carrossel e exibem uma estrela dourada &#x2b50; 
                                         no canto superior direito da capa.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 3: Menu de Opções -->
-                        <StackPanel x:Name="Page3" Visibility="Collapsed">
-                            <TextBlock Text="⚙️ Menu de Opções" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page5" Visibility="Collapsed">
+                            <TextBlock Text="&#x2699;&#xfe0f; Menu de Op&#xe7;&#xf5;es" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Como acessar" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Clique no ícone de engrenagem ⚙️ no cabeçalho para abrir o menu de contexto
-                                        com as opções do jogo selecionado.
+                                        Clique no &#xed;cone de engrenagem &#x2699;&#xfe0f; no cabe&#xe7;alho para abrir o menu de contexto
+                                        com as op&#xe7;&#xf5;es do jogo selecionado.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Opções disponíveis" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Op&#xe7;&#xf5;es dispon&#xed;veis" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="170"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Alternar Favorito" FontSize="13" Foreground="#FFD700" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Marca/desmarca o jogo como favorito ⭐" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="Marca/desmarca o jogo como favorito &#x2b50;" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
@@ -248,7 +397,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Buscar Capa Online" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Busca capas (grids) no SteamGridDB com seleção visual" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="Busca capas (grids) no SteamGridDB com sele&#xe7;&#xe3;o visual" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
@@ -264,7 +413,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Buscar Info IGDB" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Busca sinopse, gênero, nota e ano no IGDB" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="Busca sinopse, g&#xea;nero, nota e ano no IGDB" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
@@ -272,7 +421,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Renomear" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Altera o nome de exibição do jogo" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="Altera o nome de exibi&#xe7;&#xe3;o do jogo" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
@@ -280,15 +429,14 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Remover Jogo" FontSize="13" Foreground="#FF5555" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Remove o jogo da biblioteca (não desinstala)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="Remove o jogo da biblioteca (n&#xe3;o desinstala)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 4: Capas e Fundos -->
-                        <StackPanel x:Name="Page4" Visibility="Collapsed">
-                            <TextBlock Text="🖼️ Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page6" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f5bc;&#xfe0f; Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
@@ -297,10 +445,10 @@
                                         O GLauncher utiliza o SteamGridDB para buscar automaticamente:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
-                                        <TextBlock Text="• Capas (Grids) — exibidas no carrossel" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
-                                        <TextBlock Text="• Logos — exibidos sobre o fundo do jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
-                                        <TextBlock Text="• Fundos (Heroes) — imagem de fundo, suporta WEBP/GIF animado" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
-                                        <TextBlock Text="• Ícones — exibidos junto ao nome" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Capas (Grids) &#x2014; exibidas no carrossel" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Logos &#x2014; exibidos sobre o fundo do jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Fundos (Heroes) &#x2014; imagem de fundo, suporta WEBP/GIF animado" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; &#xcd;cones &#x2014; exibidos junto ao nome" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -309,8 +457,8 @@
                                 <StackPanel>
                                     <TextBlock Text="Busca Manual de Capas" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        No menu ⚙️ → "Buscar Capa Online", você pode pesquisar e escolher 
-                                        visualmente entre diversas capas disponíveis para o jogo.
+                                        No menu &#x2699;&#xfe0f; &#x2192; &#x201c;Buscar Capa Online&#x201d;, voc&#xea; pode pesquisar e escolher 
+                                        visualmente entre diversas capas dispon&#xed;veis para o jogo.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -319,8 +467,8 @@
                                 <StackPanel>
                                     <TextBlock Text="Busca Manual de Fundos" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        No menu ⚙️ → "Buscar Fundo", você visualiza previews animados dos fundos
-                                        disponíveis e seleciona o que preferir. Suporta WEBP animado e GIF.
+                                        No menu &#x2699;&#xfe0f; &#x2192; &#x201c;Buscar Fundo&#x201d;, voc&#xea; visualiza previews animados dos fundos
+                                        dispon&#xed;veis e seleciona o que preferir. Suporta WEBP animado e GIF.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -328,31 +476,30 @@
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
                                 <DockPanel>
-                                    <TextBlock Text="✅" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        A integração com o SteamGridDB é automática. As capas, logos, fundos e ícones 
-                                        são buscados automaticamente ao adicionar um jogo.
+                                        A integra&#xe7;&#xe3;o com o SteamGridDB &#xe9; autom&#xe1;tica. As capas, logos, fundos e &#xed;cones 
+                                        s&#xe3;o buscados automaticamente ao adicionar ou importar um jogo.
                                     </TextBlock>
                                 </DockPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 5: Info IGDB -->
-                        <StackPanel x:Name="Page5" Visibility="Collapsed">
-                            <TextBlock Text="📊 Informações IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page7" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f4ca; Informa&#xe7;&#xf5;es IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="O que é o IGDB?" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="O que &#xe9; o IGDB?" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O IGDB (Internet Game Database) é uma base de dados de jogos da Twitch/Amazon.
+                                        O IGDB (Internet Game Database) &#xe9; uma base de dados de jogos da Twitch/Amazon.
                                         O GLauncher busca automaticamente:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
-                                        <TextBlock Text="• Sinopse / Descrição do jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
-                                        <TextBlock Text="• Gêneros (traduzidos para PT-BR)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
-                                        <TextBlock Text="• Nota / Rating da comunidade" FontSize="13" Foreground="#FFD700" Margin="0,3"/>
-                                        <TextBlock Text="• Ano de lançamento" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Sinopse / Descri&#xe7;&#xe3;o do jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; G&#xea;neros (traduzidos para PT-BR)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Nota / Rating da comunidade" FontSize="13" Foreground="#FFD700" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Ano de lan&#xe7;amento" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -360,25 +507,24 @@
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
                                 <DockPanel>
-                                    <TextBlock Text="✅" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        A integração com o IGDB é automática. Sinopse, gêneros, nota e ano 
-                                        são buscados e traduzidos automaticamente ao adicionar um jogo.
+                                        A integra&#xe7;&#xe3;o com o IGDB &#xe9; autom&#xe1;tica. Sinopse, g&#xea;neros, nota e ano 
+                                        s&#xe3;o buscados e traduzidos automaticamente ao adicionar ou importar um jogo.
                                     </TextBlock>
                                 </DockPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 6: Temas -->
-                        <StackPanel x:Name="Page6" Visibility="Collapsed">
-                            <TextBlock Text="🎨 Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page8" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f3a8; Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Personalização Visual" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Personaliza&#xe7;&#xe3;o Visual" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Clique no botão "TEMA" no cabeçalho para abrir o seletor de temas.
-                                        O tema é aplicado imediatamente e salvo automaticamente.
+                                        Clique no bot&#xe3;o &#x201c;TEMA&#x201d; no cabe&#xe7;alho para abrir o seletor de temas.
+                                        O tema &#xe9; aplicado imediatamente e salvo automaticamente.
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -394,23 +540,61 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 7: Controle (Gamepad) -->
-                        <StackPanel x:Name="Page7" Visibility="Collapsed">
-                            <TextBlock Text="🕹️ Controle (Gamepad)" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page9" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f579;&#xfe0f; Controle (Gamepad)" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Suporte a XInput" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Controles Suportados" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher detecta automaticamente controles Xbox e compatíveis com XInput.
-                                        O ícone do controle no cabeçalho fica verde quando conectado.
+                                        O GLauncher detecta automaticamente controles conectados via USB ou Bluetooth.
+                                        O &#xed;cone do controle no cabe&#xe7;alho fica verde quando conectado.
+                                    </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; Xbox" FontWeight="SemiBold"/> <Run Text="&#x2014; Controles Xbox One, Series X|S e compat&#xed;veis XInput" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; PlayStation" FontWeight="SemiBold"/> <Run Text="&#x2014; DualSense (PS5) e DualShock 4 (PS4) via HID" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="0,10,0,0">
+                                        Os r&#xf3;tulos dos bot&#xf5;es na barra de status se adaptam automaticamente ao tipo de controle 
+                                        (ex: &#x201c;A = Jogar&#x201d; para Xbox, &#x201c;&#x2715; = Jogar&#x201d; para PlayStation).
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Mapeamento de Botões" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x1f50b; N&#xed;vel de Bateria" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Quando o controle est&#xe1; conectado via Bluetooth, o n&#xed;vel de bateria &#xe9; exibido 
+                                        no cabe&#xe7;alho ao lado do &#xed;cone do controle com percentual e &#xed;cone colorido:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; 80&#x2013;100%" FontWeight="SemiBold"/> <Run Text="&#x2014; Verde (cheio)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#69F0AE" Margin="0,3"><Run Text="&#x2022; 50&#x2013;79%" FontWeight="SemiBold"/> <Run Text="&#x2014; Verde claro" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FFD740" Margin="0,3"><Run Text="&#x2022; 20&#x2013;49%" FontWeight="SemiBold"/> <Run Text="&#x2014; Amarelo (aten&#xe7;&#xe3;o)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FF5252" Margin="0,3"><Run Text="&#x2022; 0&#x2013;19%" FontWeight="SemiBold"/> <Run Text="&#x2014; Vermelho (baixo)" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Navega&#xe7;&#xe3;o por Zonas" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A interface &#xe9; dividida em 3 zonas de navega&#xe7;&#xe3;o. Use D-Pad &#x25b2;&#x25bc; para alternar entre elas.
+                                        A zona ativa &#xe9; indicada por uma borda verde brilhante.
+                                    </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Header" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xf5;es do cabe&#xe7;alho (Xbox, Steam, Ajuda, Config, Adicionar, Tema)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; A&#xe7;&#xf5;es" FontWeight="SemiBold"/> <Run Text="&#x2014; Bot&#xe3;o JOGAR (vis&#xed;vel quando um jogo est&#xe1; selecionado)" Foreground="#AABBCC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,4"><Run Text="&#x2022; Carrossel" FontWeight="SemiBold"/> <Run Text="&#x2014; Navega&#xe7;&#xe3;o entre jogos com D-Pad &#x25c0;&#x25b6; e LB/RB" Foreground="#AABBCC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Mapeamento de Bot&#xf5;es" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
@@ -418,9 +602,20 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock FontSize="13" Foreground="#00E676" FontWeight="SemiBold">
                                             <Run Text="D-Pad"/>
-                                            <Run Text=" ◀ ▶" Foreground="#556688"/>
+                                            <Run Text=" &#x25b2; &#x25bc;" Foreground="#556688"/>
                                         </TextBlock>
-                                        <TextBlock Grid.Column="1" Text="Navegar entre jogos" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Grid.Column="1" Text="Alternar entre zonas (Header / A&#xe7;&#xf5;es / Carrossel)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock FontSize="13" Foreground="#00E676" FontWeight="SemiBold">
+                                            <Run Text="D-Pad"/>
+                                            <Run Text=" &#x25c0; &#x25b6;" Foreground="#556688"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="Navegar entre jogos (Carrossel) ou itens (Header)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
@@ -428,30 +623,30 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="LB / RB" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Navegar 5 jogos por vez (paginação rápida)" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Grid.Column="1" Text="Pular 5 jogos por vez (pagina&#xe7;&#xe3;o r&#xe1;pida)" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="A (Verde)" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Iniciar / Jogar o jogo selecionado" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="A / &#x2715;" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Confirmar / Jogar / Selecionar item do Header" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Y (Amarelo)" FontSize="13" Foreground="#FFD700" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Alternar favorito ⭐" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="Y / &#x25b3;" FontSize="13" Foreground="#FFD700" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Alternar favorito &#x2b50;" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="X (Azul)" FontSize="13" Foreground="#4488FF" FontWeight="SemiBold"/>
+                                        <TextBlock Text="X / &#x25a1;" FontSize="13" Foreground="#4488FF" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Buscar capa online" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
@@ -459,44 +654,67 @@
                                             <ColumnDefinition Width="180"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="B (Vermelho)" FontSize="13" Foreground="#FF5555" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Limpar pesquisa" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="B / &#x25cb;" FontSize="13" Foreground="#FF5555" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Voltar / Limpar pesquisa / Fechar di&#xe1;logos" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Start / Options" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abrir menu de configura&#xe7;&#xf5;es (engrenagem)" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Back / Create" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abrir este manual" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Anal&#xf3;gico Direito" FontSize="13" Foreground="#00E676" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Scroll vertical no manual" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
-                        </StackPanel>
-
-                        <!-- Page 8: Monitor de Hardware -->
-                        <StackPanel x:Name="Page8" Visibility="Collapsed">
-                            <TextBlock Text="📈 Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Gauges em Tempo Real" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x1f50a; Efeitos Sonoros" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        A barra inferior exibe 5 gauges com métricas do sistema em tempo real:
+                                        O GLauncher reproduz efeitos sonoros estilo console durante a navega&#xe7;&#xe3;o:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
-                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• CPU" FontWeight="SemiBold"/> <Run Text="— Uso do processador (%)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• GPU" FontWeight="SemiBold"/> <Run Text="— Uso da placa de vídeo (%)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="• CPU °C" FontWeight="SemiBold"/> <Run Text="— Temperatura do processador" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="• GPU °C" FontWeight="SemiBold"/> <Run Text="— Temperatura da placa de vídeo" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="• RAM" FontWeight="SemiBold"/> <Run Text="— Uso de memória RAM (%)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock Text="&#x2022; Navegar &#x2014; Som ao mover entre jogos ou itens" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Selecionar &#x2014; Som ao confirmar a&#xe7;&#xe3;o (A / &#x2715;)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Voltar &#x2014; Som ao pressionar B / &#x25cb;" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Favoritar &#x2014; Som especial ao marcar favorito" FontSize="13" Foreground="#FFD700" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Zona &#x2014; Som ao alternar entre zonas" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Lan&#xe7;ar &#x2014; Som ao iniciar um jogo" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Erro &#x2014; Som ao ocorrer falha" FontSize="13" Foreground="#FF5555" Margin="0,3"/>
                                     </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#88AACC" LineHeight="22" Margin="0,8,0,0">
+                                        Os sons podem ser ativados/desativados pelo menu &#x2699;&#xfe0f; &#x2192; &#x201c;Sons (Ligar/Desligar)&#x201d;.
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="🖥️ Especificações do Computador" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock Text="&#x1f3ae; Minimizar ao Jogar" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Ao lado dos gauges, a barra inferior também exibe as especificações do seu computador detectadas automaticamente:
+                                        Quando voc&#xea; inicia um jogo pelo controle ou bot&#xe3;o JOGAR, o GLauncher:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
-                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• Processador" FontWeight="SemiBold"/> <Run Text="— Modelo da CPU (ex: Intel Core i7-12700K)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="• Placa de Vídeo" FontWeight="SemiBold"/> <Run Text="— Modelo da GPU (ex: NVIDIA GeForce RTX 3080)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="• Memória RAM" FontWeight="SemiBold"/> <Run Text="— Total de RAM instalada (ex: 32 GB)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="• Armazenamento" FontWeight="SemiBold"/> <Run Text="— Discos detectados com espaço livre/total" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock Text="&#x2022; Minimiza a janela automaticamente" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Pausa o polling do controle (libera o gamepad para o jogo)" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Quando o jogo fecha, restaura a janela e retoma o controle" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -504,18 +722,152 @@
                             <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
                                     BorderBrush="#2A2050" BorderThickness="1">
                                 <DockPanel>
-                                    <TextBlock Text="💡" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        As cores dos gauges mudam conforme o nível: verde (normal),
-                                        amarelo (atenção) e vermelho (crítico). Temperaturas acima de 80°C ficam vermelhas.
+                                        Di&#xe1;logos como Perfil Xbox, Perfil Steam e este Manual podem ser fechados 
+                                        pressionando B / &#x25cb; no controle. No menu de configura&#xe7;&#xf5;es, use D-Pad &#x25b2;&#x25bc; para navegar 
+                                        e A / &#x2715; para selecionar a op&#xe7;&#xe3;o.
                                     </TextBlock>
                                 </DockPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Page 9: Atalhos -->
-                        <StackPanel x:Name="Page9" Visibility="Collapsed">
-                            <TextBlock Text="⌨️ Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page10" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f4c8; Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Gauges em Tempo Real" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        A barra inferior exibe 5 gauges com m&#xe9;tricas do sistema em tempo real:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; CPU" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso do processador (%)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; GPU" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso da placa de v&#xed;deo (%)" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="&#x2022; CPU &#xb0;C" FontWeight="SemiBold"/> <Run Text="&#x2014; Temperatura do processador" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="&#x2022; GPU &#xb0;C" FontWeight="SemiBold"/> <Run Text="&#x2014; Temperatura da placa de v&#xed;deo" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; RAM" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso de mem&#xf3;ria RAM (%)" Foreground="#88AACC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f5a5;&#xfe0f; Especifica&#xe7;&#xf5;es do Computador" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ao lado dos gauges, a barra inferior tamb&#xe9;m exibe as especifica&#xe7;&#xf5;es do seu computador detectadas automaticamente:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; Processador" FontWeight="SemiBold"/> <Run Text="&#x2014; Modelo da CPU" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; Placa de V&#xed;deo" FontWeight="SemiBold"/> <Run Text="&#x2014; Modelo da GPU" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; Mem&#xf3;ria RAM" FontWeight="SemiBold"/> <Run Text="&#x2014; Total de RAM instalada" Foreground="#88AACC"/></TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; Armazenamento" FontWeight="SemiBold"/> <Run Text="&#x2014; Discos detectados com espa&#xe7;o livre/total" Foreground="#88AACC"/></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f3af; Contador de FPS" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        No canto superior direito da &#xe1;rea de detalhes do jogo, um badge exibe o contador 
+                                        de FPS (frames por segundo) da interface em tempo real.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="&#x1f3af; FPS Overlay no Jogo" FontSize="15" FontWeight="SemiBold" Foreground="#00E676" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        O GLauncher pode exibir um overlay de FPS transparente por cima do jogo enquanto voc&#xea; joga.
+                                        O overlay fica no canto superior direito da tela e n&#xe3;o interfere nos cliques (&#xe9; click-through).
+                                    </TextBlock>
+                                    <StackPanel Margin="12,10,0,0">
+                                        <TextBlock Text="&#x2022; Ative/desative no menu &#x2699;&#xfe0f; &#x2192; &#x201c;FPS Overlay no Jogo (Ligar/Desligar)&#x201d;" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Quando ativado, o overlay aparece automaticamente ao lan&#xe7;ar um jogo" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Quando o jogo fecha, o overlay &#xe9; removido automaticamente" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; As cores mudam conforme o FPS: verde (&#x2265;50), amarelo (&#x2265;30), vermelho (&lt;30)" FontSize="13" Foreground="#88AACC" Margin="0,3" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        As cores dos gauges mudam conforme o n&#xed;vel: verde (normal),
+                                        amarelo (aten&#xe7;&#xe3;o) e vermelho (cr&#xed;tico). Temperaturas acima de 80&#xb0;C ficam vermelhas.
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page11" Visibility="Collapsed">
+                            <TextBlock Text="&#x2328;&#xfe0f; Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Bot&#xf5;es do Cabe&#xe7;alho" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <Grid Margin="0,4,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="+ ADICIONAR JOGO" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Adiciona jogos manualmente selecionando o .exe" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="TEMA" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abre o seletor de temas visuais" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="XBOX" FontSize="13" Foreground="#107C10" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Login Xbox Live / Perfil / Importar jogos Xbox" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="STEAM" FontSize="13" Foreground="#66C0F4" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Conectar Steam / Perfil / Importar jogos Steam" FontSize="12" Foreground="#8899AA" TextWrapping="Wrap"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#x2753; (Ajuda)" FontSize="13" Foreground="#2196F3" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abre este manual" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#x2699;&#xfe0f; (Engrenagem)" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abre menu de op&#xe7;&#xf5;es do jogo selecionado" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Clique no avatar" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Altera a imagem do avatar" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
@@ -533,24 +885,8 @@
                                             <ColumnDefinition Width="200"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Botão JOGAR" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Inicia o executável do jogo selecionado" FontSize="12" Foreground="#8899AA"/>
-                                    </Grid>
-                                    <Grid Margin="0,6,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="200"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Ícone ⚙️ (engrenagem)" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Abre menu de opções do jogo" FontSize="12" Foreground="#8899AA"/>
-                                    </Grid>
-                                    <Grid Margin="0,6,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="200"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Clique no avatar" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Altera a imagem do avatar" FontSize="12" Foreground="#8899AA"/>
+                                        <TextBlock Text="Bot&#xe3;o JOGAR" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Inicia o execut&#xe1;vel do jogo selecionado" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>
@@ -567,11 +903,12 @@
                                 <StackPanel>
                                     <TextBlock Text="Dicas Gerais" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <StackPanel Margin="8,0,0,0">
-                                        <TextBlock Text="• Jogos duplicados (mesmo .exe) não são adicionados" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="• Remover um jogo não desinstala — apenas remove da biblioteca" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="• Dados são salvos em %AppData%/GameLauncher/games.json" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="• Assets visuais são baixados automaticamente na inicialização" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="• Descrições são traduzidas automaticamente para PT-BR" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Jogos duplicados (mesmo .exe) n&#xe3;o s&#xe3;o adicionados" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Remover um jogo n&#xe3;o desinstala &#x2014; apenas remove da biblioteca" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Dados s&#xe3;o salvos em %AppData%/GameLauncher/games.json" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Assets visuais s&#xe3;o baixados automaticamente na inicializa&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Descri&#xe7;&#xf5;es s&#xe3;o traduzidas automaticamente para PT-BR" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Sess&#xf5;es Steam e Xbox s&#xe3;o restauradas automaticamente ao abrir o app" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -579,13 +916,13 @@
                     </Grid>
                 </ScrollViewer>
 
-                <!-- Footer -->
-                <Border Grid.Row="1" Margin="0,14,0,0" Padding="0,10,0,0"
+<Border Grid.Row="1" Margin="0,14,0,0" Padding="0,10,0,0"
                         BorderBrush="#1A2040" BorderThickness="0,1,0,0">
-                    <TextBlock Text="GLauncher — Desenvolvido por Kleber Freitas"
+                    <TextBlock Text="GLauncher &#x2014; Desenvolvido por Kleber Freitas"
                                FontSize="11" Foreground="#445566" HorizontalAlignment="Center"/>
                 </Border>
             </Grid>
         </Border>
     </Grid>
 </Window>
+

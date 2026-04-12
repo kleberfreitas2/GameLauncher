@@ -27,6 +27,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
 
+    public enum NavZone { Header, Actions, Carousel }
+
+    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Help", "Settings", "AddGame", "Theme"];
+
+    [ObservableProperty] private NavZone activeZone = NavZone.Carousel;
+    [ObservableProperty] private int headerIndex;
+    [ObservableProperty] private string focusedHeaderItem = "";
+
     [ObservableProperty]
     private ObservableCollection<Game> games = new();
 
@@ -52,8 +60,64 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private Game? selectedGame;
     [ObservableProperty] private Game? detailGame;
     [ObservableProperty] private bool showDetailPanel;
-    [ObservableProperty] private bool gamepadConnected;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
+    private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
+    [ObservableProperty] private bool isAnimationLoading;
+    [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
+    [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
+
+    private GpuCapabilities? _gpuCaps;
+    [ObservableProperty] private ObservableCollection<TechCompatItem> techCompatItems = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
+    [NotifyPropertyChangedFor(nameof(GamepadBatteryText))]
+    [NotifyPropertyChangedFor(nameof(GamepadBatteryIcon))]
+    private int gamepadBatteryLevel = -1;
+
+    public bool HasGamepadBattery => GamepadBatteryLevel >= 0 && GamepadConnected;
+    public string GamepadBatteryText => GamepadBatteryLevel >= 0 ? $"{GamepadBatteryLevel}%" : "";
+    public string GamepadBatteryIcon => GamepadBatteryLevel switch
+    {
+        >= 80 => "Battery",
+        >= 50 => "Battery70",
+        >= 20 => "Battery40",
+        >= 0  => "Battery10",
+        _     => "BatteryUnknown"
+    };
+
+    private bool _isContextMenuOpen;
+    public bool IsContextMenuOpen
+    {
+        get => _isContextMenuOpen;
+        set => SetProperty(ref _isContextMenuOpen, value);
+    }
+
+    public Action<GamepadButton>? ContextMenuNavigate { get; set; }
+
+    private bool _isHelpDialogOpen;
+    public bool IsHelpDialogOpen
+    {
+        get => _isHelpDialogOpen;
+        set => SetProperty(ref _isHelpDialogOpen, value);
+    }
+
+    public Action<GamepadButton>? HelpDialogNavigate { get; set; }
+
+    public Action<double>? HelpDialogScroll { get; set; }
+
+    private bool _isProfileDialogOpen;
+    public bool IsProfileDialogOpen
+    {
+        get => _isProfileDialogOpen;
+        set => SetProperty(ref _isProfileDialogOpen, value);
+    }
+
+    public Action<GamepadButton>? ProfileDialogNavigate { get; set; }
+
+    private FpsOverlayWindow? _fpsOverlay;
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
@@ -64,6 +128,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public bool HasAvatar   => !string.IsNullOrEmpty(AvatarPath);
     public bool HasNoAvatar => !HasAvatar;
+
+    private XboxLiveService? _xboxService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsXboxLoggedIn))]
+    [NotifyPropertyChangedFor(nameof(XboxButtonText))]
+    private XboxProfile? xboxProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsXboxLoggedIn))]
+    [NotifyPropertyChangedFor(nameof(XboxButtonText))]
+    private bool xboxConnected;
+
+    public bool IsXboxLoggedIn => XboxConnected && XboxProfile is not null;
+    public string XboxButtonText => IsXboxLoggedIn ? XboxProfile!.Gamertag : "XBOX";
+
+    private SteamService? _steamService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSteamConnected))]
+    [NotifyPropertyChangedFor(nameof(SteamButtonText))]
+    private SteamProfile? steamProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSteamConnected))]
+    [NotifyPropertyChangedFor(nameof(SteamButtonText))]
+    private bool steamConnected;
+
+    public bool IsSteamConnected => SteamConnected && SteamProfile is not null;
+    public string SteamButtonText => IsSteamConnected ? SteamProfile!.PersonaName : "STEAM";
 
     private readonly DispatcherTimer _clockTimer;
 
@@ -85,6 +179,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         LoadGames();
         _ = RefreshAllAssetsOnStartupAsync();
+        _ = TryRestoreXboxSessionAsync();
+        _ = TryRestoreSteamSessionAsync();
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -93,7 +189,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput = new XInputService();
         _xinput.ButtonPressed += OnGamepadButton;
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
+        _xinput.RightStickY += OnRightStickY;
+        _xinput.BatteryChanged += OnBatteryChanged;
         _xinput.Start();
+
+        SoundService.Initialize();
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
@@ -104,18 +204,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _dispatcher.BeginInvoke(() =>
         {
-            CpuUsage = m.CpuUsage;
-            CpuTemp = m.CpuTemp;
-            GpuUsage = m.GpuUsage;
-            GpuTemp = m.GpuTemp;
-            RamUsage = m.RamUsage;
+            CpuUsage = Math.Round(m.CpuUsage);
+            CpuTemp = Math.Round(m.CpuTemp);
+            GpuUsage = Math.Round(m.GpuUsage);
+            GpuTemp = Math.Round(m.GpuTemp);
+            RamUsage = Math.Round(m.RamUsage);
             CpuTempText = m.CpuTemp > 0 ? $"{m.CpuTemp:F0}°C" : "--°C";
             GpuTempText = m.GpuTemp > 0 ? $"{m.GpuTemp:F0}°C" : "--°C";
 
             if (!string.IsNullOrEmpty(m.CpuName) && string.IsNullOrEmpty(CpuName))
                 CpuName = m.CpuName;
             if (!string.IsNullOrEmpty(m.GpuName) && string.IsNullOrEmpty(GpuName))
+            {
                 GpuName = m.GpuName;
+                _gpuCaps = GpuCapabilityService.Detect(m.GpuName);
+                if (DetailGame is not null)
+                    ScanGameTech(DetailGame);
+            }
             if (!string.IsNullOrEmpty(m.RamTotal) && string.IsNullOrEmpty(RamTotal))
                 RamTotal = m.RamTotal;
             if (m.StorageDrives.Count > 0 && StorageDrives.Count == 0)
@@ -133,6 +238,90 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.Dispose();
         _hwMonitor.Stop();
         _hwMonitor.Dispose();
+        _xboxService?.Dispose();
+        _steamService?.Dispose();
+        _fpsOverlay?.Close();
+        _fpsOverlay = null;
+    }
+
+    private void ScanGameTech(Game game)
+    {
+        if (game.TechInfo is null)
+        {
+            game.TechInfo = GameTechDetectorService.Scan(game.GameRootDirectory);
+            if (game.TechInfo.HasAnyTech)
+                SaveGames();
+        }
+
+        TechCompatItems.Clear();
+        var tech = game.TechInfo;
+        if (!tech.HasAnyTech) return;
+
+        var gpu = _gpuCaps;
+
+        if (!string.IsNullOrEmpty(tech.DirectXVersion))
+            AddTechItem("DirectX", tech.DirectXVersion, gpu?.SupportsDirectX12 == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Gpu");
+
+        if (tech.HasVulkan)
+            AddTechItem("Vulkan", "Sim", gpu?.SupportsVulkan == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Gpu");
+
+        if (tech.HasRayTracing)
+            AddTechItem("Ray Tracing", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsRayTracing ? CompatStatus.Compatible : CompatStatus.Incompatible, "FlashOutline");
+
+        if (tech.HasDLSS)
+            AddTechItem("DLSS", tech.DlssVersion ?? "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsDLSS ? CompatStatus.Compatible : CompatStatus.Incompatible, "NvidiaShield");
+
+        if (tech.HasFSR)
+            AddTechItem("AMD FSR", tech.FsrVersion ?? "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsFSR ? CompatStatus.Compatible : CompatStatus.Incompatible, "Gpu");
+
+        if (tech.HasXeSS)
+            AddTechItem("Intel XeSS", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsXeSS ? CompatStatus.Compatible : CompatStatus.Incompatible, "IntelligenceOutline");
+
+        if (tech.HasFrameGeneration)
+            AddTechItem("Frame Generation", "Sim", gpu is null ? CompatStatus.Unknown
+                : gpu.SupportsFrameGeneration ? CompatStatus.Compatible : CompatStatus.Incompatible, "MotionPlayOutline");
+
+        if (tech.HasHDR)
+            AddTechItem("HDR", "Sim", gpu?.SupportsHDR == true
+                ? CompatStatus.Compatible : CompatStatus.Unknown, "Brightness7");
+    }
+
+    private void AddTechItem(string name, string detail, CompatStatus status, string icon)
+    {
+        TechCompatItems.Add(new TechCompatItem
+        {
+            TechName = name,
+            Detail = detail,
+            Status = status,
+            IconKind = icon,
+            StatusText = status switch
+            {
+                CompatStatus.Compatible => "✓ Compatível",
+                CompatStatus.Incompatible => "✗ Não suportado",
+                _ => "? Desconhecido"
+            },
+            StatusColor = status switch
+            {
+                CompatStatus.Compatible => "#00E676",
+                CompatStatus.Incompatible => "#FF5252",
+                _ => "#FFD740"
+            }
+        });
+    }
+
+    [RelayCommand]
+    private void RescanGameTech()
+    {
+        if (DetailGame is null) return;
+        DetailGame.TechInfo = null;
+        ScanGameTech(DetailGame);
+        StatusMessage = $"Tecnologias de '{DetailGame.DisplayName}' re-escaneadas";
     }
 
     [RelayCommand]
@@ -156,6 +345,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         DetailGame = value;
         ShowDetailPanel = value is not null;
+        if (value is not null)
+        {
+            SoundService.PlayNavigate();
+            ScanGameTech(value);
+        }
+        else
+        {
+            TechCompatItems.Clear();
+        }
     }
 
     private void LoadGames()
@@ -170,8 +368,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
             _gamesView.Refresh();
-            var first = _gamesView.Cast<Game>().FirstOrDefault();
-            if (first is not null)
+
+            if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
                 SelectedGame = first;
         }
         catch { }
@@ -233,7 +431,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
 
-        // Auto-busca com progresso visual para jogos recém-adicionados
         foreach (var game in newGames)
         {
             await AutoFetchAllWithProgressAsync(game);
@@ -250,7 +447,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Passo 1/6 — Ícone (0→15%)
             progressDialog.UpdateProgress(0, "Buscando ícone...");
             var apiKey = SettingsService.Current.SteamGridDbApiKey;
             SteamGridDbService? svc = null;
@@ -261,7 +457,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 svc = new SteamGridDbService(apiKey);
                 var sgdbGames = await svc.SearchGamesAsync(game.DisplayName);
-                if (sgdbGames.Count > 0)
+                if (sgdbGames.Count == 0 && IsUnauthorizedError(svc.LastError))
+                {
+                    SettingsService.Current.SteamGridDbApiKey = string.Empty;
+                    SettingsService.Save();
+                    svc = null;
+                }
+                else if (sgdbGames.Count > 0)
                 {
                     sgdbId = sgdbGames[0].Id;
                     hasSteamGridDb = true;
@@ -282,7 +484,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(15, "Ícone concluído!");
 
-            // Passo 2/6 — Logo (15→30%)
             progressDialog.UpdateProgress(18, "Buscando logo...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.LogoPath))
             {
@@ -295,7 +496,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(30, "Logo concluído!");
 
-            // Passo 3/6 — Capa (30→50%)
             progressDialog.UpdateProgress(33, "Buscando capa...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.CustomImagePath))
             {
@@ -308,7 +508,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             progressDialog.UpdateProgress(50, "Capa concluída!");
 
-            // Passo 4/6 — Fundo (50→65%)
             progressDialog.UpdateProgress(53, "Buscando fundo...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.BackgroundImagePath))
             {
@@ -323,7 +522,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             SaveGames();
 
-            // Passo 5/6 — IGDB info (65→85%)
             progressDialog.UpdateProgress(68, "Buscando descrição e informações (IGDB)...");
             var clientId     = SettingsService.Current.IgdbClientId;
             var clientSecret = SettingsService.Current.IgdbClientSecret;
@@ -356,14 +554,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             SaveGames();
 
-            // Passo 6/6 — Finalizado (90→100%)
             progressDialog.UpdateProgress(100, "Tudo pronto!");
             StatusMessage = $"'{game.DisplayName}' adicionado com sucesso!";
 
             await Task.Delay(600); // pequena pausa para o usuário ver 100%
             progressDialog.Finish();
 
-            // Força atualização da tela de detalhes e lista
             _gamesView.Refresh();
             if (SelectedGame == game)
             {
@@ -381,7 +577,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task RefreshAllAssetsOnStartupAsync()
     {
-        // 1. Visuais — SteamGridDB (logo, capa, fundo, ícone)
         var apiKey = SettingsService.Current.SteamGridDbApiKey;
         if (!string.IsNullOrEmpty(apiKey))
         {
@@ -399,7 +594,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
-        // 2. Texto — IGDB (sinopse, gêneros, nota, ano) + tradução PT-BR
         var clientId     = SettingsService.Current.IgdbClientId;
         var clientSecret = SettingsService.Current.IgdbClientSecret;
         if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
@@ -415,7 +609,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await AutoFetchIgdbAsync(game);
             }
 
-            // 3. Re-traduzir descrições que ficaram em inglês
             var untranslated = Games
                 .Where(g => g.HasIgdbInfo && !string.IsNullOrEmpty(g.Summary) && !g.IsSummaryTranslated)
                 .ToList();
@@ -450,11 +643,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             var svc = new SteamGridDbService(apiKey);
             var games = await svc.SearchGamesAsync(game.DisplayName);
+            if (games.Count == 0 && IsUnauthorizedError(svc.LastError))
+            {
+                SettingsService.Current.SteamGridDbApiKey = string.Empty;
+                SettingsService.Save();
+                StatusMessage = "API Key do SteamGridDB inválida — configure uma nova nas configurações.";
+                return;
+            }
             if (games.Count == 0) return;
 
             var sgdbId = games[0].Id;
 
-            // Ícone
             if (string.IsNullOrEmpty(game.IconPath) || !System.IO.File.Exists(game.IconPath))
             {
                 StatusMessage = $"Buscando ícone de '{game.DisplayName}'...";
@@ -466,7 +665,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Logo
             if (string.IsNullOrEmpty(game.LogoPath))
             {
                 StatusMessage = $"Buscando logo de '{game.DisplayName}'...";
@@ -478,7 +676,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Capa (Grid)
             if (string.IsNullOrEmpty(game.CustomImagePath))
             {
                 StatusMessage = $"Buscando capa de '{game.DisplayName}'...";
@@ -490,7 +687,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
             }
 
-            // Fundo (Hero)
             if (string.IsNullOrEmpty(game.BackgroundImagePath))
             {
                 StatusMessage = $"Buscando fundo de '{game.DisplayName}'...";
@@ -534,7 +730,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             var igdbGame = results[0];
 
-            // Traduz descrição para PT-BR
             var summary = igdbGame.Summary;
             if (!string.IsNullOrEmpty(summary))
             {
@@ -548,7 +743,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.ReleaseYear = igdbGame.ReleaseYear;
             game.IsSummaryTranslated = true;
 
-            // Traduz gêneros para PT-BR
             var genres = igdbGame.GenreNames;
             game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
 
@@ -598,7 +792,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            Process.Start(new ProcessStartInfo
+            SoundService.PlayLaunch();
+            var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
                 UseShellExecute = true,
@@ -607,17 +802,78 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.LastPlayed = DateTime.Now;
             SaveGames();
             StatusMessage = $"Lançando {game.DisplayName}...";
+
+            _xinput.Stop();
+            var mainWin = Application.Current.MainWindow;
+            if (mainWin is not null)
+                mainWin.WindowState = WindowState.Minimized;
+
+            if (SettingsService.Current.FpsOverlayEnabled)
+            {
+                _fpsOverlay = new FpsOverlayWindow();
+                _fpsOverlay.Show();
+            }
+
+            if (proc is not null)
+            {
+                _ = Task.Run(() =>
+                {
+                    try { proc.WaitForExit(); } catch { }
+                    _dispatcher.BeginInvoke(() =>
+                    {
+                        _fpsOverlay?.Close();
+                        _fpsOverlay = null;
+
+                        if (mainWin is not null)
+                        {
+                            mainWin.WindowState = WindowState.Normal;
+                            mainWin.Activate();
+                        }
+                        _xinput.Start();
+                        StatusMessage = $"{Games.Count} jogos na biblioteca";
+                    });
+                });
+            }
+            else
+            {
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    _dispatcher.BeginInvoke(() =>
+                    {
+                        _fpsOverlay?.Close();
+                        _fpsOverlay = null;
+                        _xinput.Start();
+                    });
+                });
+            }
         }
         catch (Exception ex)
         {
+            SoundService.PlayError();
+            _fpsOverlay?.Close();
+            _fpsOverlay = null;
+            _xinput.Start();
             StatusMessage = $"Erro ao lançar {game.DisplayName}: {ex.Message}";
         }
+    }
+
+    [RelayCommand]
+    private void ToggleFpsOverlay()
+    {
+        SettingsService.Current.FpsOverlayEnabled = !SettingsService.Current.FpsOverlayEnabled;
+        SettingsService.Save();
+        IsFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
+        StatusMessage = SettingsService.Current.FpsOverlayEnabled
+            ? "FPS Overlay ativado — será exibido durante os jogos"
+            : "FPS Overlay desativado";
     }
 
     [RelayCommand]
     private void ToggleFavorite(Game game)
     {
         game.IsFavorite = !game.IsFavorite;
+        SoundService.PlayFavorite();
         _gamesView.Refresh();
         SaveGames();
         StatusMessage = game.IsFavorite
@@ -697,10 +953,383 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void ToggleSound()
+    {
+        SettingsService.Current.SoundEnabled = !SettingsService.Current.SoundEnabled;
+        SettingsService.Save();
+        IsSoundEnabled = SettingsService.Current.SoundEnabled;
+        StatusMessage = SettingsService.Current.SoundEnabled
+            ? "Sons ativados 🔊"
+            : "Sons desativados 🔇";
+        if (SettingsService.Current.SoundEnabled)
+            SoundService.PlaySelect();
+    }
+
+    [RelayCommand]
     private void OpenHelp()
     {
         var dialog = new HelpDialog { Owner = Application.Current.MainWindow };
+        IsHelpDialogOpen = true;
+        HelpDialogNavigate = dialog.HandleGamepadInput;
+        HelpDialogScroll = dialog.HandleRightStickScroll;
         dialog.ShowDialog();
+        IsHelpDialogOpen = false;
+        HelpDialogNavigate = null;
+        HelpDialogScroll = null;
+    }
+
+
+    private async Task TryRestoreXboxSessionAsync()
+    {
+        var clientId = SettingsService.Current.XboxClientId;
+        if (string.IsNullOrEmpty(clientId) || clientId == "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
+            return;
+
+        _xboxService?.Dispose();
+        _xboxService = new XboxLiveService(clientId);
+
+        var restored = await _xboxService.TrySilentLoginAsync();
+        if (!restored) return;
+
+        var profile = await _xboxService.GetProfileAsync();
+        if (profile is not null)
+        {
+            XboxProfile = profile;
+            XboxConnected = true;
+            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task XboxLogin()
+    {
+        var clientId = SettingsService.Current.XboxClientId;
+
+        if (string.IsNullOrEmpty(clientId) || clientId == AppSettings.DefaultXboxClientId)
+        {
+            if (!string.IsNullOrEmpty(AppSettings.DefaultXboxClientId)
+                && AppSettings.DefaultXboxClientId != "REPLACE_WITH_YOUR_XBOX_CLIENT_ID")
+            {
+                clientId = AppSettings.DefaultXboxClientId;
+            }
+            else
+            {
+                var setup = new XboxSetupDialog { Owner = Application.Current.MainWindow };
+                if (setup.ShowDialog() != true) return;
+                SettingsService.Current.XboxClientId = setup.ClientId;
+                SettingsService.Save();
+                clientId = setup.ClientId;
+            }
+        }
+
+        StatusMessage = "Conectando ao Xbox Live...";
+
+        _xboxService?.Dispose();
+        _xboxService = new XboxLiveService(clientId);
+
+        var success = await _xboxService.LoginAsync();
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar ao Xbox Live.";
+            MessageBox.Show(
+                "Não foi possível autenticar com o Xbox Live.\n\n" +
+                "Verifique se o Client ID está correto e se o app Azure possui a permissão Xboxlive.signin.",
+                "Xbox Live", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        StatusMessage = "Carregando perfil Xbox...";
+        var profile = await _xboxService.GetProfileAsync();
+
+        if (profile is not null)
+        {
+            XboxProfile = profile;
+            XboxConnected = true;
+            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+        }
+        else
+        {
+            XboxConnected = true;
+            StatusMessage = "Xbox Live conectado (perfil indisponível).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenXboxProfile()
+    {
+        if (!IsXboxLoggedIn || XboxProfile is null)
+        {
+            await XboxLogin();
+            return;
+        }
+
+        var importedCount = Games.Count(g =>
+            g.InstallDirectory is not null &&
+            g.InstallDirectory.Contains("XboxGames", StringComparison.OrdinalIgnoreCase));
+
+        var availableCount = 0;
+        if (_xboxService is not null)
+        {
+            availableCount = await _xboxService.GetLibraryGamesCountAsync();
+        }
+
+        var dialog = new XboxProfileDialog(XboxProfile, importedCount, availableCount)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                if (_xboxService is not null)
+                    await _xboxService.LogoutAsync();
+
+                XboxProfile = null;
+                XboxConnected = false;
+                StatusMessage = "Desconectado do Xbox Live.";
+            }
+            else if (dialog.ImportGamesRequested)
+            {
+                await ImportXboxGames();
+            }
+        }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
+    }
+
+    [RelayCommand]
+    private async Task ImportXboxGames()
+    {
+        if (_xboxService is null)
+        {
+            StatusMessage = "Conecte-se ao Xbox Live primeiro.";
+            return;
+        }
+
+        StatusMessage = "Escaneando jogos Xbox instalados...";
+
+        var xboxGames = await Task.Run(() => _xboxService.ScanXboxInstalledGames());
+
+        if (xboxGames.Count == 0)
+        {
+            StatusMessage = "Nenhum jogo Xbox encontrado nas pastas padrão (XboxGames).";
+            MessageBox.Show(
+                "Nenhum jogo Xbox Game Pass encontrado.\n\n" +
+                "Verifique se há jogos instalados nas pastas XboxGames dos seus discos.",
+                "Xbox Games", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int added = 0;
+        var newGames = new List<Game>();
+
+        foreach (var xg in xboxGames)
+        {
+            if (Games.Any(g => g.ExecutablePath.Equals(xg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            Games.Add(xg);
+            newGames.Add(xg);
+            added++;
+        }
+
+        SaveGames();
+        _gamesView.Refresh();
+        StatusMessage = added > 0
+            ? $"{added} jogo(s) Xbox importado(s)! {Games.Count} jogos na biblioteca."
+            : "Todos os jogos Xbox já estavam na biblioteca.";
+
+        foreach (var game in newGames)
+        {
+            await AutoFetchAllWithProgressAsync(game);
+        }
+    }
+
+
+    private async Task TryRestoreSteamSessionAsync()
+    {
+        var steamId = SettingsService.Current.SteamId;
+
+        if (string.IsNullOrEmpty(steamId))
+            steamId = SteamService.DetectLocalSteamId();
+
+        if (string.IsNullOrEmpty(steamId))
+            return;
+
+        _steamService?.Dispose();
+        _steamService = new SteamService();
+
+        var connected = await _steamService.ConnectAsync(steamId);
+        if (!connected) return;
+
+        if (string.IsNullOrEmpty(SettingsService.Current.SteamId))
+        {
+            SettingsService.Current.SteamId = steamId;
+            SettingsService.Save();
+        }
+
+        var profile = await _steamService.GetProfileAsync();
+        if (profile is not null)
+        {
+            profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
+            SteamProfile = profile;
+            SteamConnected = true;
+            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SteamLogin()
+    {
+        var steamId = SteamService.DetectLocalSteamId()
+                      ?? SettingsService.Current.SteamId;
+
+        if (string.IsNullOrEmpty(steamId))
+        {
+            var setup = new SteamSetupDialog
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (setup.ShowDialog() != true) return;
+
+            steamId = setup.SteamIdOrVanity;
+        }
+
+        StatusMessage = "Conectando à Steam...";
+
+        _steamService?.Dispose();
+        _steamService = new SteamService();
+
+        var success = await _steamService.ConnectAsync(steamId);
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar à Steam.";
+            MessageBox.Show(
+                "Não foi possível conectar à Steam.\n\n" +
+                "Verifique se o Steam está instalado e você está logado.",
+                "Steam", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        SettingsService.Current.SteamId = _steamService.SteamId ?? steamId;
+        SettingsService.Save();
+
+        StatusMessage = "Carregando perfil Steam...";
+        var profile = await _steamService.GetProfileAsync();
+
+        if (profile is not null)
+        {
+            profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
+            SteamProfile = profile;
+            SteamConnected = true;
+            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+        }
+        else
+        {
+            SteamConnected = true;
+            StatusMessage = "Steam conectada (perfil indisponível).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenSteamProfile()
+    {
+        if (!IsSteamConnected || SteamProfile is null)
+        {
+            await SteamLogin();
+            return;
+        }
+
+        var importedCount = Games.Count(g =>
+            g.InstallDirectory is not null &&
+            g.InstallDirectory.Contains("steamapps", StringComparison.OrdinalIgnoreCase));
+
+        var availableCount = SteamProfile.OwnedGamesCount;
+
+        var dialog = new SteamProfileDialog(SteamProfile, importedCount, availableCount)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                _steamService?.Disconnect();
+                _steamService?.Dispose();
+                _steamService = null;
+
+                SteamProfile = null;
+                SteamConnected = false;
+                SettingsService.Current.SteamId = string.Empty;
+                SettingsService.Save();
+                StatusMessage = "Desconectado da Steam.";
+            }
+            else if (dialog.ImportGamesRequested)
+            {
+                await ImportSteamGames();
+            }
+        }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
+    }
+
+    [RelayCommand]
+    private async Task ImportSteamGames()
+    {
+        if (_steamService is null)
+        {
+            StatusMessage = "Conecte-se à Steam primeiro.";
+            return;
+        }
+
+        StatusMessage = "Escaneando jogos Steam instalados...";
+
+        var steamGames = await Task.Run(() => _steamService.ScanSteamInstalledGames());
+
+        if (steamGames.Count == 0)
+        {
+            StatusMessage = "Nenhum jogo Steam instalado encontrado.";
+            MessageBox.Show(
+                "Nenhum jogo Steam instalado encontrado.\n\n" +
+                "Verifique se há jogos instalados nas pastas do Steam.",
+                "Steam Games", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int added = 0;
+        var newGames = new List<Game>();
+
+        foreach (var sg in steamGames)
+        {
+            if (Games.Any(g => g.ExecutablePath.Equals(sg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            Games.Add(sg);
+            newGames.Add(sg);
+            added++;
+        }
+
+        SaveGames();
+        _gamesView.Refresh();
+        StatusMessage = added > 0
+            ? $"{added} jogo(s) Steam importado(s)! {Games.Count} jogos na biblioteca."
+            : "Todos os jogos Steam já estavam na biblioteca.";
+
+        foreach (var game in newGames)
+        {
+            await AutoFetchAllWithProgressAsync(game);
+        }
     }
 
     [RelayCommand]
@@ -745,7 +1374,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
 
-            // Auto-busca visuais do SteamGridDB (logo, capa, fundo)
             await AutoFetchSteamGridDbAssetsAsync(game);
 
             SaveGames();
@@ -774,24 +1402,48 @@ public partial class MainViewModel : ObservableObject, IDisposable
             LaunchGame(DetailGame);
     }
 
-    // ── Gamepad Navigation ──────────────────────────────────────
 
     private void OnGamepadConnectionChanged(bool connected)
     {
         _dispatcher.BeginInvoke(() =>
         {
             GamepadConnected = connected;
-            GamepadStatus = connected ? "🎮 Controle conectado  |  A = Jogar  |  Y = Favorito" : "";
-            if (connected && SelectedGame is null && GetVisibleGames().Count > 0)
+            var name = _xinput.ControllerName;
+            bool isPlayStation = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
+                              || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+            var buttons = isPlayStation ? "✕ = Jogar  |  △ = Favorito" : "A = Jogar  |  Y = Favorito";
+            GamepadStatus = connected
+                ? string.IsNullOrEmpty(name)
+                    ? $"🎮 Controle conectado  |  {buttons}"
+                    : $"🎮 {name} conectado  |  {buttons}"
+                : "";
+            if (!connected)
+                GamepadBatteryLevel = -1;
+            if (connected)
             {
-                _selectedIndex = 0;
-                SelectedGame = GetVisibleGames()[0];
+                ActiveZone = NavZone.Carousel;
+                FocusedHeaderItem = "";
+                if (SelectedGame is null && GetVisibleGames().Count > 0)
+                {
+                    _selectedIndex = 0;
+                    SelectedGame = GetVisibleGames()[0];
+                }
             }
             if (!connected)
             {
                 SelectedGame = null;
                 _selectedIndex = -1;
+                FocusedHeaderItem = "";
+                ActiveZone = NavZone.Carousel;
             }
+        });
+    }
+
+    private void OnBatteryChanged(int percent)
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            GamepadBatteryLevel = percent;
         });
     }
 
@@ -799,58 +1451,265 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _dispatcher.BeginInvoke(() =>
         {
-            var visible = GetVisibleGames();
-            if (visible.Count == 0) return;
+            if (IsAnimationLoading) return;
 
-            // Ensure valid selection
-            if (_selectedIndex < 0 || _selectedIndex >= visible.Count)
+            if (IsHelpDialogOpen)
             {
-                _selectedIndex = 0;
-                SelectedGame = visible[0];
+                HelpDialogNavigate?.Invoke(button);
+                return;
+            }
+
+            if (IsProfileDialogOpen)
+            {
+                ProfileDialogNavigate?.Invoke(button);
+                return;
+            }
+
+            if (IsContextMenuOpen)
+            {
+                ContextMenuNavigate?.Invoke(button);
+                return;
             }
 
             switch (button)
             {
-                case GamepadButton.DPadDown:
-                case GamepadButton.DPadRight:
-                    NavigateBy(1, visible);
-                    break;
                 case GamepadButton.DPadUp:
+                    SwitchZone(-1);
+                    return;
+                case GamepadButton.DPadDown:
+                    SwitchZone(1);
+                    return;
+
                 case GamepadButton.DPadLeft:
-                    NavigateBy(-1, visible);
-                    break;
-                case GamepadButton.RightShoulder:
-                    NavigateBy(5, visible);
-                    break;
+                    NavigateInZone(-1);
+                    return;
+                case GamepadButton.DPadRight:
+                    NavigateInZone(1);
+                    return;
+
                 case GamepadButton.LeftShoulder:
-                    NavigateBy(-5, visible);
-                    break;
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var vis = GetVisibleGames();
+                        if (vis.Count > 0) { NavigateCarousel(-5, vis); SoundService.PlayNavigate(); }
+                    }
+                    return;
+                case GamepadButton.RightShoulder:
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var vis = GetVisibleGames();
+                        if (vis.Count > 0) { NavigateCarousel(5, vis); SoundService.PlayNavigate(); }
+                    }
+                    return;
+
                 case GamepadButton.A:
-                    if (SelectedGame is not null)
-                        LaunchGame(SelectedGame);
-                    break;
+                    ActivateCurrentItem();
+                    return;
+
                 case GamepadButton.Y:
                     if (SelectedGame is not null)
                         ToggleFavorite(SelectedGame);
-                    break;
+                    return;
                 case GamepadButton.X:
                     if (SelectedGame is not null)
                         SearchCover(SelectedGame);
-                    break;
+                    return;
                 case GamepadButton.B:
-                    if (!string.IsNullOrEmpty(SearchText))
-                        SearchText = string.Empty;
-                    break;
+                    HandleBack();
+                    return;
+
+                case GamepadButton.Start:
+                    OpenSettingsMenu();
+                    return;
+                case GamepadButton.Back:
+                    OpenHelp();
+                    return;
             }
         });
     }
 
-    private void NavigateBy(int delta, List<Game> visible)
+    private void OnRightStickY(double value)
     {
-        int newIndex = _selectedIndex + delta;
-        newIndex = Math.Clamp(newIndex, 0, visible.Count - 1);
+        _dispatcher.BeginInvoke(() =>
+        {
+            if (IsHelpDialogOpen)
+                HelpDialogScroll?.Invoke(value);
+        });
+    }
+
+    private void SwitchZone(int direction)
+    {
+        var zones = Enum.GetValues<NavZone>();
+        int current = (int)ActiveZone;
+        int next = Math.Clamp(current + direction, 0, zones.Length - 1);
+
+        if ((NavZone)next == NavZone.Actions && !ShowDetailPanel)
+            next = Math.Clamp(next + direction, 0, zones.Length - 1);
+
+        if (next == current) return;
+
+        SoundService.PlayZoneChange();
+        ActiveZone = (NavZone)next;
+
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                FocusedHeaderItem = HeaderItems[HeaderIndex];
+                break;
+            case NavZone.Carousel:
+                FocusedHeaderItem = "";
+                var visible = GetVisibleGames();
+                if (visible.Count > 0 && (_selectedIndex < 0 || _selectedIndex >= visible.Count))
+                {
+                    _selectedIndex = 0;
+                    SelectedGame = visible[0];
+                }
+                break;
+            case NavZone.Actions:
+                FocusedHeaderItem = "";
+                break;
+        }
+
+        UpdateGamepadStatusForZone();
+    }
+
+    private void NavigateInZone(int direction)
+    {
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                HeaderIndex = Math.Clamp(HeaderIndex + direction, 0, HeaderItems.Length - 1);
+                FocusedHeaderItem = HeaderItems[HeaderIndex];
+                SoundService.PlayNavigate();
+                break;
+
+            case NavZone.Carousel:
+                var visible = GetVisibleGames();
+                if (visible.Count > 0)
+                {
+                    NavigateCarousel(direction, visible);
+                    SoundService.PlayNavigate();
+                }
+                break;
+
+            case NavZone.Actions:
+                break;
+        }
+    }
+
+    private void NavigateCarousel(int delta, List<Game> visible)
+    {
+        if (_selectedIndex < 0 || _selectedIndex >= visible.Count)
+            _selectedIndex = 0;
+
+        int newIndex = Math.Clamp(_selectedIndex + delta, 0, visible.Count - 1);
         _selectedIndex = newIndex;
         SelectedGame = visible[newIndex];
+    }
+
+    private void ActivateCurrentItem()
+    {
+        SoundService.PlaySelect();
+        switch (ActiveZone)
+        {
+            case NavZone.Header:
+                ActivateHeaderItem(HeaderItems[HeaderIndex]);
+                break;
+
+            case NavZone.Carousel:
+                if (SelectedGame is not null)
+                    LaunchGame(SelectedGame);
+                break;
+
+            case NavZone.Actions:
+                if (SelectedGame is not null)
+                    LaunchGame(SelectedGame);
+                break;
+        }
+    }
+
+    private void ActivateHeaderItem(string item)
+    {
+        switch (item)
+        {
+            case "Xbox":
+                OpenXboxProfileCommand.Execute(null);
+                break;
+            case "Steam":
+                OpenSteamProfileCommand.Execute(null);
+                break;
+            case "Help":
+                OpenHelp();
+                break;
+            case "Settings":
+                OpenSettingsMenu();
+                break;
+            case "AddGame":
+                AddGameCommand.Execute(null);
+                break;
+            case "Theme":
+                OpenTheme();
+                break;
+        }
+    }
+
+    private void HandleBack()
+    {
+        SoundService.PlayBack();
+        if (ActiveZone == NavZone.Header)
+        {
+            ActiveZone = NavZone.Carousel;
+            FocusedHeaderItem = "";
+            UpdateGamepadStatusForZone();
+        }
+        else if (ActiveZone == NavZone.Actions)
+        {
+            ActiveZone = NavZone.Carousel;
+            UpdateGamepadStatusForZone();
+        }
+        else if (!string.IsNullOrEmpty(SearchText))
+        {
+            SearchText = string.Empty;
+        }
+    }
+
+    private void OpenSettingsMenu()
+    {
+        _dispatcher.BeginInvoke(() =>
+        {
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow?.FindName("BtnGear") is System.Windows.Controls.Button gearBtn
+                && gearBtn.ContextMenu is not null)
+            {
+                gearBtn.ContextMenu.PlacementTarget = gearBtn;
+                gearBtn.ContextMenu.IsOpen = true;
+            }
+        });
+    }
+
+    private void UpdateGamepadStatusForZone()
+    {
+        var name = _xinput.ControllerName;
+        bool isPS = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
+                 || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+
+        string hint = ActiveZone switch
+        {
+            NavZone.Header => isPS
+                ? "⬅➡ Navegar  |  ✕ = Selecionar  |  ⬇ Jogos"
+                : "⬅➡ Navegar  |  A = Selecionar  |  ⬇ Jogos",
+            NavZone.Actions => isPS
+                ? "✕ = Jogar  |  ⬆ Menu  |  ⬇ Jogos"
+                : "A = Jogar  |  ⬆ Menu  |  ⬇ Jogos",
+            NavZone.Carousel => isPS
+                ? "⬅➡ Jogos  |  ✕ = Jogar  |  △ = Favorito  |  ⬆ Ações"
+                : "⬅➡ Jogos  |  A = Jogar  |  Y = Favorito  |  ⬆ Ações",
+            _ => ""
+        };
+
+        string prefix = string.IsNullOrEmpty(name) ? "🎮" : $"🎮 {name}";
+        string battery = GamepadBatteryLevel >= 0 ? $"  |  🔋 {GamepadBatteryLevel}%" : "";
+        GamepadStatus = $"{prefix}{battery}  |  {hint}";
     }
 
     private List<Game> GetVisibleGames()
@@ -864,6 +1723,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         return list;
     }
 
+    private static bool IsUnauthorizedError(string? error)
+    {
+        return error is not null &&
+               (error.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("API key", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("401", StringComparison.Ordinal));
     }
 
+    }
 

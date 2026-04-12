@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GameLauncher.Models;
@@ -46,7 +47,6 @@ public partial class Game : ObservableObject
     public bool HasLogo   => !string.IsNullOrEmpty(LogoPath);
     public bool HasNoLogo => !HasLogo;
 
-    // ── Metadados IGDB ──────────────────────────────────────
     public int?    IgdbId      { get; set; }
 
     [ObservableProperty]
@@ -68,6 +68,11 @@ public partial class Game : ObservableObject
     private int? releaseYear;
 
     public bool    IsSummaryTranslated { get; set; }
+
+    public GameTechInfo? TechInfo { get; set; }
+
+    [JsonIgnore]
+    public bool HasTechInfo => TechInfo is not null && TechInfo.HasAnyTech;
 
     public bool HasIgdbInfo => !string.IsNullOrEmpty(Summary) || IgdbRating.HasValue;
 
@@ -98,20 +103,24 @@ public partial class Game : ObservableObject
         }
     }
 
+    private string? _installSizeCache;
+
     public string InstallSizeDisplay
     {
         get
         {
+            if (_installSizeCache is not null) return _installSizeCache;
+
             var root = GameRootDirectory;
             if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
-                return "—";
+                return _installSizeCache = "—";
 
             try
             {
                 var dir = new DirectoryInfo(root);
                 long bytes = dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length);
 
-                return bytes switch
+                return _installSizeCache = bytes switch
                 {
                     < 1024L              => $"{bytes} B",
                     < 1024L * 1024       => $"{bytes / 1024.0:F1} KB",
@@ -121,7 +130,7 @@ public partial class Game : ObservableObject
             }
             catch
             {
-                return "—";
+                return _installSizeCache = "—";
             }
         }
     }

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher
+  # GLauncher V.2.5.0 (Beta Teste)
 
   **Launcher de jogos pessoal estilo PS5 — feito com WPF e .NET 8**
 
@@ -18,8 +18,23 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real e suporte a navegação por controle.
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
 
+
+<div align="center">
+
+## ⬇️ Download
+
+### Baixe a última versão do GLauncher na aba Releases:
+
+### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.5.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest) 👈
+
+> **Não precisa instalar!** Basta extrair o `.zip` e executar o `GameLauncher.exe`.
+>
+> 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
+
+</div>
+=======
 <img width="1915" height="1001" alt="image" src="https://github.com/user-attachments/assets/140cd580-1b7c-469a-b87e-6ace8120a492" />
 
 ---
@@ -29,6 +44,7 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 ### 🎮 Biblioteca de Jogos
 - Adicionar jogos individualmente ou vários de uma vez via seleção de `.exe`
 - Lançar jogos diretamente pelo launcher com botão **JOGAR** estilo PS5
+- Launcher **minimiza automaticamente** ao jogar e restaura quando o jogo fecha
 - Renomear jogos (nome de exibição independente do executável)
 - Remover jogos da biblioteca (não desinstala)
 - Marcar/desmarcar **favoritos** (favoritos aparecem primeiro com estrela ⭐)
@@ -98,19 +114,47 @@ Gauges circulares em tempo real no rodapé + descrições do hardware:
 - Troca de imagem de fundo da janela
 - Temas são aplicados em tempo real e salvos automaticamente
 
-### 🕹️ Suporte a Controle (XInput)
-Navegação completa com gamepad Xbox / compatíveis XInput:
+### 🕹️ Suporte a Controle (Gamepad)
+Navegação completa com gamepad — suporta **Xbox** (XInput) e **PlayStation** (DualSense / DualShock 4 via HID):
+
+**Navegação por Zonas** — a interface é dividida em 3 zonas (Header / Ações / Carrossel), alternadas com D-Pad ▲▼. A zona ativa exibe uma borda verde brilhante.
 
 | Botão | Ação |
 |-------|------|
-| **D-Pad** ◀ ▶ | Navegar entre jogos |
+| **D-Pad** ▲ ▼ | Alternar entre zonas (Header / Ações / Carrossel) |
+| **D-Pad** ◀ ▶ | Navegar entre jogos ou itens do Header |
 | **LB / RB** | Pular 5 jogos por vez (paginação rápida) |
-| **A** (Verde) | Iniciar / Jogar o jogo selecionado |
-| **Y** (Amarelo) | Alternar favorito ⭐ |
-| **X** (Azul) | Buscar capa online |
-| **B** (Vermelho) | Limpar busca |
+| **A / ✕** | Confirmar / Jogar / Selecionar item do Header |
+| **Y / △** | Alternar favorito ⭐ |
+| **X / □** | Buscar capa online |
+| **B / ○** | Voltar / Limpar busca / Fechar diálogos |
+| **Start / Options** | Abrir menu de configurações (engrenagem) |
+| **Back / Create** | Abrir manual de ajuda |
+| **Analógico Direito** | Scroll vertical no manual |
 
-O ícone do controle no cabeçalho fica 🟢 verde quando conectado.
+**Nível de bateria 🔋** — exibido no cabeçalho com ícone e percentual colorido (verde → amarelo → vermelho).
+
+O ícone do controle no cabeçalho fica 🟢 verde quando conectado. Os rótulos dos botões se adaptam ao tipo de controle (Xbox / PlayStation).
+
+### 🔊 Efeitos Sonoros
+Sons estilo console gerados programaticamente (sem arquivos de áudio externos):
+
+| Som | Quando toca |
+|-----|-------------|
+| Navegar | Mover entre jogos ou itens |
+| Selecionar | Confirmar ação (A / ✕) |
+| Voltar | Pressionar B / ○ |
+| Favoritar | Marcar/desmarcar favorito ⭐ |
+| Zona | Alternar entre zonas |
+| Lançar | Iniciar um jogo |
+| Erro | Falha ao executar ação |
+
+Sons podem ser ativados/desativados pelo menu ⚙️ → "Sons (Ligar/Desligar)".
+
+### 🚀 Minimizar ao Jogar
+- Ao iniciar um jogo, o launcher **minimiza automaticamente**
+- O polling do controle é **pausado** (libera o gamepad para o jogo)
+- Quando o jogo fecha, a janela é **restaurada** e o controle é retomado
 
 ### ⚙️ Menu de Opções (Engrenagem)
 Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
@@ -126,8 +170,9 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 | Remover Jogo | Remove da biblioteca (não desinstala) |
 
 ### 📖 Manual Integrado
-- Manual interativo com **10 páginas** acessível pelo ícone ❓ no cabeçalho
+- Manual interativo com **12 páginas** acessível pelo ícone ❓ no cabeçalho
 - Navegação lateral com sidebar
+- Navegável por gamepad (D-Pad ▲▼ + B para fechar, analógico direito para scroll)
 - Cobre todas as funcionalidades do launcher
 
 ### 🔐 Execução como Administrador
@@ -158,20 +203,27 @@ GameLauncher/
 │   ├── IconExtractor.cs          # Extração de ícone de .exe
 │   ├── IgdbService.cs            # Integração IGDB (sinopse, gênero, nota)
 │   ├── SettingsService.cs        # Persistência, temas e credenciais
+│   ├── SoundService.cs           # Efeitos sonoros programáticos (7 sons)
 │   ├── SteamGridDbService.cs     # Integração SteamGridDB (capas, logos, fundos)
+│   ├── SteamService.cs           # Integração Steam (perfil, jogos instalados)
 │   ├── TranslationService.cs     # Tradução automática para PT-BR
-│   └── XInputService.cs          # Polling de controle XInput
+│   ├── XboxLiveService.cs        # Integração Xbox Live (login, perfil, jogos)
+│   └── XInputService.cs          # Gamepad XInput + HID (Xbox + PlayStation)
 ├── ViewModels/
 │   └── MainViewModel.cs          # ViewModel principal (MVVM)
 ├── Views/
 │   ├── ApiKeyDialog.xaml          # Cadastro de API Key SteamGridDB
 │   ├── BackgroundSearchDialog.xaml # Busca e preview de fundos animados
 │   ├── CoverSearchDialog.xaml     # Busca e seleção de capas online
-│   ├── HelpDialog.xaml            # Manual interativo (10 páginas)
+│   ├── HelpDialog.xaml            # Manual interativo (12 páginas)
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
 │   ├── RenameDialog.xaml          # Renomear jogo
-│   └── ThemeDialog.xaml           # Seleção de temas
+│   ├── SteamProfileDialog.xaml    # Perfil Steam (avatar, jogos, importar)
+│   ├── SteamSetupDialog.xaml      # Configuração Steam ID
+│   ├── ThemeDialog.xaml           # Seleção de temas
+│   ├── XboxProfileDialog.xaml     # Perfil Xbox (Gamertag, Gamerscore, importar)
+│   └── XboxSetupDialog.xaml       # Configuração Xbox Client ID
 ├── MainWindow.xaml                # Janela principal (PS5-style)
 ├── app.manifest                   # Elevação para administrador
 └── GameLauncher.csproj            # Projeto .NET 8
@@ -223,6 +275,8 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 6. Para trocar o avatar: clique na foto no canto superior direito
 7. Para opções do jogo: clique no ícone ⚙️ no cabeçalho
 8. Para ajuda: clique no ícone ❓ azul para abrir o manual integrado
+9. Conecte um **controle Xbox ou PlayStation** para navegar com gamepad
+10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
 
 ---
 
@@ -230,7 +284,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🟢 GLauncher    [+ ADICIONAR JOGO] [TEMA] [❓] [🎮] [⚙️] 14:30 [👤]  │  ← Header
+│  🟢 GLauncher    [+ ADICIONAR JOGO] [TEMA] [❓] [🎮] [⚙️] 14:30 [👤]   │  ← Header
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │          ┌─────────────────────────────────────────────┐                 │
@@ -240,22 +294,22 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 │          │    [▶ JOGAR]                                │                 │
 │          └─────────────────────────────────────────────┘                 │
 │                                                                          │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐       │
-│  │ ⭐   │ │      │ │      │ │      │ │      │ │      │ │      │       │  ← Carrossel
-│  │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │       │
-│  │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │       │
-│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘       │
-│                                                                          │
-│  ┌─ Detalhes ────────────────┐  ┌─ Descrição ──────────────────────┐    │
-│  │ Atividade: Há 2 dias      │  │ Sinopse traduzida para PT-BR    │    │
-│  │ Tamanho: 45.2 GB          │  │ Lorem ipsum dolor sit amet...   │    │
-│  │ Gênero: Ação, Aventura    │  │                                 │    │
-│  │ Rating: ⭐ 92/100          │  │                                 │    │
-│  │ Lançamento: 2023           │  │                                 │    │
-│  └────────────────────────────┘  └─────────────────────────────────┘    │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐          │
+│  │ ⭐   │ │      │ │      │ │      │ │      │ │      │ │      │          │  ← Carrossel
+│  │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │           │
+│  │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │           │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘           │
+│                                                                           │
+│  ┌─ Detalhes ────────────────┐  ┌─ Descrição ──────────────────────┐      │
+│  │ Atividade: Há 2 dias      │  │ Sinopse traduzida para PT-BR    │       │
+│  │ Tamanho: 45.2 GB          │  │ Lorem ipsum dolor sit amet...   │       │
+│  │ Gênero: Ação, Aventura    │  │                                 │       │
+│  │ Rating: ⭐ 92/100          │  │                                 │      │
+│  │ Lançamento: 2023           │  │                                 │      │
+│  └────────────────────────────┘  └─────────────────────────────────┘      │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  12 jogos         CPU: Ryzen 7 5800X    [CPU%][GPU%][CPU°C][GPU°C][RAM] │  ← Footer
+│  12 jogos  🎮 Xbox  🔋 85%  CPU: Ryzen 7 5800X  [CPU%][GPU%][CPU°C][GPU°C][RAM] │  ← Footer
 │  por Kleber       GPU: RTX 3070                                          │
 │                   RAM: 32 GB · SSD: 1TB                                  │
 └──────────────────────────────────────────────────────────────────────────┘

@@ -1,9 +1,9 @@
-<Window x:Class="GameLauncher.Views.IgdbSetupDialog"
+<Window x:Class="GameLauncher.Views.XboxSetupDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="🌐 Configurar IGDB"
-        Width="500" Height="310"
+        Title="🎮 Configurar Xbox Live"
+        Width="520" Height="340"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#16213E"
@@ -13,47 +13,41 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
 <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="🌐 Configure o acesso ao IGDB"
+            <TextBlock Text="🎮 Configure o acesso ao Xbox Live"
                        FontSize="14" FontWeight="SemiBold" Foreground="White"/>
-            <TextBlock Margin="0,8,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
-                1. Acesse
-                <Hyperlink NavigateUri="https://dev.twitch.tv/console/apps/create"
+            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                1. Acesse o
+                <Hyperlink NavigateUri="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
                            RequestNavigate="Hyperlink_RequestNavigate"
-                           Foreground="#7C9DFF">dev.twitch.tv/console</Hyperlink>
-                e crie um aplicativo (Category: <Run FontStyle="Italic">Application Integration</Run>)
+                           Foreground="#7C9DFF">Portal Azure (App Registrations)</Hyperlink>
+                e registre um novo aplicativo
             </TextBlock>
             <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
-                2. Copie o <Run FontWeight="SemiBold" Foreground="White">Client ID</Run> e gere um
-                   <Run FontWeight="SemiBold" Foreground="White">Client Secret</Run> na página do app
+                2. Escolha <Run FontWeight="SemiBold" Foreground="White">"Contas pessoais Microsoft"</Run> como tipo de conta
             </TextBlock>
-            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB">
-                3. Cole abaixo — acesso é <Run FontWeight="SemiBold" Foreground="#00E676">gratuito e ilimitado</Run>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                3. Em <Run FontStyle="Italic">API Permissions</Run>, adicione:
+                <Run FontWeight="SemiBold" Foreground="#00E676">Xbox Live → Xboxlive.signin</Run>
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                4. Copie o <Run FontWeight="SemiBold" Foreground="White">Application (Client) ID</Run> e cole abaixo
             </TextBlock>
         </StackPanel>
 
 <TextBox x:Name="ClientIdBox"
                  Grid.Row="1"
-                 md:HintAssist.Hint="Client ID (Twitch)"
+                 md:HintAssist.Hint="Application (Client) ID"
                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                  Foreground="White" CaretBrush="White"
                  FontSize="13" Height="52" Margin="0,0,0,10"
                  VerticalContentAlignment="Center"/>
 
-<TextBox x:Name="ClientSecretBox"
-                 Grid.Row="2"
-                 md:HintAssist.Hint="Client Secret (Twitch)"
-                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                 Foreground="White" CaretBrush="White"
-                 FontSize="13" Height="52"
-                 VerticalContentAlignment="Center"/>
-
-<StackPanel Grid.Row="4" Orientation="Horizontal"
+<StackPanel Grid.Row="3" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,14,0,0">
             <Button Content="CANCELAR" IsCancel="True"
                     Style="{StaticResource MaterialDesignFlatButton}"
@@ -61,7 +55,7 @@
                     Click="Cancel_Click"/>
             <Button Content="SALVAR"
                     Style="{StaticResource MaterialDesignFlatButton}"
-                    Foreground="#7C4DFF" FontWeight="Bold"
+                    Foreground="#107C10" FontWeight="Bold"
                     Click="Save_Click"/>
         </StackPanel>
     </Grid>
