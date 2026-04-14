@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private WindowStyle _previousWindowStyle;
     private WindowState _previousWindowState;
     private ResizeMode _previousResizeMode;
+    private Rect _previousBounds;
 
     private readonly GlobalHotkeyService _globalHotkey = new();
 
@@ -210,17 +211,32 @@ public partial class MainWindow : Window
             _previousWindowStyle = WindowStyle;
             _previousWindowState = WindowState;
             _previousResizeMode = ResizeMode;
+            _previousBounds = WindowState == WindowState.Maximized
+                ? RestoreBounds
+                : new Rect(Left, Top, Width, Height);
 
-            WindowState = WindowState.Normal;
+            if (WindowState != WindowState.Normal)
+                WindowState = WindowState.Normal;
+
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.NoResize;
-            WindowState = WindowState.Maximized;
+
+            // Manual full-screen bounds instead of Maximized to avoid
+            // DWM fullscreen optimization that suppresses overlays and can disrupt gdigrab
+            Left = 0;
+            Top = 0;
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
             _isFullscreen = true;
         }
         else
         {
             WindowStyle = _previousWindowStyle;
             ResizeMode = _previousResizeMode;
+            Left = _previousBounds.Left;
+            Top = _previousBounds.Top;
+            Width = _previousBounds.Width;
+            Height = _previousBounds.Height;
             WindowState = _previousWindowState;
             _isFullscreen = false;
         }

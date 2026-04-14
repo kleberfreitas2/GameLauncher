@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Management;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
@@ -49,11 +50,16 @@ public sealed class GameRecorderService : IDisposable
     private string? _currentOutputFile;
     private RecordingResolution _currentResolution;
     private string _lastFfmpegError = string.Empty;
+    private string _lastFfplayError = string.Empty;
     private volatile bool _stoppingManually;
     private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
     private CancellationTokenSource? _facecamKeepAliveCts;
     private string? _resolvedLoopbackDevice;
+    private string? _facecamWebcamDevice;
+    private FacecamPosition _facecamPosition;
+    private int _facecamRestartCount;
+    private const int MaxFacecamRestarts = 5;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
@@ -73,6 +79,22 @@ public sealed class GameRecorderService : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
     private const int SM_CXSCREEN = 0;
     private const int SM_CYSCREEN = 1;
     private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
@@ -82,6 +104,7 @@ public sealed class GameRecorderService : IDisposable
     private const uint SWP_NOACTIVATE = 0x0010;
     private const uint SWP_SHOWWINDOW = 0x0040;
     private const int SW_SHOWNA = 8;
+    private const int SW_HIDE = 0;
 
     public bool IsRecording => _ffmpegProcess is not null && !_ffmpegProcess.HasExited;
     public string? CurrentFile => _currentOutputFile;
@@ -242,7 +265,7 @@ public sealed class GameRecorderService : IDisposable
                     // Prefer full device interface friendly name (includes adapter suffix)
                     // e.g., "Microfone (Realtek Audio)" — matches dshow device name format
                     var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
-                    if (!string.IsNullOrEmpty(fullName))
+                    if (!string.IsNullOrEmpty(fullName) && fullName.Contains('('))
                     {
                         devices.Add(fullName);
                         Debug.WriteLine($"[Devices] Registry mic (full): '{fullName}'");
@@ -360,6 +383,49 @@ public sealed class GameRecorderService : IDisposable
         return storedName;
     }
 
+    private static (bool success, string info) DiagnoseVideoDevice(string deviceName)
+    {
+        if (!File.Exists(FfmpegExe)) return (false, "FFmpeg não encontrado");
+        try
+        {
+            using var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = FfmpegExe,
+                    Arguments = $"-f dshow -rtbufsize 100M -i video=\"{deviceName}\" -frames:v 1 -f null - -y",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true
+                }
+            };
+            proc.Start();
+            var stderr = proc.StandardError.ReadToEnd();
+            if (!proc.WaitForExit(10000))
+            {
+                try { proc.Kill(); } catch { }
+                return (true, "");
+            }
+
+            Debug.WriteLine($"[Diagnostic] Video device test exit={proc.ExitCode}");
+            foreach (var line in stderr.Split('\n'))
+                Debug.WriteLine($"[Diagnostic] {line.TrimEnd()}");
+
+            if (proc.ExitCode == 0) return (true, "");
+
+            var err = stderr.Split('\n')
+                .LastOrDefault(l =>
+                    l.Contains("Could not", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("Error", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("No such", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("Permission", StringComparison.OrdinalIgnoreCase))
+                ?.Trim() ?? $"Código de saída: {proc.ExitCode}";
+            return (false, err);
+        }
+        catch (Exception ex) { return (false, ex.Message); }
+    }
+
     private static string? GetPhysicalAudioAdapterName()
     {
         try
@@ -412,13 +478,31 @@ public sealed class GameRecorderService : IDisposable
         var adapter = GetPhysicalAudioAdapterName();
         if (adapter is not null)
         {
-            var candidate = $"{endpointName} ({adapter})";
-            candidates.Add(candidate);
+            // If stored name IS the adapter name (e.g., "Realtek Audio"),
+            // try common endpoint prefixes used by Windows in different languages
+            if (endpointName.Equals(adapter, StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var prefix in new[] { "Microfone", "Microphone", "Mic", "Mikrofon",
+                    "Linha de entrada", "Line In", "Mixagem est\u00e9reo", "Stereo Mix" })
+                {
+                    candidates.Add($"{prefix} ({adapter})");
+                }
+                var cleanAdapter = CleanRegisteredSymbol(adapter);
+                if (cleanAdapter != adapter)
+                {
+                    foreach (var prefix in new[] { "Microfone", "Microphone", "Mic" })
+                        candidates.Add($"{prefix} ({cleanAdapter})");
+                }
+            }
+            else
+            {
+                var candidate = $"{endpointName} ({adapter})";
+                candidates.Add(candidate);
 
-            // Also try without \u00ae / (R) / (TM) symbols (varies between driver versions)
-            var cleanAdapter = CleanRegisteredSymbol(adapter);
-            if (cleanAdapter != adapter)
-                candidates.Add($"{endpointName} ({cleanAdapter})");
+                var cleanAdapter = CleanRegisteredSymbol(adapter);
+                if (cleanAdapter != adapter)
+                    candidates.Add($"{endpointName} ({cleanAdapter})");
+            }
         }
 
         return candidates;
@@ -689,10 +773,12 @@ public sealed class GameRecorderService : IDisposable
         }
 
         Debug.WriteLine($"[Recording] Config: mode={mode}, hasMic={hasMic}, hasCam={hasCam}, hasLoopback={hasLoopback}");
-        var args = BuildFfmpegArgs(resolution, hasCam, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice,
-            hasCam ? webcamDevice : null, facecamPos);
+        var args = BuildFfmpegArgs(resolution, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice);
         Debug.WriteLine($"[Recording] FFmpeg args: {args}");
-        _pendingRetry = hasMic || hasCam || hasLoopback;
+        // _pendingRetry covers only mic/loopback because the health check only retries for those.
+        // Including hasCam here would suppress StopFacecamPreview() in the Exited handler while
+        // the health check still falls through to RecordingStateChanged(false), leaving ffplay orphaned.
+        _pendingRetry = hasMic || hasLoopback;
 
         try
         {
@@ -755,15 +841,16 @@ public sealed class GameRecorderService : IDisposable
                 }
             };
 
+            // Start facecam preview via ffplay before gdigrab so it appears on screen
+            if (hasCam)
+                StartFacecamPreview(webcamDevice!, facecamPos);
+
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
 
             // Monitor process health asynchronously — retry without mic if device failed
             var hasMicForRetry = hasMic;
-            var hasCamForRetry = hasCam;
             var hasLoopbackForRetry = hasLoopback;
-            var webcamForRetry = webcamDevice;
-            var facecamPosForRetry = facecamPos;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(2000);
@@ -778,17 +865,15 @@ public sealed class GameRecorderService : IDisposable
                     try { exitCode = proc.ExitCode; } catch { }
                     if (exitCode == 0) return;
 
-                    if (hasMicForRetry || hasCamForRetry || hasLoopbackForRetry)
+                    if (hasMicForRetry || hasLoopbackForRetry)
                     {
-                        // Retry: drop mic (most likely cause), keep loopback + webcam overlay
+                        // Retry: drop mic (most likely cause), keep loopback
                         string? retryLoopback = hasLoopbackForRetry ? _resolvedLoopbackDevice : null;
-                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={retryLoopback is not null}, cam={hasCamForRetry})...");
+                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={retryLoopback is not null})...");
                         StatusMessage?.Invoke(retryLoopback is not null
                             ? "⚠ Dispositivo falhou. Tentando novamente com áudio do jogo..."
                             : "⚠ Dispositivo de áudio falhou. Tentando novamente sem áudio...");
-                        RetryScreenOnly(loopbackDevice: retryLoopback,
-                            webcamDevice: hasCamForRetry ? webcamForRetry : null,
-                            facecamPos: facecamPosForRetry);
+                        RetryScreenOnly(loopbackDevice: retryLoopback);
                     }
                     else
                     {
@@ -820,9 +905,8 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private string BuildFfmpegArgs(RecordingResolution resolution, bool hasCam, bool hasMic, string? micDevice,
-        bool hasLoopback = false, string? loopbackDevice = null,
-        string? webcamDevice = null, FacecamPosition facecamPos = FacecamPosition.TopRight)
+    private string BuildFfmpegArgs(RecordingResolution resolution, bool hasMic, string? micDevice,
+        bool hasLoopback = false, string? loopbackDevice = null)
     {
         var (width, height) = resolution switch
         {
@@ -842,15 +926,10 @@ public sealed class GameRecorderService : IDisposable
             _ => "-c:v libx264 -preset ultrafast -crf 23"
         };
 
+        // Screen capture via gdigrab (facecam is shown by ffplay and captured as part of the desktop)
         var inputs = "-f gdigrab -framerate 60 -i desktop";
         int nextInput = 1;
-        int camIdx = -1, loopbackIdx = -1, micIdx = -1;
-
-        if (hasCam && !string.IsNullOrEmpty(webcamDevice))
-        {
-            inputs += $" -f dshow -framerate 30 -i video=\"{webcamDevice}\"";
-            camIdx = nextInput++;
-        }
+        int loopbackIdx = -1, micIdx = -1;
 
         if (hasLoopback && !string.IsNullOrEmpty(loopbackDevice))
         {
@@ -864,36 +943,14 @@ public sealed class GameRecorderService : IDisposable
             micIdx = nextInput++;
         }
 
-        // Build filter graph (video overlay + audio mix in single -filter_complex)
-        var filters = new List<string>();
-        string videoMap;
-
-        if (hasCam)
-        {
-            var overlayPos = facecamPos switch
-            {
-                FacecamPosition.TopRight => "W-w-20:20",
-                FacecamPosition.TopLeft => "20:20",
-                FacecamPosition.BottomRight => "W-w-20:H-h-70",
-                FacecamPosition.BottomLeft => "20:H-h-70",
-                _ => "W-w-20:20"
-            };
-            filters.Add($"[{camIdx}:v]scale=480:360[cam]");
-            filters.Add($"[0:v]scale={width}:{height}[desk]");
-            filters.Add($"[desk][cam]overlay={overlayPos}[vout]");
-            videoMap = "-map \"[vout]\"";
-        }
-        else
-        {
-            videoMap = "-map 0:v";
-        }
-
+        string videoMap = "-map 0:v";
         string audioMap;
         string audioArgs;
+        string filterComplex = "";
 
         if (hasLoopback && hasMic)
         {
-            filters.Add($"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]");
+            filterComplex = $"-filter_complex \"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]\"";
             audioMap = "-map \"[aout]\"";
             audioArgs = "-c:a aac -b:a 192k";
         }
@@ -913,23 +970,47 @@ public sealed class GameRecorderService : IDisposable
             audioArgs = "";
         }
 
-        var filterComplex = filters.Count > 0
-            ? $"-filter_complex \"{string.Join(';', filters)}\""
-            : "";
-
-        var sizeArg = hasCam ? "" : $"-s {width}x{height}";
-
-        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} {sizeArg} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} -s {width}x{height} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
 
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
     {
         StopFacecamPreview();
+        _facecamWebcamDevice = webcamDevice;
+        _facecamPosition = position;
+        _facecamRestartCount = 0;
+
+        // Verify webcam is accessible via ffmpeg before launching ffplay
+        var (deviceOk, diagInfo) = DiagnoseVideoDevice(webcamDevice);
+        if (!deviceOk)
+        {
+            Debug.WriteLine($"[FFplay] Video device diagnosis FAILED: {diagInfo}");
+            StatusMessage?.Invoke($"⚠ Câmera '{webcamDevice}' inacessível: {diagInfo}");
+            return;
+        }
+        Debug.WriteLine("[FFplay] Video device diagnosis OK");
+
+        // Small delay after releasing device from diagnostic test
+        Thread.Sleep(500);
+
+        LaunchFfplayProcess(webcamDevice, position);
+        StartFacecamKeepAlive();
+    }
+
+    private void LaunchFfplayProcess(string webcamDevice, FacecamPosition position)
+    {
+        if (_ffplayProcess is not null)
+        {
+            if (!_ffplayProcess.HasExited)
+                try { _ffplayProcess.Kill(); } catch { }
+            _ffplayProcess.Dispose();
+            _ffplayProcess = null;
+        }
 
         var screenW = GetSystemMetrics(SM_CXSCREEN);
         var screenH = GetSystemMetrics(SM_CYSCREEN);
         var camW = 480;
-        var camH = 360;
+        var camH = 270;
         var margin = 20;
 
         var (left, top) = position switch
@@ -943,40 +1024,88 @@ public sealed class GameRecorderService : IDisposable
 
         try
         {
+            // No stdio redirection — stderr pipes can interfere with SDL2 window lifecycle.
+            // -rtbufsize 100M: prevents dshow real-time buffer overflow.
+            // CreateNoWindow = true: suppresses the ffplay console window; the SDL2 video
+            // window (GLauncherFacecam) is created by SDL2 independently and still appears.
+            // Device accessibility already verified by DiagnoseVideoDevice.
             _ffplayProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = FfplayExe,
-                    Arguments = $"-f dshow -i video=\"{webcamDevice}\" " +
-                                $"-window_title GLauncherFacecam -noborder -alwaysontop " +
-                                $"-left {left} -top {top} -x {camW} -y {camH} -loglevel error",
+                    Arguments = $"-f dshow -rtbufsize 100M -i video=\"{webcamDevice}\" " +
+                                $"-an -window_title GLauncherFacecam -noborder -alwaysontop " +
+                                $"-left {left} -top {top} -x {camW} -y {camH}",
                     UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardError = true
+                    CreateNoWindow = true
                 },
                 EnableRaisingEvents = true
             };
 
-            _ffplayProcess.ErrorDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    Debug.WriteLine($"[FFplay] {e.Data}");
-            };
-
             _ffplayProcess.Exited += (_, _) =>
             {
-                Debug.WriteLine("[FFplay] Facecam preview process exited");
+                int code = -1;
+                try { code = _ffplayProcess?.ExitCode ?? -1; } catch { }
+                Debug.WriteLine($"[FFplay] Facecam exited (code {code})");
             };
 
             _ffplayProcess.Start();
-            _ffplayProcess.BeginErrorReadLine();
-            StartFacecamKeepAlive();
+            Debug.WriteLine($"[FFplay] Facecam started (PID: {_ffplayProcess.Id})");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[FFplay] Failed to start facecam: {ex.Message}");
+            StatusMessage?.Invoke($"⚠ Erro ao iniciar facecam: {ex.Message}");
         }
+    }
+
+    private IntPtr FindFfplayWindow()
+    {
+        // Try title-based search first (fastest)
+        var hwnd = FindWindow(null!, "GLauncherFacecam");
+        if (hwnd != IntPtr.Zero) return hwnd;
+
+        // Fallback: search by PID — SDL2 may use a different window title format
+        if (_ffplayProcess is null || _ffplayProcess.HasExited) return IntPtr.Zero;
+
+        uint pid;
+        try { pid = (uint)_ffplayProcess.Id; } catch { return IntPtr.Zero; }
+
+        IntPtr result = IntPtr.Zero;
+        EnumWindows((h, _) =>
+        {
+            GetWindowThreadProcessId(h, out uint windowPid);
+            if (windowPid == pid && IsWindowVisible(h))
+            {
+                // Skip console windows — we want the SDL2 window
+                var sb = new StringBuilder(256);
+                GetClassName(h, sb, 256);
+                if (!sb.ToString().Equals("ConsoleWindowClass", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = h;
+                    return false;
+                }
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        return result;
+    }
+
+    private void HideFfplayConsoleWindows(IntPtr sdlHwnd)
+    {
+        if (_ffplayProcess is null || _ffplayProcess.HasExited) return;
+        uint pid;
+        try { pid = (uint)_ffplayProcess.Id; } catch { return; }
+
+        EnumWindows((h, _) =>
+        {
+            GetWindowThreadProcessId(h, out uint windowPid);
+            if (windowPid == pid && h != sdlHwnd && IsWindowVisible(h))
+                ShowWindow(h, SW_HIDE);
+            return true;
+        }, IntPtr.Zero);
     }
 
     private void StartFacecamKeepAlive()
@@ -987,24 +1116,70 @@ public sealed class GameRecorderService : IDisposable
 
         _ = Task.Run(async () =>
         {
+            int noWindowTicks = 0;
             while (!ct.IsCancellationRequested)
             {
                 try { await Task.Delay(500, ct); } catch (OperationCanceledException) { break; }
                 try
                 {
-                    var hwnd = FindWindow(null!, "GLauncherFacecam");
+                    var hwnd = FindFfplayWindow();
                     if (hwnd != IntPtr.Zero)
                     {
-                        ShowWindow(hwnd, SW_SHOWNA);
+                        noWindowTicks = 0;
+                        HideFfplayConsoleWindows(hwnd);
+                        // Re-assert topmost every tick to survive game fullscreen transitions.
+                        // SetWindowPos with SWP_NOACTIVATE is safe — does not disturb SDL2 event loop.
                         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                     }
-                    else if (_ffplayProcess is null || _ffplayProcess.HasExited)
+                    else if (_ffplayProcess is not null && !_ffplayProcess.HasExited)
                     {
-                        Debug.WriteLine("[FFplay] Keepalive: ffplay exited, stopping keepalive");
-                        break;
+                        // Process alive but no visible SDL window — may be stuck
+                        noWindowTicks++;
+                        if (noWindowTicks >= 10 && _facecamRestartCount < MaxFacecamRestarts &&
+                            _facecamWebcamDevice is not null &&
+                            _ffmpegProcess is not null && !_ffmpegProcess.HasExited)
+                        {
+                            noWindowTicks = 0;
+                            _facecamRestartCount++;
+                            Debug.WriteLine($"[FFplay] Force restart: no visible window (attempt {_facecamRestartCount}/{MaxFacecamRestarts})");
+                            try { _ffplayProcess.Kill(); } catch { }
+                            try { _ffplayProcess.Dispose(); } catch { }
+                            _ffplayProcess = null;
+                            try { await Task.Delay(1000, ct); } catch (OperationCanceledException) { break; }
+                            if (_facecamWebcamDevice is not null)
+                                LaunchFfplayProcess(_facecamWebcamDevice, _facecamPosition);
+                        }
+                    }
+                    else
+                    {
+                        noWindowTicks = 0;
+                        // Auto-restart ffplay if recording is still active
+                        if (_facecamRestartCount < MaxFacecamRestarts &&
+                            _facecamWebcamDevice is not null &&
+                            _ffmpegProcess is not null && !_ffmpegProcess.HasExited)
+                        {
+                            _facecamRestartCount++;
+                            Debug.WriteLine($"[FFplay] Auto-restart facecam (attempt {_facecamRestartCount}/{MaxFacecamRestarts})");
+                            // Longer delay between restarts — give webcam time to reinitialize
+                            try { await Task.Delay(2000, ct); } catch (OperationCanceledException) { break; }
+                            LaunchFfplayProcess(_facecamWebcamDevice, _facecamPosition);
+                        }
+                        else
+                        {
+                            // Run fresh diagnostic to get the actual error
+                            var diagDevice = _facecamWebcamDevice ?? "";
+                            var (_, diagErr) = DiagnoseVideoDevice(diagDevice);
+                            Debug.WriteLine($"[FFplay] Keepalive: stopping. Fresh diagnostic: {diagErr}");
+                            if (!string.IsNullOrEmpty(diagErr))
+                                StatusMessage?.Invoke($"⚠ Facecam falhou: {diagErr}");
+                            else
+                                StatusMessage?.Invoke("⚠ Facecam não conseguiu iniciar. Verifique permissões da câmera.");
+                            break;
+                        }
                     }
                 }
+                catch (OperationCanceledException) { break; }
                 catch { }
             }
         }, ct);
@@ -1029,8 +1204,7 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly(string? loopbackDevice = null, string? webcamDevice = null,
-        FacecamPosition facecamPos = FacecamPosition.TopRight)
+    private void RetryScreenOnly(string? loopbackDevice = null)
     {
         if (_ffmpegProcess is not null)
         {
@@ -1041,10 +1215,9 @@ public sealed class GameRecorderService : IDisposable
 
         _lastFfmpegError = string.Empty;
         bool hasLoopback = loopbackDevice is not null;
-        bool hasCam = webcamDevice is not null;
-        var args = BuildFfmpegArgs(_currentResolution, hasCam, hasMic: false, micDevice: null,
-            hasLoopback, loopbackDevice, webcamDevice, facecamPos);
-        Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}, cam={hasCam}): {args}");
+        var args = BuildFfmpegArgs(_currentResolution, hasMic: false, micDevice: null,
+            hasLoopback, loopbackDevice);
+        Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}): {args}");
 
         try
         {
@@ -1091,7 +1264,6 @@ public sealed class GameRecorderService : IDisposable
             _ffmpegProcess.BeginErrorReadLine();
             var retryFeatures = new List<string> { "tela" };
             if (hasLoopback) retryFeatures.Add("áudio do jogo");
-            if (hasCam) retryFeatures.Add("facecam");
             StatusMessage?.Invoke($"🔴 Gravando ({string.Join(" + ", retryFeatures)}): {Path.GetFileName(_currentOutputFile)}");
         }
         catch (Exception ex)
