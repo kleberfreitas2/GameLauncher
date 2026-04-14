@@ -25,6 +25,11 @@ public class AppSettings
     public bool SoundEnabled            { get; set; } = true;
     public bool FpsOverlayEnabled       { get; set; } = false;
 
+    public bool RecordingEnabled        { get; set; } = false;
+    public string RecordingResolution   { get; set; } = "1080p";
+    public string RecordingHotkey       { get; set; } = "F9";
+    public string RecordingEncoder      { get; set; } = "auto";
+
     public string DiscordWebhookUrl      { get; set; } = string.Empty;
     public List<string> DiscordQuickMessages { get; set; } =
     [

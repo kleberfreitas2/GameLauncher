@@ -69,6 +69,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
+    private bool _isRecordingEnabled = SettingsService.Current.RecordingEnabled;
+    public bool IsRecordingEnabled
+    {
+        get => _isRecordingEnabled;
+        set => SetProperty(ref _isRecordingEnabled, value);
+    }
+
+    private bool _isRecording;
+    public bool IsRecording
+    {
+        get => _isRecording;
+        set => SetProperty(ref _isRecording, value);
+    }
+
+    private GameRecorderService? _recorder;
+    private RecordingOverlayWindow? _recordingOverlay;
+    private string? _runningGameName;
+
     private GpuCapabilities? _gpuCaps;
     [ObservableProperty] private ObservableCollection<TechCompatItem> techCompatItems = [];
 
@@ -281,6 +299,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
+        _recorder?.Dispose();
+        _recordingOverlay?.Close();
+        _recordingOverlay = null;
     }
 
     private void ScanGameTech(Game game)
@@ -828,6 +849,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             SoundService.PlayLaunch();
+            _runningGameName = game.DisplayName;
             var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
@@ -860,6 +882,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     {
                         ClearDiscordRichPresence();
 
+                        var wasRecording = _recorder is not null && _recorder.IsRecording;
+                        if (wasRecording)
+                            _recorder!.StopRecording();
+
+                        if (_recorder is not null && _runningGameName is not null)
+                            _recorder.RenameRecording(_runningGameName);
+
+                        _runningGameName = null;
+                        _recordingOverlay?.Close();
+                        _recordingOverlay = null;
+                        IsRecording = false;
+
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
 
@@ -882,6 +916,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     {
                         ClearDiscordRichPresence();
 
+                        var wasRecording = _recorder is not null && _recorder.IsRecording;
+                        if (wasRecording)
+                            _recorder!.StopRecording();
+
+                        if (_recorder is not null && _runningGameName is not null)
+                            _recorder.RenameRecording(_runningGameName);
+
+                        _runningGameName = null;
+                        _recordingOverlay?.Close();
+                        _recordingOverlay = null;
+                        IsRecording = false;
+
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
                         _xinput.Start();
@@ -893,6 +939,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SoundService.PlayError();
             ClearDiscordRichPresence();
+            if (_recorder is not null && _recorder.IsRecording)
+                _recorder.StopRecording();
+            _recordingOverlay?.Close();
+            _recordingOverlay = null;
+            IsRecording = false;
             _fpsOverlay?.Close();
             _fpsOverlay = null;
             _xinput.Start();
@@ -909,6 +960,61 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = SettingsService.Current.FpsOverlayEnabled
             ? "FPS Overlay ativado — será exibido durante os jogos"
             : "FPS Overlay desativado";
+    }
+
+    [RelayCommand]
+    private void ToggleRecordingEnabled()
+    {
+        SettingsService.Current.RecordingEnabled = !SettingsService.Current.RecordingEnabled;
+        SettingsService.Save();
+        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
+        StatusMessage = SettingsService.Current.RecordingEnabled
+            ? $"Gravação ativada — pressione {SettingsService.Current.RecordingHotkey} durante o jogo"
+            : "Gravação desativada";
+    }
+
+    [RelayCommand]
+    private void OpenRecordingSettings()
+    {
+        var dialog = new RecordingSettingsDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
+        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
+    }
+
+    public void HandleRecordingHotkey()
+    {
+        if (!SettingsService.Current.RecordingEnabled) return;
+
+        if (_recorder is null)
+        {
+            _recorder = new GameRecorderService();
+            _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
+            _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
+            {
+                IsRecording = recording;
+                if (recording)
+                {
+                    _recordingOverlay?.Close();
+                    _recordingOverlay = new RecordingOverlayWindow();
+                    _recordingOverlay.Show();
+                }
+                else
+                {
+                    _recordingOverlay?.Close();
+                    _recordingOverlay = null;
+                }
+            });
+        }
+
+        var res = SettingsService.Current.RecordingResolution switch
+        {
+            "720p" => RecordingResolution.HD_720p,
+            "4K" => RecordingResolution.UHD_4K,
+            _ => RecordingResolution.FHD_1080p
+        };
+
+        var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
+        _recorder.ToggleRecording(res, gameName);
     }
 
     [RelayCommand]

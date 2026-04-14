@@ -605,6 +605,17 @@
                                         <md:PackIcon Kind="Speedometer" Width="16" Height="16"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
+                                <MenuItem Header="Gravar Vídeo (F9)" Command="{Binding ToggleRecordingEnabledCommand}"
+                                          IsCheckable="True" IsChecked="{Binding IsRecordingEnabled, Mode=OneWay}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="VideoOutline" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Configurar Gravação..." Command="{Binding OpenRecordingSettingsCommand}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="Cog" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <Separator/>
                                 <MenuItem Header="Alternar Favorito"
                           Command="{Binding ToggleFavoriteCommand}"
