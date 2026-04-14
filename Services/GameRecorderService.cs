@@ -52,6 +52,7 @@ public sealed class GameRecorderService : IDisposable
     private volatile bool _stoppingManually;
     private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
+    private CancellationTokenSource? _facecamKeepAliveCts;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
@@ -63,9 +64,23 @@ public sealed class GameRecorderService : IDisposable
     [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
     private const int SM_CXSCREEN = 0;
     private const int SM_CYSCREEN = 1;
     private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+    private static readonly IntPtr HWND_TOPMOST = new(-1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    private const uint SWP_SHOWWINDOW = 0x0040;
+    private const int SW_SHOWNA = 8;
 
     public bool IsRecording => _ffmpegProcess is not null && !_ffmpegProcess.HasExited;
     public string? CurrentFile => _currentOutputFile;
@@ -703,8 +718,8 @@ public sealed class GameRecorderService : IDisposable
 
         var screenW = GetSystemMetrics(SM_CXSCREEN);
         var screenH = GetSystemMetrics(SM_CYSCREEN);
-        var camW = 320;
-        var camH = 240;
+        var camW = 480;
+        var camH = 360;
         var margin = 20;
 
         var (left, top) = position switch
@@ -746,6 +761,7 @@ public sealed class GameRecorderService : IDisposable
 
             _ffplayProcess.Start();
             _ffplayProcess.BeginErrorReadLine();
+            StartFacecamKeepAlive();
         }
         catch (Exception ex)
         {
@@ -753,8 +769,47 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
+    private void StartFacecamKeepAlive()
+    {
+        _facecamKeepAliveCts?.Cancel();
+        _facecamKeepAliveCts = new CancellationTokenSource();
+        var ct = _facecamKeepAliveCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try { await Task.Delay(500, ct); } catch (OperationCanceledException) { break; }
+                try
+                {
+                    var hwnd = FindWindow(null!, "GLauncherFacecam");
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        ShowWindow(hwnd, SW_SHOWNA);
+                        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                    }
+                    else if (_ffplayProcess is null || _ffplayProcess.HasExited)
+                    {
+                        Debug.WriteLine("[FFplay] Keepalive: ffplay exited, stopping keepalive");
+                        break;
+                    }
+                }
+                catch { }
+            }
+        }, ct);
+    }
+
+    private void StopFacecamKeepAlive()
+    {
+        try { _facecamKeepAliveCts?.Cancel(); } catch { }
+        _facecamKeepAliveCts?.Dispose();
+        _facecamKeepAliveCts = null;
+    }
+
     public void StopFacecamPreview()
     {
+        StopFacecamKeepAlive();
         if (_ffplayProcess is not null)
         {
             if (!_ffplayProcess.HasExited)
@@ -809,13 +864,18 @@ public sealed class GameRecorderService : IDisposable
             {
                 try
                 {
+                    StopFacecamPreview();
                     int exitCode = -1;
                     try { exitCode = _ffmpegProcess?.ExitCode ?? -1; } catch { }
                     if (exitCode != 0 && !_stoppingManually)
                         StatusMessage?.Invoke($"❌ Erro na gravação: {_lastFfmpegError}");
                     RecordingStateChanged?.Invoke(false);
                 }
-                catch { RecordingStateChanged?.Invoke(false); }
+                catch
+                {
+                    StopFacecamPreview();
+                    RecordingStateChanged?.Invoke(false);
+                }
             };
 
             _ffmpegProcess.Start();
