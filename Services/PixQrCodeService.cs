@@ -437,10 +437,9 @@ internal static class QrEncoder
         SetModule(modules, isFunc, 7, 8, ((bits >> 8) & 1) == 1);
 
         SetModule(modules, isFunc, size - 7, 8, ((bits >> 6) & 1) == 1);
-        SetModule(modules, isFunc, size - 6, 8, ((bits >> 7) & 1) == 1);
-        SetModule(modules, isFunc, size - 5, 8, ((bits >> 8) & 1) == 1);
 
-        for (int i = 9; i < 15; i++)
+        // Bits 7-14 of the second copy go along row 8 from top-right
+        for (int i = 7; i < 15; i++)
         {
             SetModule(modules, isFunc, 14 - i, 8, ((bits >> i) & 1) == 1);
             SetModule(modules, isFunc, 8, size - 15 + i, ((bits >> i) & 1) == 1);

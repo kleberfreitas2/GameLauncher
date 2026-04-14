@@ -21,7 +21,7 @@ public partial class PixDonationDialog : Window
             merchantCity: "SAO PAULO",
             description: "GLauncher");
 
-        QrCodeImage.Source = PixQrCodeService.GenerateQrCode(payload, moduleSize: 8, quietZone: 2);
+        QrCodeImage.Source = PixQrCodeService.GenerateQrCode(payload, moduleSize: 4, quietZone: 4);
     }
 
     private void CopyKey_Click(object sender, RoutedEventArgs e)

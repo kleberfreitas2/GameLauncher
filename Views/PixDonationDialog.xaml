@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="&#x1f3ae; Apoie o GLauncher"
-        Width="460" Height="580"
+        Width="460" Height="680"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#0A0A12"
@@ -47,7 +47,7 @@
                 <Border.Effect>
                     <DropShadowEffect Color="#00E676" BlurRadius="24" ShadowDepth="0" Opacity="0.35"/>
                 </Border.Effect>
-                <Image x:Name="QrCodeImage" Width="220" Height="220" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                <Image x:Name="QrCodeImage" MaxWidth="240" MaxHeight="240" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
             </Border>
 
             <!-- PIX label -->
@@ -66,15 +66,15 @@
 
             <!-- Copy key button -->
             <Button x:Name="CopyButton" Click="CopyKey_Click" Cursor="Hand"
-                    HorizontalAlignment="Center" Margin="0,0,0,10">
+                    HorizontalAlignment="Center" Margin="0,0,0,10" Height="47">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="CopyBd" Background="#1A2040" CornerRadius="22" Padding="28,10"
-                                BorderBrush="#2A3060" BorderThickness="1" MinWidth="240">
-                            <StackPanel Orientation="Horizontal">
+                        <Border x:Name="CopyBd" Background="#1A2040" CornerRadius="22" Padding="20,10"
+                                BorderBrush="#2A3060" BorderThickness="1" MinWidth="280">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <md:PackIcon Kind="ContentCopy" Width="16" Height="16" Foreground="#88AACC"
                                              VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock x:Name="CopyText" Text="Copiar chave PIX" FontSize="12"
+                                <TextBlock x:Name="CopyText" Text="Copiar chave PIX" FontSize="13"
                                            FontWeight="SemiBold" Foreground="#AABBDD" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
