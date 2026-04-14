@@ -53,6 +53,7 @@ public sealed class GameRecorderService : IDisposable
     private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
     private CancellationTokenSource? _facecamKeepAliveCts;
+    private string? _resolvedLoopbackDevice;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
@@ -488,6 +489,90 @@ public sealed class GameRecorderService : IDisposable
         catch { return false; }
     }
 
+    private static string? FindSystemLoopbackDevice()
+    {
+        // Search dshow listing first
+        var dshowAudio = ListDshowDevices("audio");
+        foreach (var d in dshowAudio)
+        {
+            if (IsLoopbackDeviceName(d))
+            {
+                Debug.WriteLine($"[Recording] Loopback device found (dshow): '{d}'");
+                return d;
+            }
+        }
+
+        // Registry fallback — search active capture devices for loopback keywords
+        try
+        {
+            using var captureKey = Registry.LocalMachine.OpenSubKey(
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture");
+            if (captureKey is null) return null;
+
+            string? cachedAdapter = null;
+            bool adapterResolved = false;
+
+            foreach (var subKeyName in captureKey.GetSubKeyNames())
+            {
+                try
+                {
+                    using var deviceKey = captureKey.OpenSubKey(subKeyName);
+                    if (deviceKey is null) continue;
+
+                    var state = deviceKey.GetValue("DeviceState");
+                    if (state is not int stateVal || stateVal != 1) continue;
+
+                    using var propsKey = deviceKey.OpenSubKey("Properties");
+                    if (propsKey is null) continue;
+
+                    var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
+                    if (!string.IsNullOrEmpty(fullName) && IsLoopbackDeviceName(fullName))
+                    {
+                        Debug.WriteLine($"[Recording] Loopback device found (registry full): '{fullName}'");
+                        return fullName;
+                    }
+
+                    var endpointName = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
+                    if (!string.IsNullOrEmpty(endpointName) && IsLoopbackDeviceName(endpointName))
+                    {
+                        if (!endpointName.Contains('('))
+                        {
+                            if (!adapterResolved)
+                            {
+                                cachedAdapter = GetPhysicalAudioAdapterName();
+                                adapterResolved = true;
+                            }
+                            if (cachedAdapter is not null)
+                            {
+                                var built = $"{endpointName} ({cachedAdapter})";
+                                Debug.WriteLine($"[Recording] Loopback device found (registry built): '{built}'");
+                                return built;
+                            }
+                        }
+                        Debug.WriteLine($"[Recording] Loopback device found (registry endpoint): '{endpointName}'");
+                        return endpointName;
+                    }
+                }
+                catch { continue; }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] FindSystemLoopbackDevice registry error: {ex.Message}");
+        }
+
+        return null;
+    }
+
+    private static bool IsLoopbackDeviceName(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        return lower.Contains("stereo mix") || lower.Contains("mixagem est") ||
+               lower.Contains("mezcla est") || lower.Contains("stereomix") ||
+               lower.Contains("what u hear") || lower.Contains("wave out mix") ||
+               lower.Contains("loopback");
+    }
+
     public bool StartRecording(RecordingResolution resolution, RecordingMode mode = RecordingMode.ScreenOnly,
         FacecamPosition facecamPos = FacecamPosition.TopRight,
         string? webcamDevice = null, string? micDevice = null, string? gameName = null)
@@ -543,9 +628,17 @@ public sealed class GameRecorderService : IDisposable
             }
         }
 
-        var args = BuildFfmpegArgs(resolution, hasCam: false, hasMic, micDevice);
+        // Detect loopback device (Stereo Mix / Mixagem estéreo) for game audio capture
+        _resolvedLoopbackDevice = FindSystemLoopbackDevice();
+        bool hasLoopback = _resolvedLoopbackDevice is not null;
+        if (hasLoopback)
+            Debug.WriteLine($"[Recording] Loopback device: '{_resolvedLoopbackDevice}'");
+        else
+            StatusMessage?.Invoke("⚠ 'Mixagem estéreo' não encontrada — áudio do jogo não será capturado. Ative em: Configurações de Som → Dispositivos de entrada → Mixagem estéreo.");
+
+        var args = BuildFfmpegArgs(resolution, hasCam: false, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice);
         Debug.WriteLine($"[Recording] FFmpeg args: {args}");
-        _pendingRetry = hasMic || hasCam;
+        _pendingRetry = hasMic || hasCam || hasLoopback;
 
         try
         {
@@ -632,6 +725,7 @@ public sealed class GameRecorderService : IDisposable
             // Monitor process health asynchronously — retry without audio if device failed
             var hasMicForRetry = hasMic;
             var hasCamForRetry = hasCam;
+            var hasLoopbackForRetry = hasLoopback;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(2000);
@@ -646,14 +740,16 @@ public sealed class GameRecorderService : IDisposable
                     try { exitCode = proc.ExitCode; } catch { }
                     if (exitCode == 0) return;
 
-                    if (hasMicForRetry || hasCamForRetry)
+                    if (hasMicForRetry || hasCamForRetry || hasLoopbackForRetry)
                     {
                         bool keepCam = hasCamForRetry && _ffplayProcess is not null && !_ffplayProcess.HasExited;
-                        Debug.WriteLine($"[Recording] FFmpeg failed with audio/cam (exit {exitCode}), retrying (keepCam={keepCam})...");
-                        StatusMessage?.Invoke(keepCam
-                            ? "⚠ Microfone indisponível. Gravando sem áudio..."
-                            : "⚠ Dispositivo de áudio/câmera indisponível. Gravando apenas a tela...");
-                        RetryScreenOnly(keepFacecam: keepCam);
+                        // If had both mic+loopback, retry with loopback only (preserve game audio)
+                        string? retryLoopback = hasLoopbackForRetry ? _resolvedLoopbackDevice : null;
+                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying (keepCam={keepCam}, loopback={retryLoopback is not null})...");
+                        StatusMessage?.Invoke(retryLoopback is not null
+                            ? "⚠ Microfone indisponível. Gravando com áudio do jogo..."
+                            : "⚠ Dispositivo de áudio indisponível. Gravando apenas a tela...");
+                        RetryScreenOnly(keepFacecam: keepCam, loopbackDevice: retryLoopback);
                     }
                     else
                     {
@@ -681,7 +777,8 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private string BuildFfmpegArgs(RecordingResolution resolution, bool hasCam, bool hasMic, string? micDevice)
+    private string BuildFfmpegArgs(RecordingResolution resolution, bool hasCam, bool hasMic, string? micDevice,
+        bool hasLoopback = false, string? loopbackDevice = null)
     {
         var (width, height) = resolution switch
         {
@@ -702,12 +799,43 @@ public sealed class GameRecorderService : IDisposable
         };
 
         var inputs = "-f gdigrab -framerate 60 -i desktop";
+        int nextInput = 1;
+        int loopbackIdx = -1, micIdx = -1;
 
-        if (hasMic)
+        if (hasLoopback && !string.IsNullOrEmpty(loopbackDevice))
+        {
+            inputs += $" -f dshow -i audio=\"{loopbackDevice}\"";
+            loopbackIdx = nextInput++;
+        }
+
+        if (hasMic && !string.IsNullOrEmpty(micDevice))
+        {
             inputs += $" -f dshow -i audio=\"{micDevice}\"";
+            micIdx = nextInput++;
+        }
 
-        var mapArgs = hasMic ? "-map 0:v -map 1:a" : "";
-        var audioArgs = hasMic ? "-c:a aac -b:a 128k" : "";
+        string mapArgs, audioArgs;
+        if (hasLoopback && hasMic)
+        {
+            // Mix game audio (loopback) + microphone using amix filter
+            mapArgs = $"-filter_complex \"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]\" -map 0:v -map \"[aout]\"";
+            audioArgs = "-c:a aac -b:a 192k";
+        }
+        else if (hasLoopback)
+        {
+            mapArgs = $"-map 0:v -map {loopbackIdx}:a";
+            audioArgs = "-c:a aac -b:a 192k";
+        }
+        else if (hasMic)
+        {
+            mapArgs = $"-map 0:v -map {micIdx}:a";
+            audioArgs = "-c:a aac -b:a 128k";
+        }
+        else
+        {
+            mapArgs = "";
+            audioArgs = "";
+        }
 
         return $"-y {inputs} {mapArgs} {encoderArgs} -s {width}x{height} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
@@ -819,7 +947,7 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly(bool keepFacecam = false)
+    private void RetryScreenOnly(bool keepFacecam = false, string? loopbackDevice = null)
     {
         if (!keepFacecam)
             StopFacecamPreview();
@@ -832,8 +960,10 @@ public sealed class GameRecorderService : IDisposable
         }
 
         _lastFfmpegError = string.Empty;
-        var args = BuildFfmpegArgs(_currentResolution, hasCam: false, hasMic: false, micDevice: null);
-        Debug.WriteLine($"[Recording] Retry screen-only args: {args}");
+        bool hasLoopback = loopbackDevice is not null;
+        var args = BuildFfmpegArgs(_currentResolution, hasCam: false, hasMic: false, micDevice: null,
+            hasLoopback, loopbackDevice);
+        Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}): {args}");
 
         try
         {
@@ -880,7 +1010,9 @@ public sealed class GameRecorderService : IDisposable
 
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
-            StatusMessage?.Invoke($"🔴 Gravando (sem áudio): {Path.GetFileName(_currentOutputFile)}");
+            StatusMessage?.Invoke(hasLoopback
+                ? $"🔴 Gravando (sem microfone): {Path.GetFileName(_currentOutputFile)}"
+                : $"🔴 Gravando (sem áudio): {Path.GetFileName(_currentOutputFile)}");
         }
         catch (Exception ex)
         {
