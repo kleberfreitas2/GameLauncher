@@ -37,7 +37,6 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 > 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
 
 </div>
-=======
 
 <img width="1918" height="1079" alt="image" src="https://github.com/user-attachments/assets/8ebb6caa-359b-462c-96e0-b98d7fdd1209" />
 
