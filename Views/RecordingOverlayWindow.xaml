@@ -1,0 +1,23 @@
+<Window x:Class="GameLauncher.Views.RecordingOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Rec" Width="110" Height="36"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" Topmost="True"
+        ShowInTaskbar="False" ResizeMode="NoResize">
+    <Border Background="#CC000000" CornerRadius="10" Padding="10,4" VerticalAlignment="Center"
+            HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Ellipse x:Name="RecDot" Width="10" Height="10" Fill="#FF1744" Margin="0,0,6,0"
+                     VerticalAlignment="Center">
+                <Ellipse.Effect>
+                    <DropShadowEffect Color="#FF1744" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+                </Ellipse.Effect>
+            </Ellipse>
+            <TextBlock x:Name="RecText" Text="REC" FontSize="12" FontWeight="Bold"
+                       Foreground="#FF1744" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBlock x:Name="TimerText" Text="00:00" FontSize="11" FontWeight="SemiBold"
+                       Foreground="#CCCCCC" VerticalAlignment="Center" FontFamily="Consolas"/>
+        </StackPanel>
+    </Border>
+</Window>

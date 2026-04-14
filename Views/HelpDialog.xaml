@@ -62,6 +62,8 @@
                     <ListBoxItem Content="&#x1f3ae;  Steam"/>
                     <ListBoxItem Content="&#x1f3ae;  Xbox Live"/>
                     <ListBoxItem Content="&#x1f4ac;  Discord"/>
+                    <ListBoxItem Content="&#x1f3ae;  Epic Games"/>
+                    <ListBoxItem Content="&#x1f534;  Grava&#xe7;&#xe3;o de Gameplay" Selected="ListBoxItem_Selected"/>
                     <ListBoxItem Content="&#x1f3ae;  Biblioteca e Carrossel"/>
                     <ListBoxItem Content="&#x2699;&#xfe0f;  Menu de Op&#xe7;&#xf5;es"/>
                     <ListBoxItem Content="&#x1f5bc;&#xfe0f;  Capas e Fundos"/>
@@ -400,6 +402,139 @@
                         </StackPanel>
 
 <StackPanel x:Name="Page5" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f3ae; Integra&#xe7;&#xe3;o Epic Games" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Como funciona" FontSize="15" FontWeight="SemiBold" Foreground="#2F2D2E" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        O GLauncher detecta automaticamente os jogos instalados pela Epic Games Store.
+                                        N&#xe3;o &#xe9; necess&#xe1;rio configurar nada &#x2014; basta ter a Epic Games Store instalada no PC.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Passo a passo" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        1. Clique no bot&#xe3;o <Run FontWeight="SemiBold" Foreground="#CCCCCC">EPIC</Run> no cabe&#xe7;alho
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        2. O GLauncher detecta automaticamente os jogos instalados via manifestos da Epic
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        3. Seu perfil &#xe9; carregado com o nome da conta e total de jogos
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        4. Na tela de perfil, clique em <Run FontWeight="SemiBold" Foreground="#CCCCCC">IMPORTAR JOGOS EPIC</Run>
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,4,0,0">
+                                        5. Todos os jogos s&#xe3;o adicionados &#xe0; biblioteca com capas, logos, fundos e informa&#xe7;&#xf5;es
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Perfil Epic Games" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Ap&#xf3;s conectar, o bot&#xe3;o Epic no cabe&#xe7;alho exibe o nome e a quantidade de jogos.
+                                        Clicando nele, voc&#xea; abre o perfil com:
+                                    </TextBlock>
+                                    <StackPanel Margin="12,8,0,0">
+                                        <TextBlock Text="&#x2022; Logo oficial da Epic Games" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Nome da conta e total de jogos instalados" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para importar jogos" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                        <TextBlock Text="&#x2022; Bot&#xe3;o para desconectar" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x2705;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        Jogos importados da Epic exibem "Epic Games - PC (Windows)" na se&#xe7;&#xe3;o de detalhes.
+                                        A detec&#xe7;&#xe3;o &#xe9; restaurada automaticamente ao abrir o GLauncher.
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page6" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f534; Grava&#xe7;&#xe3;o de Gameplay" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Como funciona" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        O GLauncher permite gravar suas partidas usando o FFmpeg com um &#xfa;nico bot&#xe3;o.
+                                        A grava&#xe7;&#xe3;o funciona com hotkey global — funciona mesmo com o jogo em tela cheia.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Controles" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <Grid Margin="0,4,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="F9" FontSize="13" Foreground="#FF5252" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Inicia ou para a grava&#xe7;&#xe3;o (toggle)" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#x2699;&#xfe0f; &#x2192; Grava&#xe7;&#xe3;o" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Abre as configura&#xe7;&#xf5;es de grava&#xe7;&#xe3;o" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Configura&#xe7;&#xf5;es" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <StackPanel Margin="8,0,0,0">
+                                        <TextBlock Text="&#x2022; Resolu&#xe7;&#xe3;o: 720p, 1080p ou 4K" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Encoder: detectado automaticamente (NVENC, AMF, QSV ou libx264)" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; FFmpeg: baixado automaticamente na primeira utiliza&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Ativa&#xe7;&#xe3;o: habilite a grava&#xe7;&#xe3;o nas configura&#xe7;&#xf5;es antes de usar" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Arquivo de sa&#xed;da" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        Os v&#xed;deos s&#xe3;o salvos em <Run FontWeight="SemiBold" Foreground="#88AACC">C:\Users\Seu_Usuario\Videos\GLauncher Videos\</Run>
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,6,0,0">
+                                        Formato do nome: <Run FontWeight="SemiBold" Foreground="#88AACC">NomeDoJogo_1080p_2025-06-13_14-30-00.mp4</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
+                                    BorderBrush="#2A2050" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
+                                        O overlay "&#x1f534; REC" aparece na tela durante a grava&#xe7;&#xe3;o, mas &#xe9; invis&#xed;vel no v&#xed;deo gravado.
+                                        O nome do jogo que est&#xe1; rodando &#xe9; detectado automaticamente para nomear o arquivo.
+                                    </TextBlock>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+<StackPanel x:Name="Page7" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -440,14 +575,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page6" Visibility="Collapsed">
+<StackPanel x:Name="Page8" Visibility="Collapsed">
                             <TextBlock Text="&#x2699;&#xfe0f; Menu de Op&#xe7;&#xf5;es" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Como acessar" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Clique no &#xed;cone de engrenagem &#x2699;&#xfe0f; no cabe&#xe7;alho para abrir o menu de contexto
+                                        Clique no &#xed;cone de engrenagem
                                         com as op&#xe7;&#xf5;es do jogo selecionado.
                                     </TextBlock>
                                 </StackPanel>
@@ -516,14 +651,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page7" Visibility="Collapsed">
+<StackPanel x:Name="Page9" Visibility="Collapsed">
                             <TextBlock Text="&#x1f5bc;&#xfe0f; Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="SteamGridDB" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher utiliza o SteamGridDB para buscar automaticamente:
+                                        O GLauncher utiliza o SteamGridDB
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
                                         <TextBlock Text="&#x2022; Capas (Grids) &#x2014; exibidas no carrossel" FontSize="13" Foreground="#88AACC" Margin="0,3"/>
@@ -566,14 +701,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page8" Visibility="Collapsed">
+<StackPanel x:Name="Page10" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4ca; Informa&#xe7;&#xf5;es IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="O que &#xe9; o IGDB?" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O IGDB (Internet Game Database) &#xe9; uma base de dados de jogos da Twitch/Amazon.
+                                        O IGDB (Internet Game Database)
                                         O GLauncher busca automaticamente:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
@@ -597,14 +732,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page9" Visibility="Collapsed">
+<StackPanel x:Name="Page11" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3a8; Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Personaliza&#xe7;&#xe3;o Visual" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Clique no bot&#xe3;o &#x201c;TEMA&#x201d; no cabe&#xe7;alho para abrir o seletor de temas.
+                                        Clique no bot&#xe3;o &#x201c;TEMA&#x201d;
                                         O tema &#xe9; aplicado imediatamente e salvo automaticamente.
                                     </TextBlock>
                                 </StackPanel>
@@ -621,14 +756,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page10" Visibility="Collapsed">
-                            <TextBlock Text="&#x1f579;&#xfe0f; Controle (Gamepad)" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
+<StackPanel x:Name="Page12" Visibility="Collapsed">
+                            <TextBlock Text="&#x1f579;&#xfe0f; Controle" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Controles Suportados" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher detecta automaticamente controles conectados via USB ou Bluetooth.
+                                        O GLauncher detecta automaticamente controles conectados
                                         O &#xed;cone do controle no cabe&#xe7;alho fica verde quando conectado.
                                     </TextBlock>
                                     <StackPanel Margin="12,10,0,0">
@@ -813,14 +948,14 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page11" Visibility="Collapsed">
+<StackPanel x:Name="Page13" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4c8; Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
                                     <TextBlock Text="Gauges em Tempo Real" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        A barra inferior exibe 5 gauges com m&#xe9;tricas do sistema em tempo real:
+                                        A barra inferior exibe 5 gauges
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
                                         <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; CPU" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso do processador (%)" Foreground="#88AACC"/></TextBlock>
@@ -885,7 +1020,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page12" Visibility="Collapsed">
+<StackPanel x:Name="Page14" Visibility="Collapsed">
                             <TextBlock Text="&#x2328;&#xfe0f; Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -984,6 +1119,22 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Scroll horizontal" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Navega pelo carrossel de jogos" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="F9" FontSize="13" Foreground="#FF5252" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Iniciar / parar grava&#xe7;&#xe3;o de gameplay" FontSize="12" Foreground="#8899AA"/>
+                                    </Grid>
+                                    <Grid Margin="0,6,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="F11" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Alternar tela cheia" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>

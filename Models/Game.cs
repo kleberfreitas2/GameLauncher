@@ -137,6 +137,25 @@ public partial class Game : ObservableObject
 
     public string DisplayName => Name.Replace(".exe", "").Replace("_", " ");
 
+    [JsonIgnore]
+    public string PlatformSource
+    {
+        get
+        {
+            var path = InstallDirectory ?? ExecutablePath ?? "";
+            if (path.Contains("XboxGames", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase))
+                return "Instalado via Xbox - PC (Windows)";
+            if (path.Contains("steamapps", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("Steam", StringComparison.OrdinalIgnoreCase))
+                return "Instalado via Steam - PC (Windows)";
+            if (path.Contains("Epic Games", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("EpicGames", StringComparison.OrdinalIgnoreCase))
+                return "Instalado via Epic Games - PC (Windows)";
+            return "Local - PC (Windows)";
+        }
+    }
+
     public string? EffectiveImagePath =>
         !string.IsNullOrEmpty(CustomImagePath) ? CustomImagePath :
         !string.IsNullOrEmpty(IconPath) ? IconPath : null;

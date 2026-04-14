@@ -29,7 +29,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public enum NavZone { Header, Actions, Carousel }
 
-    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Discord", "Help", "Settings", "AddGame", "Theme"];
+    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Epic", "Discord", "Help", "Settings", "AddGame", "Theme"];
 
     [ObservableProperty] private NavZone activeZone = NavZone.Carousel;
     [ObservableProperty] private int headerIndex;
@@ -68,6 +68,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool isDiscordLoading;
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
+
+    private bool _isRecordingEnabled = SettingsService.Current.RecordingEnabled;
+    public bool IsRecordingEnabled
+    {
+        get => _isRecordingEnabled;
+        set => SetProperty(ref _isRecordingEnabled, value);
+    }
+
+    private bool _isRecording;
+    public bool IsRecording
+    {
+        get => _isRecording;
+        set => SetProperty(ref _isRecording, value);
+    }
+
+    private GameRecorderService? _recorder;
+    private RecordingOverlayWindow? _recordingOverlay;
+    private string? _runningGameName;
 
     private GpuCapabilities? _gpuCaps;
     [ObservableProperty] private ObservableCollection<TechCompatItem> techCompatItems = [];
@@ -160,6 +178,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public bool IsSteamConnected => SteamConnected && SteamProfile is not null;
     public string SteamButtonText => IsSteamConnected ? SteamProfile!.PersonaName : "STEAM";
 
+    private EpicGamesService? _epicService;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEpicConnected))]
+    [NotifyPropertyChangedFor(nameof(EpicButtonText))]
+    private EpicProfile? epicProfile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEpicConnected))]
+    [NotifyPropertyChangedFor(nameof(EpicButtonText))]
+    private bool epicConnected;
+
+    public bool IsEpicConnected => EpicConnected && EpicProfile is not null;
+    public string EpicButtonText => IsEpicConnected ? EpicProfile!.DisplayName : "EPIC";
+
     private DiscordService? _discordService;
     private DiscordRichPresenceService? _discordRpc;
     private DiscordRpcService? _discordRpcPanel;
@@ -199,6 +232,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _ = RefreshAllAssetsOnStartupAsync();
         _ = TryRestoreXboxSessionAsync();
         _ = TryRestoreSteamSessionAsync();
+        _ = TryRestoreEpicSessionAsync();
         _ = TryRestoreDiscordSessionAsync();
 
         _hwMonitor = new HardwareMonitorService();
@@ -259,11 +293,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _hwMonitor.Dispose();
         _xboxService?.Dispose();
         _steamService?.Dispose();
+        _epicService?.Dispose();
         _discordService?.Dispose();
         _discordRpc?.Dispose();
         _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
+        _recorder?.Dispose();
+        _recordingOverlay?.Close();
+        _recordingOverlay = null;
     }
 
     private void ScanGameTech(Game game)
@@ -811,6 +849,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             SoundService.PlayLaunch();
+            _runningGameName = game.DisplayName;
             var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
@@ -819,7 +858,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             });
             game.LastPlayed = DateTime.Now;
             SaveGames();
-            StatusMessage = $"Lançando {game.DisplayName}...";
+            StatusMessage = $"Iniciando {game.DisplayName}...";
 
             SetDiscordRichPresence(game.DisplayName);
 
@@ -843,6 +882,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     {
                         ClearDiscordRichPresence();
 
+                        var wasRecording = _recorder is not null && _recorder.IsRecording;
+                        if (wasRecording)
+                            _recorder!.StopRecording();
+
+                        if (_recorder is not null && _runningGameName is not null)
+                            _recorder.RenameRecording(_runningGameName);
+
+                        _runningGameName = null;
+                        _recordingOverlay?.Close();
+                        _recordingOverlay = null;
+                        IsRecording = false;
+
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
 
@@ -861,9 +912,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(5000);
-                    _dispatcher.BeginInvoke(() =>
+                    await _dispatcher.BeginInvoke(() =>
                     {
                         ClearDiscordRichPresence();
+
+                        var wasRecording = _recorder is not null && _recorder.IsRecording;
+                        if (wasRecording)
+                            _recorder!.StopRecording();
+
+                        if (_recorder is not null && _runningGameName is not null)
+                            _recorder.RenameRecording(_runningGameName);
+
+                        _runningGameName = null;
+                        _recordingOverlay?.Close();
+                        _recordingOverlay = null;
+                        IsRecording = false;
 
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
@@ -876,10 +939,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SoundService.PlayError();
             ClearDiscordRichPresence();
+            if (_recorder is not null && _recorder.IsRecording)
+                _recorder.StopRecording();
+            _recordingOverlay?.Close();
+            _recordingOverlay = null;
+            IsRecording = false;
             _fpsOverlay?.Close();
             _fpsOverlay = null;
             _xinput.Start();
-            StatusMessage = $"Erro ao lançar {game.DisplayName}: {ex.Message}";
+            StatusMessage = $"Erro ao iniciar {game.DisplayName}: {ex.Message}";
         }
     }
 
@@ -892,6 +960,61 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = SettingsService.Current.FpsOverlayEnabled
             ? "FPS Overlay ativado — será exibido durante os jogos"
             : "FPS Overlay desativado";
+    }
+
+    [RelayCommand]
+    private void ToggleRecordingEnabled()
+    {
+        SettingsService.Current.RecordingEnabled = !SettingsService.Current.RecordingEnabled;
+        SettingsService.Save();
+        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
+        StatusMessage = SettingsService.Current.RecordingEnabled
+            ? $"Gravação ativada — pressione {SettingsService.Current.RecordingHotkey} durante o jogo"
+            : "Gravação desativada";
+    }
+
+    [RelayCommand]
+    private void OpenRecordingSettings()
+    {
+        var dialog = new RecordingSettingsDialog { Owner = Application.Current.MainWindow };
+        dialog.ShowDialog();
+        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
+    }
+
+    public void HandleRecordingHotkey()
+    {
+        if (!SettingsService.Current.RecordingEnabled) return;
+
+        if (_recorder is null)
+        {
+            _recorder = new GameRecorderService();
+            _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
+            _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
+            {
+                IsRecording = recording;
+                if (recording)
+                {
+                    _recordingOverlay?.Close();
+                    _recordingOverlay = new RecordingOverlayWindow();
+                    _recordingOverlay.Show();
+                }
+                else
+                {
+                    _recordingOverlay?.Close();
+                    _recordingOverlay = null;
+                }
+            });
+        }
+
+        var res = SettingsService.Current.RecordingResolution switch
+        {
+            "720p" => RecordingResolution.HD_720p,
+            "4K" => RecordingResolution.UHD_4K,
+            _ => RecordingResolution.FHD_1080p
+        };
+
+        var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
+        _recorder.ToggleRecording(res, gameName);
     }
 
     [RelayCommand]
@@ -1357,6 +1480,170 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = added > 0
             ? $"{added} jogo(s) Steam importado(s)! {Games.Count} jogos na biblioteca."
             : "Todos os jogos Steam já estavam na biblioteca.";
+
+        foreach (var game in newGames)
+        {
+            await AutoFetchAllWithProgressAsync(game);
+        }
+    }
+
+
+    private Task TryRestoreEpicSessionAsync()
+    {
+        _epicService?.Dispose();
+        _epicService = new EpicGamesService();
+
+        var connected = _epicService.Connect();
+        if (!connected) return Task.CompletedTask;
+
+        var profile = _epicService.GetProfile();
+        if (profile is not null)
+        {
+            EpicProfile = profile;
+            EpicConnected = true;
+            StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private Task EpicLogin()
+    {
+        var epicPath = EpicGamesService.DetectEpicInstallPath();
+
+        if (string.IsNullOrEmpty(epicPath))
+        {
+            var setup = new EpicSetupDialog
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (setup.ShowDialog() != true) return Task.CompletedTask;
+
+            epicPath = setup.EpicPath;
+        }
+
+        StatusMessage = "Conectando à Epic Games...";
+
+        _epicService?.Dispose();
+        _epicService = new EpicGamesService();
+
+        var success = _epicService.Connect(epicPath);
+        if (!success)
+        {
+            StatusMessage = "Falha ao conectar à Epic Games.";
+            MessageBox.Show(
+                "Não foi possível detectar jogos da Epic Games.\n\n" +
+                "Verifique se o Epic Games Launcher está instalado e há jogos instalados.",
+                "Epic Games", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return Task.CompletedTask;
+        }
+
+        var profile = _epicService.GetProfile();
+
+        if (profile is not null)
+        {
+            EpicProfile = profile;
+            EpicConnected = true;
+            StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
+        }
+        else
+        {
+            EpicConnected = true;
+            StatusMessage = "Epic Games conectada (perfil indisponível).";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task OpenEpicProfile()
+    {
+        if (!IsEpicConnected || EpicProfile is null)
+        {
+            await EpicLogin();
+            return;
+        }
+
+        var importedCount = Games.Count(g =>
+            g.InstallDirectory is not null &&
+            (g.InstallDirectory.Contains("Epic Games", StringComparison.OrdinalIgnoreCase) ||
+             g.InstallDirectory.Contains("Epic", StringComparison.OrdinalIgnoreCase)));
+
+        var availableCount = EpicProfile.InstalledGamesCount;
+
+        var dialog = new EpicProfileDialog(EpicProfile, importedCount, availableCount)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        IsProfileDialogOpen = true;
+        ProfileDialogNavigate = dialog.HandleGamepadInput;
+
+        if (dialog.ShowDialog() == true)
+        {
+            if (dialog.LogoutRequested)
+            {
+                _epicService?.Disconnect();
+                _epicService?.Dispose();
+                _epicService = null;
+
+                EpicProfile = null;
+                EpicConnected = false;
+                StatusMessage = "Desconectado da Epic Games.";
+            }
+            else if (dialog.ImportGamesRequested)
+            {
+                await ImportEpicGames();
+            }
+        }
+
+        IsProfileDialogOpen = false;
+        ProfileDialogNavigate = null;
+    }
+
+    [RelayCommand]
+    private async Task ImportEpicGames()
+    {
+        if (_epicService is null)
+        {
+            StatusMessage = "Conecte-se à Epic Games primeiro.";
+            return;
+        }
+
+        StatusMessage = "Escaneando jogos Epic Games instalados...";
+
+        var epicGames = await Task.Run(() => _epicService.ScanEpicInstalledGames());
+
+        if (epicGames.Count == 0)
+        {
+            StatusMessage = "Nenhum jogo Epic Games instalado encontrado.";
+            MessageBox.Show(
+                "Nenhum jogo da Epic Games encontrado.\n\n" +
+                "Verifique se há jogos instalados pelo Epic Games Launcher.",
+                "Epic Games", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        int added = 0;
+        var newGames = new List<Game>();
+
+        foreach (var eg in epicGames)
+        {
+            if (Games.Any(g => g.ExecutablePath.Equals(eg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            Games.Add(eg);
+            newGames.Add(eg);
+            added++;
+        }
+
+        SaveGames();
+        _gamesView.Refresh();
+        StatusMessage = added > 0
+            ? $"{added} jogo(s) Epic importado(s)! {Games.Count} jogos na biblioteca."
+            : "Todos os jogos Epic já estavam na biblioteca.";
 
         foreach (var game in newGames)
         {

@@ -1,0 +1,64 @@
+<Window x:Class="GameLauncher.Views.EpicSetupDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="&#x1f3ae; Conectar &#xe0; Epic Games"
+        Width="520" Height="280"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="&#x1f3ae; Conectar &#xe0; Epic Games"
+                       FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                N&#xe3;o foi poss&#xed;vel detectar a pasta da Epic Games automaticamente.
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                Informe o <Run FontWeight="SemiBold" Foreground="White">caminho da pasta</Run> onde seus jogos da Epic est&#xe3;o instalados.
+            </TextBlock>
+            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                Ex: <Run FontWeight="SemiBold" Foreground="#00B4D8">C:\Program Files\Epic Games</Run>
+            </TextBlock>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="EpicPathBox"
+                     md:HintAssist.Hint="Caminho da pasta Epic Games"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Foreground="White" CaretBrush="White"
+                     FontSize="13" Height="52"
+                     VerticalContentAlignment="Center"/>
+            <Button Grid.Column="1" Content="..." Margin="8,0,0,0"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="White" FontSize="16" FontWeight="Bold"
+                    Width="48" Height="48"
+                    Click="Browse_Click"/>
+        </Grid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="CONECTAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#00B4D8" FontWeight="Bold"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

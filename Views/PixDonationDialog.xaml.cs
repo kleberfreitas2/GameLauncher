@@ -1,5 +1,4 @@
 using System.Windows;
-using GameLauncher.Services;
 
 namespace GameLauncher.Views;
 
@@ -10,18 +9,6 @@ public partial class PixDonationDialog : Window
     public PixDonationDialog()
     {
         InitializeComponent();
-        GenerateQrCode();
-    }
-
-    private void GenerateQrCode()
-    {
-        var payload = PixQrCodeService.BuildPixPayload(
-            pixKey: PixKey,
-            merchantName: "Kleber Freitas",
-            merchantCity: "SAO PAULO",
-            description: "GLauncher");
-
-        QrCodeImage.Source = PixQrCodeService.GenerateQrCode(payload, moduleSize: 8, quietZone: 2);
     }
 
     private void CopyKey_Click(object sender, RoutedEventArgs e)

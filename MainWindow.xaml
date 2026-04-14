@@ -251,6 +251,88 @@
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Epic">
+                                        <Setter Property="BorderBrush" Value="#00E676"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect Color="#00E676" BlurRadius="14" ShadowDepth="0" Opacity="0.7"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    <Button Command="{Binding OpenEpicProfileCommand}"
+                            Cursor="Hand" BorderThickness="0"
+                            ToolTip="Epic Games">
+                        <Button.Template>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border x:Name="EpicBd" CornerRadius="22" Padding="14,8"
+                                                        RenderTransformOrigin="0.5,0.5">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#000000"/>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <Border.RenderTransform>
+                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                                    </Border.RenderTransform>
+                                                    <Border.Effect>
+                                                        <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.6"/>
+                                                    </Border.Effect>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                       <Image Source="Assets/epic_logo.png" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,6,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        <TextBlock Text="{Binding EpicButtonText}" FontSize="12" FontWeight="Bold"
+                                                   FontFamily="Segoe UI" Foreground="White" VerticalAlignment="Center"/>
+<Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEpicConnected}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal">
+                                                <md:PackIcon Kind="GamepadVariant" Width="12" Height="12" Foreground="#00B4D8"
+                                                             VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                <TextBlock Text="{Binding EpicProfile.InstalledGamesCount, StringFormat='{}{0:N0}'}"
+                                                           FontSize="11" FontWeight="SemiBold" Foreground="#00B4D8"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="EpicBd" Property="Background" Value="#2A2A2A"/>
+                                        <Setter TargetName="EpicBd" Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="EpicBd" Property="Background" Value="#111111"/>
+                                        <Setter TargetName="EpicBd" Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    </Border>
+
+<Border Margin="0,0,12,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
+                                <Style.Triggers>
                                     <DataTrigger Binding="{Binding FocusedHeaderItem}" Value="Discord">
                                         <Setter Property="BorderBrush" Value="#00E676"/>
                                         <Setter Property="Effect">
@@ -316,15 +398,19 @@
                             ToolTip="Apoie o projeto via PIX" Margin="0,0,14,0">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="DonateBd" Background="#18FFFFFF" CornerRadius="22" Padding="12,7"
+                                <Border x:Name="DonateBd" Background="#18FFFFFF" CornerRadius="22" Padding="14,8"
                                         RenderTransformOrigin="0.5,0.5">
                                     <Border.RenderTransform>
                                         <ScaleTransform ScaleX="1" ScaleY="1"/>
                                     </Border.RenderTransform>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#x2764;&#xfe0f;" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="DOAR" FontSize="11" FontWeight="Bold" Foreground="White"
-                                                   VerticalAlignment="Center"/>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#FF5252" BlurRadius="12" ShadowDepth="2" Opacity="0.4"/>
+                                    </Border.Effect>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <md:PackIcon Kind="Heart" Width="20" Height="20" Foreground="#FF5252"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="DOAR" FontSize="12" FontWeight="Bold" FontFamily="Segoe UI"
+                                                   Foreground="White" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -332,7 +418,7 @@
                                         <Setter TargetName="DonateBd" Property="Background" Value="#30FFFFFF"/>
                                         <Setter TargetName="DonateBd" Property="RenderTransform">
                                             <Setter.Value>
-                                                <ScaleTransform ScaleX="1.08" ScaleY="1.08"/>
+                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
                                             </Setter.Value>
                                         </Setter>
                                     </Trigger>
@@ -340,7 +426,7 @@
                                         <Setter TargetName="DonateBd" Property="Background" Value="#20FFFFFF"/>
                                         <Setter TargetName="DonateBd" Property="RenderTransform">
                                             <Setter.Value>
-                                                <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
                                             </Setter.Value>
                                         </Setter>
                                     </Trigger>
@@ -517,6 +603,17 @@
                                           IsCheckable="True" IsChecked="{Binding IsFpsOverlayEnabled, Mode=OneWay}">
                                     <MenuItem.Icon>
                                         <md:PackIcon Kind="Speedometer" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Gravar Vídeo (F9)" Command="{Binding ToggleRecordingEnabledCommand}"
+                                          IsCheckable="True" IsChecked="{Binding IsRecordingEnabled, Mode=OneWay}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="VideoOutline" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Configurar Gravação..." Command="{Binding OpenRecordingSettingsCommand}">
+                                    <MenuItem.Icon>
+                                        <md:PackIcon Kind="Cog" Width="16" Height="16"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator/>
@@ -741,7 +838,7 @@
                             BorderThickness="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="AddBd" CornerRadius="24" Padding="32,14"
+                                <Border x:Name="AddBd" CornerRadius="24" Padding="40,16"
                                         RenderTransformOrigin="0.5,0.5">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -1076,7 +1173,7 @@
                                  Foreground="#334455" HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Visibility="{Binding HasNoImage, Converter={StaticResource BoolToVisibility}}"/>
                                         <Image Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=155}"
-                           Stretch="UniformToFill"
+                           Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
                            Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility}}"/>
                                         <md:PackIcon Kind="Star" Width="16" Height="16" Foreground="#FFD700"
                                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
@@ -1164,7 +1261,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Plataforma" FontSize="13" Foreground="#778899"/>
-                                        <TextBlock Grid.Column="1" Text="PC (Windows)" FontSize="13" Foreground="#5599CC"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.PlatformSource}" FontSize="13" Foreground="#5599CC"/>
                                     </Grid>
                                     <Grid Margin="0,0,0,5">
                                         <Grid.ColumnDefinitions>

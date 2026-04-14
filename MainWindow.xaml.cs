@@ -36,6 +36,8 @@ public partial class MainWindow : Window
     private WindowState _previousWindowState;
     private ResizeMode _previousResizeMode;
 
+    private readonly GlobalHotkeyService _globalHotkey = new();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -74,10 +76,21 @@ public partial class MainWindow : Window
 
         KeyDown += MainWindow_KeyDown;
 
-        Loaded += (_, _) => CompositionTarget.Rendering += OnFpsRendering;
+        Loaded += (_, _) =>
+        {
+            CompositionTarget.Rendering += OnFpsRendering;
+
+            _globalHotkey.RecordHotkeyPressed += () =>
+            {
+                if (DataContext is MainViewModel vm)
+                    Dispatcher.BeginInvoke(() => vm.HandleRecordingHotkey());
+            };
+            _globalHotkey.Register();
+        };
         Closed += (_, _) =>
         {
             CompositionTarget.Rendering -= OnFpsRendering;
+            _globalHotkey.Dispose();
             (DataContext as MainViewModel)?.Dispose();
         };
     }
