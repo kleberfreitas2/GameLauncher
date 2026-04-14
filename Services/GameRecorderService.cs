@@ -50,6 +50,7 @@ public sealed class GameRecorderService : IDisposable
     private RecordingResolution _currentResolution;
     private string _lastFfmpegError = string.Empty;
     private volatile bool _stoppingManually;
+    private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -220,9 +221,23 @@ public sealed class GameRecorderService : IDisposable
                     using var propsKey = deviceKey.OpenSubKey("Properties");
                     if (propsKey is null) continue;
 
+                    // Prefer full device interface friendly name (includes adapter suffix)
+                    // e.g., "Microfone (Realtek Audio)" — matches dshow device name format
+                    var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
+                    if (!string.IsNullOrEmpty(fullName))
+                    {
+                        devices.Add(fullName);
+                        Debug.WriteLine($"[Devices] Registry mic (full): '{fullName}'");
+                        continue;
+                    }
+
+                    // Fallback to endpoint friendly name (may be just "Microfone" without adapter)
                     var name = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
                     if (!string.IsNullOrEmpty(name))
+                    {
                         devices.Add(name);
+                        Debug.WriteLine($"[Devices] Registry mic (endpoint only): '{name}'");
+                    }
                 }
                 catch { continue; }
             }
@@ -234,37 +249,104 @@ public sealed class GameRecorderService : IDisposable
     private static string? ResolveDshowAudioDevice(string storedName)
     {
         var dshowDevices = ListDshowDevices("audio");
+        Debug.WriteLine($"[Recording] ResolveDshowAudio: stored='{storedName}', dshow found={dshowDevices.Count}");
 
-        if (dshowDevices.Count == 0)
-            return null;
+        if (dshowDevices.Count > 0)
+        {
+            foreach (var d in dshowDevices)
+                Debug.WriteLine($"[Recording]   dshow audio: '{d}'");
 
-        if (dshowDevices.Any(d => d.Equals(storedName, StringComparison.OrdinalIgnoreCase)))
-            return storedName;
+            if (dshowDevices.Any(d => d.Equals(storedName, StringComparison.OrdinalIgnoreCase)))
+                return storedName;
 
-        var partial = dshowDevices.FirstOrDefault(d =>
-            d.Contains(storedName, StringComparison.OrdinalIgnoreCase) ||
-            storedName.Contains(d, StringComparison.OrdinalIgnoreCase));
-        if (partial is not null) return partial;
+            var partial = dshowDevices.FirstOrDefault(d =>
+                d.Contains(storedName, StringComparison.OrdinalIgnoreCase) ||
+                storedName.Contains(d, StringComparison.OrdinalIgnoreCase));
+            if (partial is not null) return partial;
 
-        return dshowDevices[0];
+            return dshowDevices[0];
+        }
+
+        // dshow listing failed — try to build the full dshow-compatible name
+        var fullName = TryBuildFullAudioDeviceName(storedName);
+        if (fullName is not null) return fullName;
+
+        // Last resort: return stored name as-is and let FFmpeg try
+        Debug.WriteLine($"[Recording] Using stored audio name as-is: '{storedName}'");
+        return storedName;
     }
 
     private static string? ResolveDshowVideoDevice(string storedName)
     {
         var dshowDevices = ListDshowDevices("video");
+        Debug.WriteLine($"[Recording] ResolveDshowVideo: stored='{storedName}', dshow found={dshowDevices.Count}");
 
-        if (dshowDevices.Count == 0)
+        if (dshowDevices.Count > 0)
+        {
+            foreach (var d in dshowDevices)
+                Debug.WriteLine($"[Recording]   dshow video: '{d}'");
+
+            if (dshowDevices.Any(d => d.Equals(storedName, StringComparison.OrdinalIgnoreCase)))
+                return storedName;
+
+            var partial = dshowDevices.FirstOrDefault(d =>
+                d.Contains(storedName, StringComparison.OrdinalIgnoreCase) ||
+                storedName.Contains(d, StringComparison.OrdinalIgnoreCase));
+            if (partial is not null) return partial;
+
+            return dshowDevices[0];
+        }
+
+        // dshow listing failed — camera names from WMI typically match dshow exactly
+        Debug.WriteLine($"[Recording] Using stored video name as-is: '{storedName}'");
+        return storedName;
+    }
+
+    private static string? TryBuildFullAudioDeviceName(string endpointName)
+    {
+        // If name already has adapter suffix like "Microfone (Realtek Audio)", no need to build
+        if (endpointName.Contains('(') && endpointName.EndsWith(')'))
             return null;
 
-        if (dshowDevices.Any(d => d.Equals(storedName, StringComparison.OrdinalIgnoreCase)))
-            return storedName;
+        try
+        {
+            // Get audio adapter names via WMI to build the full dshow name
+            // dshow format: "{EndpointName} ({AdapterName})" e.g. "Microfone (Realtek Audio)"
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT Name FROM Win32_SoundDevice");
+            var adapters = new List<string>();
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                var name = obj["Name"]?.ToString();
+                if (!string.IsNullOrEmpty(name))
+                    adapters.Add(name);
+            }
 
-        var partial = dshowDevices.FirstOrDefault(d =>
-            d.Contains(storedName, StringComparison.OrdinalIgnoreCase) ||
-            storedName.Contains(d, StringComparison.OrdinalIgnoreCase));
-        if (partial is not null) return partial;
+            Debug.WriteLine($"[Recording] Audio adapters (WMI): [{string.Join(", ", adapters)}]");
 
-        return dshowDevices[0];
+            // Filter out HDMI/display/virtual audio — keep physical adapters (Realtek, Conexant, IDT)
+            var physical = adapters.Where(a =>
+                !a.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) &&
+                !a.Contains("Virtual", StringComparison.OrdinalIgnoreCase) &&
+                !(a.Contains("Intel", StringComparison.OrdinalIgnoreCase) &&
+                  (a.Contains("Display", StringComparison.OrdinalIgnoreCase) ||
+                   a.Contains("tela", StringComparison.OrdinalIgnoreCase) ||
+                   a.Contains("HDMI", StringComparison.OrdinalIgnoreCase))))
+                .ToList();
+
+            var adapter = physical.Count > 0 ? physical[0] : (adapters.Count > 0 ? adapters[0] : null);
+            if (adapter is not null)
+            {
+                var candidate = $"{endpointName} ({adapter})";
+                Debug.WriteLine($"[Recording] Built full audio device name: '{candidate}'");
+                return candidate;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] TryBuildFullAudioDeviceName error: {ex.Message}");
+        }
+        return null;
     }
 
     public static bool HasCameraHardware()
@@ -354,6 +436,7 @@ public sealed class GameRecorderService : IDisposable
 
         var args = BuildFfmpegArgs(resolution, hasCam: false, hasMic, micDevice);
         Debug.WriteLine($"[Recording] FFmpeg args: {args}");
+        _pendingRetry = hasMic || hasCam;
 
         try
         {
@@ -393,6 +476,13 @@ public sealed class GameRecorderService : IDisposable
                     try { exitCode = proc?.ExitCode ?? -1; } catch { }
                     bool crashed = exitCode != 0 && !_stoppingManually;
 
+                    // If retry is pending, let the health monitor handle the failure
+                    if (crashed && _pendingRetry)
+                    {
+                        Debug.WriteLine($"[Recording] FFmpeg exited (code {exitCode}) — retry pending");
+                        return;
+                    }
+
                     StopFacecamPreview();
 
                     if (crashed)
@@ -408,31 +498,44 @@ public sealed class GameRecorderService : IDisposable
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[Recording] Exited handler error: {ex}");
-                    RecordingStateChanged?.Invoke(false);
+                    if (!_pendingRetry)
+                        RecordingStateChanged?.Invoke(false);
                 }
             };
 
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
 
-            // Monitor process health asynchronously (don't block UI thread)
+            // Monitor process health asynchronously — retry without audio if device failed
+            var hasMicForRetry = hasMic;
+            var hasCamForRetry = hasCam;
             _ = Task.Run(async () =>
             {
-                await Task.Delay(1500);
+                await Task.Delay(2000);
+                _pendingRetry = false;
                 try
                 {
                     var proc = _ffmpegProcess;
-                    if (proc is not null && proc.HasExited && !_stoppingManually)
+                    if (proc is null || _stoppingManually) return;
+                    if (!proc.HasExited) return; // Still running = success
+
+                    int exitCode = -1;
+                    try { exitCode = proc.ExitCode; } catch { }
+                    if (exitCode == 0) return;
+
+                    if (hasMicForRetry || hasCamForRetry)
                     {
-                        int exitCode = -1;
-                        try { exitCode = proc.ExitCode; } catch { }
-                        if (exitCode != 0)
-                        {
-                            var errorDetail = !string.IsNullOrEmpty(_lastFfmpegError)
-                                ? _lastFfmpegError
-                                : "FFmpeg não conseguiu iniciar a gravação";
-                            StatusMessage?.Invoke($"❌ Falha: {errorDetail}");
-                        }
+                        Debug.WriteLine($"[Recording] FFmpeg failed with audio/cam (exit {exitCode}), retrying screen-only...");
+                        StatusMessage?.Invoke("⚠ Dispositivo de áudio/câmera indisponível. Gravando apenas a tela...");
+                        RetryScreenOnly();
+                    }
+                    else
+                    {
+                        var errorDetail = !string.IsNullOrEmpty(_lastFfmpegError)
+                            ? _lastFfmpegError
+                            : "FFmpeg não conseguiu iniciar a gravação";
+                        StatusMessage?.Invoke($"❌ Falha: {errorDetail}");
+                        RecordingStateChanged?.Invoke(false);
                     }
                 }
                 catch { }
@@ -533,9 +636,77 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
+    private void RetryScreenOnly()
+    {
+        StopFacecamPreview();
+
+        if (_ffmpegProcess is not null)
+        {
+            try { if (!_ffmpegProcess.HasExited) _ffmpegProcess.Kill(); } catch { }
+            try { _ffmpegProcess.Dispose(); } catch { }
+            _ffmpegProcess = null;
+        }
+
+        _lastFfmpegError = string.Empty;
+        var args = BuildFfmpegArgs(_currentResolution, hasCam: false, hasMic: false, micDevice: null);
+        Debug.WriteLine($"[Recording] Retry screen-only args: {args}");
+
+        try
+        {
+            _ffmpegProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = FfmpegExe,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardError = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            _ffmpegProcess.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    Debug.WriteLine($"[FFmpeg-retry] {e.Data}");
+                    _lastFfmpegError = e.Data;
+                }
+            };
+
+            _ffmpegProcess.Exited += (_, _) =>
+            {
+                try
+                {
+                    int exitCode = -1;
+                    try { exitCode = _ffmpegProcess?.ExitCode ?? -1; } catch { }
+                    if (exitCode != 0 && !_stoppingManually)
+                        StatusMessage?.Invoke($"❌ Erro na gravação: {_lastFfmpegError}");
+                    RecordingStateChanged?.Invoke(false);
+                }
+                catch { RecordingStateChanged?.Invoke(false); }
+            };
+
+            _ffmpegProcess.Start();
+            _ffmpegProcess.BeginErrorReadLine();
+            StatusMessage?.Invoke($"🔴 Gravando (sem áudio): {Path.GetFileName(_currentOutputFile)}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] Retry failed: {ex}");
+            StatusMessage?.Invoke($"❌ Falha total na gravação: {ex.Message}");
+            _ffmpegProcess?.Dispose();
+            _ffmpegProcess = null;
+            RecordingStateChanged?.Invoke(false);
+        }
+    }
+
     public void StopRecording()
     {
         _stoppingManually = true;
+        _pendingRetry = false;
 
         if (_ffmpegProcess is null || _ffmpegProcess.HasExited)
         {
