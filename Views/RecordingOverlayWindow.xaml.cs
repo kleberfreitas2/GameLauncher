@@ -27,15 +27,23 @@ public partial class RecordingOverlayWindow : Window
     private readonly DispatcherTimer _timer;
     private DateTime _startTime;
 
-    public RecordingOverlayWindow()
+    public RecordingOverlayWindow(bool facecamTopRight = false)
     {
         InitializeComponent();
 
         SourceInitialized += (_, _) => MakeClickThrough();
 
         var screen = SystemParameters.WorkArea;
-        Left = screen.Right - Width - 16;
-        Top = screen.Top + 50;
+        if (facecamTopRight)
+        {
+            Left = screen.Left + 16;
+            Top = screen.Top + 50;
+        }
+        else
+        {
+            Left = screen.Right - Width - 16;
+            Top = screen.Top + 50;
+        }
 
         _startTime = DateTime.Now;
 

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="&#x1f3ae; Gravação de Vídeo"
-        Width="460" Height="650"
+        Width="480" Height="780"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#0D0D0D"
@@ -41,7 +41,7 @@
 
             <!-- Enable toggle -->
             <Border Background="#161622" CornerRadius="12" Padding="16,12" HorizontalAlignment="Center"
-                    MinWidth="380" Margin="0,0,0,14">
+                    MinWidth="400" Margin="0,0,0,14">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -57,9 +57,125 @@
                 </Grid>
             </Border>
 
+            <!-- Recording Mode -->
+            <Border Background="#161622" CornerRadius="12" Padding="16,12" HorizontalAlignment="Center"
+                    MinWidth="400" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Modo de gravação" FontSize="13" FontWeight="SemiBold" Foreground="White"
+                               Margin="0,0,0,10"/>
+
+                    <RadioButton x:Name="ModeScreen" GroupName="RecMode" Foreground="White" FontSize="12"
+                                 Margin="0,0,0,8" Checked="Mode_Changed">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Monitor" Width="16" Height="16" Foreground="#778899"
+                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Apenas captura de tela" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton x:Name="ModeMic" GroupName="RecMode" Foreground="White" FontSize="12"
+                                 Margin="0,0,0,8" Checked="Mode_Changed">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Microphone" Width="16" Height="16" Foreground="#4FC3F7"
+                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Somente Microfone" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="  (tela + áudio)" Foreground="#556677" VerticalAlignment="Center" FontSize="10"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton x:Name="ModeFacecam" GroupName="RecMode" Foreground="White" FontSize="12"
+                                 Checked="Mode_Changed">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Webcam" Width="16" Height="16" Foreground="#FF1744"
+                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Facecam + Microfone" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="  (tela + cam + áudio)" Foreground="#556677" VerticalAlignment="Center" FontSize="10"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </Border>
+
+            <!-- Facecam Position -->
+            <Border x:Name="FacecamSection" Background="#161622" CornerRadius="12" Padding="16,12"
+                    HorizontalAlignment="Center" MinWidth="400" Margin="0,0,0,14" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Posição da facecam" FontSize="13" FontWeight="SemiBold" Foreground="White"
+                               Margin="0,0,0,10"/>
+                    <UniformGrid Rows="2" Columns="2" HorizontalAlignment="Center" Width="280">
+                        <Border x:Name="PosTopLeft" Background="#0A0E1A" CornerRadius="8" Padding="6" Margin="4"
+                                Cursor="Hand" MouseLeftButtonUp="FacecamPos_Click" Tag="top_left"
+                                BorderThickness="2" BorderBrush="Transparent">
+                            <Grid Width="100" Height="56">
+                                <Border Background="#111528" CornerRadius="4"/>
+                                <Border Width="22" Height="16" Background="#FF1744" CornerRadius="3"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,5,0,0" Opacity="0.9"/>
+                                <TextBlock Text="Superior Esq." FontSize="8" Foreground="#556677"
+                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                            </Grid>
+                        </Border>
+                        <Border x:Name="PosTopRight" Background="#0A0E1A" CornerRadius="8" Padding="6" Margin="4"
+                                Cursor="Hand" MouseLeftButtonUp="FacecamPos_Click" Tag="top_right"
+                                BorderThickness="2" BorderBrush="Transparent">
+                            <Grid Width="100" Height="56">
+                                <Border Background="#111528" CornerRadius="4"/>
+                                <Border Width="22" Height="16" Background="#FF1744" CornerRadius="3"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,6,0" Opacity="0.9"/>
+                                <TextBlock Text="Superior Dir." FontSize="8" Foreground="#556677"
+                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                            </Grid>
+                        </Border>
+                        <Border x:Name="PosBottomLeft" Background="#0A0E1A" CornerRadius="8" Padding="6" Margin="4"
+                                Cursor="Hand" MouseLeftButtonUp="FacecamPos_Click" Tag="bottom_left"
+                                BorderThickness="2" BorderBrush="Transparent">
+                            <Grid Width="100" Height="56">
+                                <Border Background="#111528" CornerRadius="4"/>
+                                <Border Width="22" Height="16" Background="#FF1744" CornerRadius="3"
+                                        HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="6,0,0,5" Opacity="0.9"/>
+                                <TextBlock Text="Inferior Esq." FontSize="8" Foreground="#556677"
+                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                            </Grid>
+                        </Border>
+                        <Border x:Name="PosBottomRight" Background="#0A0E1A" CornerRadius="8" Padding="6" Margin="4"
+                                Cursor="Hand" MouseLeftButtonUp="FacecamPos_Click" Tag="bottom_right"
+                                BorderThickness="2" BorderBrush="Transparent">
+                            <Grid Width="100" Height="56">
+                                <Border Background="#111528" CornerRadius="4"/>
+                                <Border Width="22" Height="16" Background="#FF1744" CornerRadius="3"
+                                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,5" Opacity="0.9"/>
+                                <TextBlock Text="Inferior Dir." FontSize="8" Foreground="#556677"
+                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                            </Grid>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Device selectors -->
+            <Border x:Name="DeviceSection" Background="#161622" CornerRadius="12" Padding="16,12"
+                    HorizontalAlignment="Center" MinWidth="400" Margin="0,0,0,14" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Dispositivos" FontSize="13" FontWeight="SemiBold" Foreground="White"
+                               Margin="0,0,0,10"/>
+
+                    <StackPanel x:Name="WebcamRow" Margin="0,0,0,10">
+                        <TextBlock Text="Webcam" FontSize="11" Foreground="#778899" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="WebcamCombo" Foreground="White" FontSize="12"
+                                  Background="#0A0E1A" MinWidth="360"
+                                  SelectionChanged="WebcamCombo_Changed"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Microfone" FontSize="11" Foreground="#778899" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="MicCombo" Foreground="White" FontSize="12"
+                                  Background="#0A0E1A" MinWidth="360"
+                                  SelectionChanged="MicCombo_Changed"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Hotkey display -->
             <Border Background="#161622" CornerRadius="12" Padding="16,12" HorizontalAlignment="Center"
-                    MinWidth="380" Margin="0,0,0,14">
+                    MinWidth="400" Margin="0,0,0,14">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -79,7 +195,7 @@
 
             <!-- Resolution selector -->
             <Border Background="#161622" CornerRadius="12" Padding="16,12" HorizontalAlignment="Center"
-                    MinWidth="380" Margin="0,0,0,14">
+                    MinWidth="400" Margin="0,0,0,14">
                 <StackPanel>
                     <TextBlock Text="Resolução de gravação" FontSize="13" FontWeight="SemiBold" Foreground="White"
                                Margin="0,0,0,10"/>
@@ -118,7 +234,7 @@
 
             <!-- Output folder -->
             <Border Background="#161622" CornerRadius="12" Padding="16,10" HorizontalAlignment="Center"
-                    MinWidth="380" Margin="0,0,0,14">
+                    MinWidth="400" Margin="0,0,0,14">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -127,7 +243,7 @@
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="Pasta de saída" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
                         <TextBlock x:Name="OutputPathText" Text="" FontSize="9" Foreground="#556677" Margin="0,2,0,0"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="280"/>
+                                   TextTrimming="CharacterEllipsis" MaxWidth="300"/>
                     </StackPanel>
                     <Button Grid.Column="1" Content="ABRIR" Click="OpenFolder_Click"
                             Style="{StaticResource MaterialDesignFlatButton}"
@@ -137,7 +253,7 @@
 
             <!-- FFmpeg status -->
             <Border x:Name="FfmpegStatusBorder" Background="#161622" CornerRadius="12" Padding="16,10"
-                    HorizontalAlignment="Center" MinWidth="380">
+                    HorizontalAlignment="Center" MinWidth="400">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <md:PackIcon x:Name="FfmpegIcon" Kind="CheckCircle" Width="18" Height="18"
                                  Foreground="#00E676" VerticalAlignment="Center" Margin="0,0,8,0"/>
