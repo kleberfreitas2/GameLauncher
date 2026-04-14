@@ -995,7 +995,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 if (recording)
                 {
                     _recordingOverlay?.Close();
-                    _recordingOverlay = new RecordingOverlayWindow();
+                    var facecamPos = SettingsService.Current.FacecamPosition;
+                    var mode = SettingsService.Current.RecordingMode;
+                    bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
+                    _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
                     _recordingOverlay.Show();
                 }
                 else
@@ -1013,8 +1016,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _ => RecordingResolution.FHD_1080p
         };
 
+        var mode2 = SettingsService.Current.RecordingMode switch
+        {
+            "microphone" => RecordingMode.Microphone,
+            "facecam_mic" => RecordingMode.FacecamMic,
+            _ => RecordingMode.ScreenOnly
+        };
+
+        var facecamPos2 = SettingsService.Current.FacecamPosition switch
+        {
+            "top_left" => FacecamPosition.TopLeft,
+            "bottom_right" => FacecamPosition.BottomRight,
+            "bottom_left" => FacecamPosition.BottomLeft,
+            _ => FacecamPosition.TopRight
+        };
+
         var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
-        _recorder.ToggleRecording(res, gameName);
+        _recorder.ToggleRecording(res, mode2, facecamPos2,
+            SettingsService.Current.FacecamDevice,
+            SettingsService.Current.MicrophoneDevice,
+            gameName);
     }
 
     [RelayCommand]

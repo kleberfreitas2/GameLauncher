@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace GameLauncher.Services;
 
@@ -12,6 +14,21 @@ public enum RecordingResolution
     UHD_4K
 }
 
+public enum RecordingMode
+{
+    ScreenOnly,
+    Microphone,
+    FacecamMic
+}
+
+public enum FacecamPosition
+{
+    TopRight,
+    TopLeft,
+    BottomRight,
+    BottomLeft
+}
+
 public sealed class GameRecorderService : IDisposable
 {
     private static readonly string FfmpegDir = Path.Combine(
@@ -19,14 +36,30 @@ public sealed class GameRecorderService : IDisposable
         "GameLauncher", "ffmpeg");
 
     private static readonly string FfmpegExe = Path.Combine(FfmpegDir, "ffmpeg.exe");
+    private static readonly string FfplayExe = Path.Combine(FfmpegDir, "ffplay.exe");
 
     private static readonly string OutputDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
         "GLauncher Videos");
 
     private Process? _ffmpegProcess;
+    private Process? _ffplayProcess;
     private string? _currentOutputFile;
     private RecordingResolution _currentResolution;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint dwAffinity);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private const int SM_CXSCREEN = 0;
+    private const int SM_CYSCREEN = 1;
+    private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
     public bool IsRecording => _ffmpegProcess is not null && !_ffmpegProcess.HasExited;
     public string? CurrentFile => _currentOutputFile;
@@ -35,10 +68,11 @@ public sealed class GameRecorderService : IDisposable
     public event Action<string>? StatusMessage;
 
     public static bool IsFfmpegAvailable() => File.Exists(FfmpegExe);
+    public static bool IsFfplayAvailable() => File.Exists(FfplayExe);
 
     public static async Task<bool> EnsureFfmpegAsync(Action<string>? progress = null)
     {
-        if (File.Exists(FfmpegExe))
+        if (File.Exists(FfmpegExe) && File.Exists(FfplayExe))
             return true;
 
         try
@@ -71,6 +105,10 @@ public sealed class GameRecorderService : IDisposable
                     return false;
 
                 ffmpegEntry.ExtractToFile(FfmpegExe, overwrite: true);
+
+                var ffplayEntry = zip.Entries
+                    .FirstOrDefault(e => e.FullName.EndsWith("bin/ffplay.exe", StringComparison.OrdinalIgnoreCase));
+                ffplayEntry?.ExtractToFile(FfplayExe, overwrite: true);
             }
 
             try { File.Delete(zipPath); } catch { }
@@ -85,7 +123,48 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    public bool StartRecording(RecordingResolution resolution, string? gameName = null)
+    public static List<string> ListVideoDevices() => ListDshowDevices("video");
+    public static List<string> ListAudioDevices() => ListDshowDevices("audio");
+
+    private static List<string> ListDshowDevices(string type)
+    {
+        if (!File.Exists(FfmpegExe)) return [];
+        try
+        {
+            using var proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = FfmpegExe,
+                Arguments = "-list_devices true -f dshow -i dummy",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
+            });
+            var stderr = proc?.StandardError.ReadToEnd() ?? "";
+            proc?.WaitForExit(5000);
+
+            var devices = new List<string>();
+            bool inSection = false;
+            foreach (var line in stderr.Split('\n'))
+            {
+                if (line.Contains($"DirectShow {type} devices"))
+                { inSection = true; continue; }
+                if (inSection && line.Contains("DirectShow") && !line.Contains($"{type} devices"))
+                    break;
+                if (inSection)
+                {
+                    var m = Regex.Match(line, "\"(.+?)\"");
+                    if (m.Success && !line.Contains("Alternative name"))
+                        devices.Add(m.Groups[1].Value);
+                }
+            }
+            return devices;
+        }
+        catch { return []; }
+    }
+
+    public bool StartRecording(RecordingResolution resolution, RecordingMode mode = RecordingMode.ScreenOnly,
+        FacecamPosition facecamPos = FacecamPosition.TopRight,
+        string? webcamDevice = null, string? micDevice = null, string? gameName = null)
     {
         if (IsRecording) return false;
         if (!File.Exists(FfmpegExe)) return false;
@@ -97,42 +176,13 @@ public sealed class GameRecorderService : IDisposable
         var safeName = string.IsNullOrEmpty(gameName) ? "Recording" : SanitizeFileName(gameName);
         _currentOutputFile = Path.Combine(OutputDir, $"{safeName}_{timestamp}.mp4");
 
-        var (width, height) = resolution switch
-        {
-            RecordingResolution.HD_720p => (1280, 720),
-            RecordingResolution.FHD_1080p => (1920, 1080),
-            RecordingResolution.UHD_4K => (3840, 2160),
-            _ => (1920, 1080)
-        };
+        bool hasMic = mode != RecordingMode.ScreenOnly && !string.IsNullOrEmpty(micDevice);
+        bool hasCam = mode == RecordingMode.FacecamMic && !string.IsNullOrEmpty(webcamDevice);
 
-        var hwAccel = DetectHardwareEncoder();
+        if (hasCam && File.Exists(FfplayExe))
+            StartFacecamPreview(webcamDevice!, facecamPos);
 
-        var args = hwAccel switch
-        {
-            "h264_nvenc" =>
-                $"-f gdigrab -framerate 60 -i desktop " +
-                $"-c:v h264_nvenc -preset p4 -tune hq -rc vbr -cq 23 " +
-                $"-s {width}x{height} -pix_fmt yuv420p " +
-                $"-movflags +faststart \"{_currentOutputFile}\"",
-
-            "h264_amf" =>
-                $"-f gdigrab -framerate 60 -i desktop " +
-                $"-c:v h264_amf -quality balanced -rc cqp -qp_i 23 -qp_p 23 " +
-                $"-s {width}x{height} -pix_fmt yuv420p " +
-                $"-movflags +faststart \"{_currentOutputFile}\"",
-
-            "h264_qsv" =>
-                $"-f gdigrab -framerate 60 -i desktop " +
-                $"-c:v h264_qsv -preset medium -global_quality 23 " +
-                $"-s {width}x{height} -pix_fmt yuv420p " +
-                $"-movflags +faststart \"{_currentOutputFile}\"",
-
-            _ =>
-                $"-f gdigrab -framerate 60 -i desktop " +
-                $"-c:v libx264 -preset ultrafast -crf 23 " +
-                $"-s {width}x{height} -pix_fmt yuv420p " +
-                $"-movflags +faststart \"{_currentOutputFile}\""
-        };
+        var args = BuildFfmpegArgs(resolution, hasCam: false, hasMic, micDevice);
 
         try
         {
@@ -152,6 +202,7 @@ public sealed class GameRecorderService : IDisposable
 
             _ffmpegProcess.Exited += (_, _) =>
             {
+                StopFacecamPreview();
                 RecordingStateChanged?.Invoke(false);
             };
 
@@ -165,9 +216,90 @@ public sealed class GameRecorderService : IDisposable
         catch (Exception ex)
         {
             StatusMessage?.Invoke($"Erro ao iniciar gravação: {ex.Message}");
+            StopFacecamPreview();
             _ffmpegProcess?.Dispose();
             _ffmpegProcess = null;
             return false;
+        }
+    }
+
+    private string BuildFfmpegArgs(RecordingResolution resolution, bool hasCam, bool hasMic, string? micDevice)
+    {
+        var (width, height) = resolution switch
+        {
+            RecordingResolution.HD_720p => (1280, 720),
+            RecordingResolution.FHD_1080p => (1920, 1080),
+            RecordingResolution.UHD_4K => (3840, 2160),
+            _ => (1920, 1080)
+        };
+
+        var hwAccel = DetectHardwareEncoder();
+
+        var encoderArgs = hwAccel switch
+        {
+            "h264_nvenc" => "-c:v h264_nvenc -preset p4 -tune hq -rc vbr -cq 23",
+            "h264_amf" => "-c:v h264_amf -quality balanced -rc cqp -qp_i 23 -qp_p 23",
+            "h264_qsv" => "-c:v h264_qsv -preset medium -global_quality 23",
+            _ => "-c:v libx264 -preset ultrafast -crf 23"
+        };
+
+        var inputs = $"-f gdigrab -framerate 60 -i desktop";
+
+        if (hasMic)
+            inputs += $" -f dshow -i audio=\"{micDevice}\"";
+
+        var audioArgs = hasMic ? "-c:a aac -b:a 128k" : "";
+
+        return $"{inputs} {encoderArgs} -s {width}x{height} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+    }
+
+    private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
+    {
+        StopFacecamPreview();
+
+        var screenW = GetSystemMetrics(SM_CXSCREEN);
+        var screenH = GetSystemMetrics(SM_CYSCREEN);
+        var camW = 320;
+        var camH = 240;
+        var margin = 20;
+
+        var (left, top) = position switch
+        {
+            FacecamPosition.TopRight => (screenW - camW - margin, margin),
+            FacecamPosition.TopLeft => (margin, margin),
+            FacecamPosition.BottomRight => (screenW - camW - margin, screenH - camH - margin - 50),
+            FacecamPosition.BottomLeft => (margin, screenH - camH - margin - 50),
+            _ => (screenW - camW - margin, margin)
+        };
+
+        try
+        {
+            _ffplayProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = FfplayExe,
+                    Arguments = $"-f dshow -video_size 640x480 -i video=\"{webcamDevice}\" " +
+                                $"-window_title GLauncherFacecam -noborder -alwaysontop " +
+                                $"-left {left} -top {top} -x {camW} -y {camH} -loglevel quiet",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                },
+                EnableRaisingEvents = true
+            };
+            _ffplayProcess.Start();
+        }
+        catch { }
+    }
+
+    public void StopFacecamPreview()
+    {
+        if (_ffplayProcess is not null)
+        {
+            if (!_ffplayProcess.HasExited)
+                try { _ffplayProcess.Kill(); } catch { }
+            _ffplayProcess.Dispose();
+            _ffplayProcess = null;
         }
     }
 
@@ -176,6 +308,7 @@ public sealed class GameRecorderService : IDisposable
         if (_ffmpegProcess is null || _ffmpegProcess.HasExited)
         {
             _ffmpegProcess = null;
+            StopFacecamPreview();
             return;
         }
 
@@ -204,16 +337,19 @@ public sealed class GameRecorderService : IDisposable
         {
             _ffmpegProcess?.Dispose();
             _ffmpegProcess = null;
+            StopFacecamPreview();
             RecordingStateChanged?.Invoke(false);
         }
     }
 
-    public void ToggleRecording(RecordingResolution resolution, string? gameName = null)
+    public void ToggleRecording(RecordingResolution resolution, RecordingMode mode = RecordingMode.ScreenOnly,
+        FacecamPosition facecamPos = FacecamPosition.TopRight,
+        string? webcamDevice = null, string? micDevice = null, string? gameName = null)
     {
         if (IsRecording)
             StopRecording();
         else
-            StartRecording(resolution, gameName);
+            StartRecording(resolution, mode, facecamPos, webcamDevice, micDevice, gameName);
     }
 
     private string DetectHardwareEncoder()
@@ -314,10 +450,20 @@ public sealed class GameRecorderService : IDisposable
         _ => "1080p"
     };
 
+    public static string GetFacecamPositionLabel(FacecamPosition pos) => pos switch
+    {
+        FacecamPosition.TopLeft => "Superior Esquerda",
+        FacecamPosition.TopRight => "Superior Direita",
+        FacecamPosition.BottomLeft => "Inferior Esquerda",
+        FacecamPosition.BottomRight => "Inferior Direita",
+        _ => "Superior Direita"
+    };
+
     public void Dispose()
     {
         if (IsRecording)
             StopRecording();
+        StopFacecamPreview();
         _ffmpegProcess?.Dispose();
     }
 }

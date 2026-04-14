@@ -29,6 +29,10 @@ public class AppSettings
     public string RecordingResolution   { get; set; } = "1080p";
     public string RecordingHotkey       { get; set; } = "F9";
     public string RecordingEncoder      { get; set; } = "auto";
+    public string RecordingMode         { get; set; } = "screen_only";
+    public string FacecamPosition       { get; set; } = "top_right";
+    public string FacecamDevice         { get; set; } = "";
+    public string MicrophoneDevice      { get; set; } = "";
 
     public string DiscordWebhookUrl      { get; set; } = string.Empty;
     public List<string> DiscordQuickMessages { get; set; } =

@@ -478,6 +478,36 @@
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
+                                    <TextBlock Text="Modos de Grava&#xe7;&#xe3;o" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
+                                    <StackPanel Margin="8,0,0,0">
+                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
+                                            <Run FontWeight="SemiBold" Foreground="#88AACC">&#x1f5a5;&#xfe0f; Captura de tela:</Run> grava apenas a tela (sem &#xe1;udio de microfone ou webcam).
+                                        </TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
+                                            <Run FontWeight="SemiBold" Foreground="#4FC3F7">&#x1f3a4; Somente Microfone:</Run> grava a tela + &#xe1;udio do microfone selecionado.
+                                        </TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
+                                            <Run FontWeight="SemiBold" Foreground="#FF5252">&#x1f4f7; Facecam + Microfone:</Run> grava tela + webcam + &#xe1;udio. A facecam aparece como overlay no canto escolhido.
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Facecam" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
+                                        No modo Facecam + Microfone, a webcam &#xe9; exibida como janela flutuante (via ffplay) em um dos 4 cantos da tela:
+                                        Superior Esquerda, Superior Direita, Inferior Esquerda ou Inferior Direita.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,6,0,0">
+                                        O overlay de FPS e o indicador REC se reposicionam automaticamente para n&#xe3;o conflitar com a facecam.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
+                                <StackPanel>
                                     <TextBlock Text="Controles" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
@@ -502,10 +532,12 @@
                                 <StackPanel>
                                     <TextBlock Text="Configura&#xe7;&#xf5;es" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <StackPanel Margin="8,0,0,0">
-                                        <TextBlock Text="&#x2022; Resolu&#xe7;&#xe3;o: 720p, 1080p ou 4K" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Modo: Captura de tela, Microfone ou Facecam + Microfone" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Posi&#xe7;&#xe3;o da facecam: 4 cantos da tela" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Dispositivos: webcam e microfone selecion&#xe1;veis" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; Resolu&#xe7;&#xe3;o: 720p, 1080p ou 4K a 60 FPS" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                         <TextBlock Text="&#x2022; Encoder: detectado automaticamente (NVENC, AMF, QSV ou libx264)" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; FFmpeg: baixado automaticamente na primeira utiliza&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Ativa&#xe7;&#xe3;o: habilite a grava&#xe7;&#xe3;o nas configura&#xe7;&#xf5;es antes de usar" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
+                                        <TextBlock Text="&#x2022; FFmpeg + FFplay: baixados automaticamente na primeira utiliza&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -527,8 +559,8 @@
                                 <DockPanel>
                                     <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        O overlay "&#x1f534; REC" aparece na tela durante a grava&#xe7;&#xe3;o, mas &#xe9; invis&#xed;vel no v&#xed;deo gravado.
-                                        O nome do jogo que est&#xe1; rodando &#xe9; detectado automaticamente para nomear o arquivo.
+                                        O overlay "&#x1f534; REC" e o FPS s&#xe3;o invis&#xed;veis no v&#xed;deo gravado. A facecam (se ativa) aparece no v&#xed;deo pois &#xe9; capturada junto com a tela.
+                                        O nome do jogo &#xe9; detectado automaticamente para nomear o arquivo.
                                     </TextBlock>
                                 </DockPanel>
                             </Border>

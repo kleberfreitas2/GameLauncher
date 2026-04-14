@@ -21,7 +21,7 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos), **gravação de gameplay** com hotkey (FFmpeg) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos), **gravação de gameplay** com hotkey (FFmpeg) incluindo **facecam + microfone** (3 modos de gravação) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
 
 
 <div align="center">
@@ -120,24 +120,34 @@ Importação automática de jogos instalados via **Epic Games Store**:
 > 💡 Basta ter a Epic Games Store instalada — o GLauncher detecta os jogos automaticamente.
 
 ### 🔴 Gravação de Gameplay
-Grave suas partidas com um único botão usando **FFmpeg**:
+Grave suas partidas com **FFmpeg** — agora com **3 modos de gravação**, **facecam** e **microfone**:
 
 - **Hotkey global F9** — inicia/para gravação a qualquer momento (mesmo com o jogo em foco)
+- **3 modos de gravação:**
+  - 🖥️ **Captura de tela** — grava apenas a tela (sem áudio de microfone ou webcam)
+  - 🎤 **Somente Microfone** — grava a tela + áudio do microfone selecionado
+  - 📷 **Facecam + Microfone** — grava tela + webcam + áudio do microfone
+- **Facecam overlay** — a webcam aparece como janela flutuante (via ffplay) posicionada em **4 cantos** da tela
+- **Seleção de dispositivos** — escolha a webcam e o microfone nas configurações
 - Detecção automática de encoder de hardware: **NVENC** (NVIDIA), **AMF** (AMD), **QSV** (Intel), ou **libx264** (CPU)
-- Resoluções: **720p**, **1080p** ou **4K**
-- Overlay "REC" com timer em tempo real (invisível nas gravações via `WDA_EXCLUDEFROMCAPTURE`)
+- Resoluções: **720p**, **1080p** ou **4K** a **60 FPS**
+- Overlay "REC" e FPS counter são invisíveis nas gravações (via `WDA_EXCLUDEFROMCAPTURE`)
+- Overlays se reposicionam automaticamente para não conflitar com a facecam
 - Arquivo nomeado automaticamente: `NomeDoJogo_1080p_2025-06-13_14-30-00.mp4`
-- FFmpeg baixado automaticamente na primeira utilização
+- FFmpeg + FFplay baixados automaticamente na primeira utilização
 - Configurações acessíveis pelo menu ⚙️ → "Configurações de Gravação"
 
 | Configuração | Opções |
 |---|---|
-| Resolução | 720p / 1080p / 4K |
+| Modo | Captura de tela / Microfone / Facecam + Microfone |
+| Posição facecam | Superior Esq. / Superior Dir. / Inferior Esq. / Inferior Dir. |
+| Dispositivos | Webcam e microfone selecionáveis |
+| Resolução | 720p / 1080p / 4K (60 FPS) |
 | Encoder | Auto-detectado (GPU > CPU) |
 | Hotkey | F9 (global, funciona em qualquer app) |
 | Saída | `%LOCALAPPDATA%\GameLauncher\recordings\` |
 
-> 💡 Pressione **F9** para iniciar a gravação e **F9** novamente para parar. O overlay "🔴 REC" aparece na tela mas **não aparece no vídeo gravado**.
+> 💡 Pressione **F9** para iniciar a gravação e **F9** novamente para parar. O overlay "🔴 REC" aparece na tela mas **não aparece no vídeo gravado**. A facecam (se ativa) aparece no vídeo pois é capturada junto com a tela.
 
 ### 🖥️ Monitor de Hardware
 Gauges circulares em tempo real no rodapé + descrições do hardware:
@@ -259,7 +269,7 @@ GameLauncher/
 │   ├── DiscordRichPresenceService.cs # Rich Presence via IPC Named Pipes
 │   ├── DiscordService.cs         # Discord OAuth2 (login, perfil, token cache)
 │   ├── EpicGamesService.cs       # Integração Epic Games (detecção, importação)
-│   ├── GameRecorderService.cs    # Gravação de gameplay (FFmpeg, encoders HW)
+│   ├── GameRecorderService.cs    # Gravação de gameplay (FFmpeg + ffplay, facecam, mic, encoders HW)
 │   ├── GameScanner.cs            # Scanner de pasta por executáveis
 │   ├── GlobalHotkeyService.cs    # Hotkey global F9 (WH_KEYBOARD_LL)
 │   ├── HardwareMonitorService.cs # CPU/GPU/RAM + WMI para storage
@@ -282,11 +292,12 @@ GameLauncher/
 │   ├── DiscordSetupDialog.xaml    # Configuração Discord Client ID
 │   ├── EpicProfileDialog.xaml     # Perfil Epic Games (jogos, importar)
 │   ├── EpicSetupDialog.xaml       # Configuração Epic Games
-│   ├── HelpDialog.xaml            # Manual interativo (13 páginas)
+│   ├── HelpDialog.xaml            # Manual interativo (15 páginas)
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
+│   ├── FpsOverlayWindow.xaml      # Overlay FPS em tempo real
 │   ├── RecordingOverlayWindow.xaml # Overlay REC com timer
-│   ├── RecordingSettingsDialog.xaml # Configurações de gravação
+│   ├── RecordingSettingsDialog.xaml # Configurações de gravação (modo, facecam, dispositivos)
 │   ├── RenameDialog.xaml          # Renomear jogo
 │   ├── SteamProfileDialog.xaml    # Perfil Steam (avatar, jogos, importar)
 │   ├── SteamSetupDialog.xaml      # Configuração Steam ID
