@@ -202,6 +202,8 @@ public sealed class GameRecorderService : IDisposable
     private static List<string> ListMicrophonesViaRegistry()
     {
         var devices = new List<string>();
+        string? cachedAdapter = null;
+        bool adapterResolved = false;
         try
         {
             using var captureKey = Registry.LocalMachine.OpenSubKey(
@@ -235,6 +237,22 @@ public sealed class GameRecorderService : IDisposable
                     var name = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
                     if (!string.IsNullOrEmpty(name))
                     {
+                        // Build full dshow name if endpoint-only (e.g. "Microfone" → "Microfone (Realtek Audio)")
+                        if (!name.Contains('('))
+                        {
+                            if (!adapterResolved)
+                            {
+                                cachedAdapter = GetPhysicalAudioAdapterName();
+                                adapterResolved = true;
+                            }
+                            if (cachedAdapter is not null)
+                            {
+                                var built = $"{name} ({cachedAdapter})";
+                                devices.Add(built);
+                                Debug.WriteLine($"[Devices] Registry mic (built): '{built}'");
+                                continue;
+                            }
+                        }
                         devices.Add(name);
                         Debug.WriteLine($"[Devices] Registry mic (endpoint only): '{name}'");
                     }
@@ -256,9 +274,17 @@ public sealed class GameRecorderService : IDisposable
             foreach (var d in dshowDevices)
                 Debug.WriteLine($"[Recording]   dshow audio: '{d}'");
 
+            // Exact match
             if (dshowDevices.Any(d => d.Equals(storedName, StringComparison.OrdinalIgnoreCase)))
                 return storedName;
 
+            // Match ignoring ® / (R) / (TM) symbols (vary between driver versions)
+            var cleanStored = CleanRegisteredSymbol(storedName);
+            var cleanMatch = dshowDevices.FirstOrDefault(d =>
+                CleanRegisteredSymbol(d).Equals(cleanStored, StringComparison.OrdinalIgnoreCase));
+            if (cleanMatch is not null) return cleanMatch;
+
+            // Partial match (stored name is part of dshow name or vice versa)
             var partial = dshowDevices.FirstOrDefault(d =>
                 d.Contains(storedName, StringComparison.OrdinalIgnoreCase) ||
                 storedName.Contains(d, StringComparison.OrdinalIgnoreCase));
@@ -267,12 +293,28 @@ public sealed class GameRecorderService : IDisposable
             return dshowDevices[0];
         }
 
-        // dshow listing failed — try to build the full dshow-compatible name
-        var fullName = TryBuildFullAudioDeviceName(storedName);
-        if (fullName is not null) return fullName;
+        // dshow listing failed — test stored name directly with FFmpeg
+        Debug.WriteLine($"[Recording] Testing stored audio name: '{storedName}'");
+        if (QuickTestDshowAudioDevice(storedName))
+        {
+            Debug.WriteLine($"[Recording] Stored audio name works: '{storedName}'");
+            return storedName;
+        }
 
-        // Last resort: return stored name as-is and let FFmpeg try
-        Debug.WriteLine($"[Recording] Using stored audio name as-is: '{storedName}'");
+        // Build candidate names (endpoint + adapter variants) and test each
+        var candidates = BuildAudioDeviceCandidates(storedName);
+        foreach (var candidate in candidates)
+        {
+            Debug.WriteLine($"[Recording] Testing audio candidate: '{candidate}'");
+            if (QuickTestDshowAudioDevice(candidate))
+            {
+                Debug.WriteLine($"[Recording] Audio candidate works: '{candidate}'");
+                return candidate;
+            }
+        }
+
+        // No candidate verified — return stored name (retry-without-audio catches failures)
+        Debug.WriteLine($"[Recording] No audio device name verified, using stored: '{storedName}'");
         return storedName;
     }
 
@@ -302,16 +344,10 @@ public sealed class GameRecorderService : IDisposable
         return storedName;
     }
 
-    private static string? TryBuildFullAudioDeviceName(string endpointName)
+    private static string? GetPhysicalAudioAdapterName()
     {
-        // If name already has adapter suffix like "Microfone (Realtek Audio)", no need to build
-        if (endpointName.Contains('(') && endpointName.EndsWith(')'))
-            return null;
-
         try
         {
-            // Get audio adapter names via WMI to build the full dshow name
-            // dshow format: "{EndpointName} ({AdapterName})" e.g. "Microfone (Realtek Audio)"
             using var searcher = new ManagementObjectSearcher(
                 "SELECT Name FROM Win32_SoundDevice");
             var adapters = new List<string>();
@@ -334,19 +370,77 @@ public sealed class GameRecorderService : IDisposable
                    a.Contains("HDMI", StringComparison.OrdinalIgnoreCase))))
                 .ToList();
 
-            var adapter = physical.Count > 0 ? physical[0] : (adapters.Count > 0 ? adapters[0] : null);
-            if (adapter is not null)
-            {
-                var candidate = $"{endpointName} ({adapter})";
-                Debug.WriteLine($"[Recording] Built full audio device name: '{candidate}'");
-                return candidate;
-            }
+            return physical.Count > 0 ? physical[0] : (adapters.Count > 0 ? adapters[0] : null);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[Recording] TryBuildFullAudioDeviceName error: {ex.Message}");
+            Debug.WriteLine($"[Recording] GetPhysicalAudioAdapterName error: {ex.Message}");
+            return null;
         }
-        return null;
+    }
+
+    private static List<string> BuildAudioDeviceCandidates(string endpointName)
+    {
+        var candidates = new List<string>();
+
+        // If name already has adapter suffix, generate clean variants
+        if (endpointName.Contains('(') && endpointName.EndsWith(')'))
+        {
+            candidates.Add(endpointName);
+            var cleaned = CleanRegisteredSymbol(endpointName);
+            if (cleaned != endpointName)
+                candidates.Add(cleaned);
+            return candidates;
+        }
+
+        var adapter = GetPhysicalAudioAdapterName();
+        if (adapter is not null)
+        {
+            var candidate = $"{endpointName} ({adapter})";
+            candidates.Add(candidate);
+
+            // Also try without \u00ae / (R) / (TM) symbols (varies between driver versions)
+            var cleanAdapter = CleanRegisteredSymbol(adapter);
+            if (cleanAdapter != adapter)
+                candidates.Add($"{endpointName} ({cleanAdapter})");
+        }
+
+        return candidates;
+    }
+
+    private static bool QuickTestDshowAudioDevice(string deviceName)
+    {
+        if (!File.Exists(FfmpegExe)) return false;
+        try
+        {
+            using var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = FfmpegExe,
+                    Arguments = $"-f dshow -i audio=\"{deviceName}\" -t 0.1 -f null - -y -loglevel quiet",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            if (!proc.WaitForExit(4000))
+            {
+                // Still running after 4s = device is valid (actively capturing audio)
+                try { proc.Kill(); } catch { }
+                return true;
+            }
+            Debug.WriteLine($"[Recording] QuickTest audio='{deviceName}' \u2192 exit {proc.ExitCode}");
+            return proc.ExitCode == 0;
+        }
+        catch { return false; }
+    }
+
+    private static string CleanRegisteredSymbol(string name)
+    {
+        var cleaned = name.Replace("(R)", "").Replace("(r)", "").Replace("(TM)", "")
+                          .Replace("\u00ae", "").Replace("\u2122", "");
+        return Regex.Replace(cleaned, @"\s{2,}", " ").Trim();
     }
 
     public static bool HasCameraHardware()
@@ -442,7 +536,21 @@ public sealed class GameRecorderService : IDisposable
         {
             // Start facecam before FFmpeg so gdigrab captures it on screen
             if (hasCam && File.Exists(FfplayExe))
+            {
                 StartFacecamPreview(webcamDevice!, facecamPos);
+
+                // Wait for ffplay window to appear before gdigrab starts capturing
+                var sw = Stopwatch.StartNew();
+                while (sw.ElapsedMilliseconds < 2000)
+                {
+                    if (FindWindow(null!, "GLauncherFacecam") != IntPtr.Zero)
+                    {
+                        Debug.WriteLine($"[Recording] Facecam window detected in {sw.ElapsedMilliseconds}ms");
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+            }
 
             _ffmpegProcess = new Process
             {
@@ -525,9 +633,12 @@ public sealed class GameRecorderService : IDisposable
 
                     if (hasMicForRetry || hasCamForRetry)
                     {
-                        Debug.WriteLine($"[Recording] FFmpeg failed with audio/cam (exit {exitCode}), retrying screen-only...");
-                        StatusMessage?.Invoke("⚠ Dispositivo de áudio/câmera indisponível. Gravando apenas a tela...");
-                        RetryScreenOnly();
+                        bool keepCam = hasCamForRetry && _ffplayProcess is not null && !_ffplayProcess.HasExited;
+                        Debug.WriteLine($"[Recording] FFmpeg failed with audio/cam (exit {exitCode}), retrying (keepCam={keepCam})...");
+                        StatusMessage?.Invoke(keepCam
+                            ? "⚠ Microfone indisponível. Gravando sem áudio..."
+                            : "⚠ Dispositivo de áudio/câmera indisponível. Gravando apenas a tela...");
+                        RetryScreenOnly(keepFacecam: keepCam);
                     }
                     else
                     {
@@ -612,17 +723,34 @@ public sealed class GameRecorderService : IDisposable
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = FfplayExe,
-                    Arguments = $"-f dshow -video_size 640x480 -i video=\"{webcamDevice}\" " +
+                    Arguments = $"-f dshow -i video=\"{webcamDevice}\" " +
                                 $"-window_title GLauncherFacecam -noborder -alwaysontop " +
-                                $"-left {left} -top {top} -x {camW} -y {camH} -loglevel quiet",
+                                $"-left {left} -top {top} -x {camW} -y {camH} -loglevel error",
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    RedirectStandardError = true
                 },
                 EnableRaisingEvents = true
             };
+
+            _ffplayProcess.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    Debug.WriteLine($"[FFplay] {e.Data}");
+            };
+
+            _ffplayProcess.Exited += (_, _) =>
+            {
+                Debug.WriteLine("[FFplay] Facecam preview process exited");
+            };
+
             _ffplayProcess.Start();
+            _ffplayProcess.BeginErrorReadLine();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[FFplay] Failed to start facecam: {ex.Message}");
+        }
     }
 
     public void StopFacecamPreview()
@@ -636,9 +764,10 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly()
+    private void RetryScreenOnly(bool keepFacecam = false)
     {
-        StopFacecamPreview();
+        if (!keepFacecam)
+            StopFacecamPreview();
 
         if (_ffmpegProcess is not null)
         {
