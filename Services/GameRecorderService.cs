@@ -573,6 +573,43 @@ public sealed class GameRecorderService : IDisposable
                lower.Contains("loopback");
     }
 
+    private static bool HasDisabledLoopbackDevice()
+    {
+        try
+        {
+            using var captureKey = Registry.LocalMachine.OpenSubKey(
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture");
+            if (captureKey is null) return false;
+            foreach (var subKeyName in captureKey.GetSubKeyNames())
+            {
+                try
+                {
+                    using var deviceKey = captureKey.OpenSubKey(subKeyName);
+                    if (deviceKey is null) continue;
+                    var state = deviceKey.GetValue("DeviceState");
+                    if (state is not int stateVal || stateVal != 2) continue;
+                    using var propsKey = deviceKey.OpenSubKey("Properties");
+                    if (propsKey is null) continue;
+                    var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
+                    if (!string.IsNullOrEmpty(fullName) && IsLoopbackDeviceName(fullName))
+                    {
+                        Debug.WriteLine($"[Recording] Disabled loopback found: '{fullName}'");
+                        return true;
+                    }
+                    var endpointName = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
+                    if (!string.IsNullOrEmpty(endpointName) && IsLoopbackDeviceName(endpointName))
+                    {
+                        Debug.WriteLine($"[Recording] Disabled loopback found: '{endpointName}'");
+                        return true;
+                    }
+                }
+                catch { continue; }
+            }
+        }
+        catch { }
+        return false;
+    }
+
     public bool StartRecording(RecordingResolution resolution, RecordingMode mode = RecordingMode.ScreenOnly,
         FacecamPosition facecamPos = FacecamPosition.TopRight,
         string? webcamDevice = null, string? micDevice = null, string? gameName = null)
@@ -632,34 +669,33 @@ public sealed class GameRecorderService : IDisposable
         _resolvedLoopbackDevice = FindSystemLoopbackDevice();
         bool hasLoopback = _resolvedLoopbackDevice is not null;
         if (hasLoopback)
+        {
             Debug.WriteLine($"[Recording] Loopback device: '{_resolvedLoopbackDevice}'");
+        }
         else
-            StatusMessage?.Invoke("⚠ 'Mixagem estéreo' não encontrada — áudio do jogo não será capturado. Ative em: Configurações de Som → Dispositivos de entrada → Mixagem estéreo.");
+        {
+            if (HasDisabledLoopbackDevice())
+                StatusMessage?.Invoke("⚠ 'Mixagem estéreo' está desativada — ative em: Painel de Controle → Som → aba Gravação → clique direito → Mostrar dispositivos desativados → Mixagem estéreo → Ativar.");
+            else
+                Debug.WriteLine("[Recording] No loopback device available — game audio will not be captured");
+        }
 
-        var args = BuildFfmpegArgs(resolution, hasCam: false, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice);
+        // Don't use the same device as both mic and loopback
+        if (hasMic && hasLoopback &&
+            micDevice!.Equals(_resolvedLoopbackDevice, StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.WriteLine("[Recording] Mic device same as loopback — skipping duplicate");
+            hasMic = false;
+        }
+
+        Debug.WriteLine($"[Recording] Config: mode={mode}, hasMic={hasMic}, hasCam={hasCam}, hasLoopback={hasLoopback}");
+        var args = BuildFfmpegArgs(resolution, hasCam, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice,
+            hasCam ? webcamDevice : null, facecamPos);
         Debug.WriteLine($"[Recording] FFmpeg args: {args}");
         _pendingRetry = hasMic || hasCam || hasLoopback;
 
         try
         {
-            // Start facecam before FFmpeg so gdigrab captures it on screen
-            if (hasCam && File.Exists(FfplayExe))
-            {
-                StartFacecamPreview(webcamDevice!, facecamPos);
-
-                // Wait for ffplay window to appear before gdigrab starts capturing
-                var sw = Stopwatch.StartNew();
-                while (sw.ElapsedMilliseconds < 2000)
-                {
-                    if (FindWindow(null!, "GLauncherFacecam") != IntPtr.Zero)
-                    {
-                        Debug.WriteLine($"[Recording] Facecam window detected in {sw.ElapsedMilliseconds}ms");
-                        break;
-                    }
-                    Thread.Sleep(100);
-                }
-            }
-
             _ffmpegProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -722,10 +758,12 @@ public sealed class GameRecorderService : IDisposable
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
 
-            // Monitor process health asynchronously — retry without audio if device failed
+            // Monitor process health asynchronously — retry without mic if device failed
             var hasMicForRetry = hasMic;
             var hasCamForRetry = hasCam;
             var hasLoopbackForRetry = hasLoopback;
+            var webcamForRetry = webcamDevice;
+            var facecamPosForRetry = facecamPos;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(2000);
@@ -742,14 +780,15 @@ public sealed class GameRecorderService : IDisposable
 
                     if (hasMicForRetry || hasCamForRetry || hasLoopbackForRetry)
                     {
-                        bool keepCam = hasCamForRetry && _ffplayProcess is not null && !_ffplayProcess.HasExited;
-                        // If had both mic+loopback, retry with loopback only (preserve game audio)
+                        // Retry: drop mic (most likely cause), keep loopback + webcam overlay
                         string? retryLoopback = hasLoopbackForRetry ? _resolvedLoopbackDevice : null;
-                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying (keepCam={keepCam}, loopback={retryLoopback is not null})...");
+                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={retryLoopback is not null}, cam={hasCamForRetry})...");
                         StatusMessage?.Invoke(retryLoopback is not null
-                            ? "⚠ Microfone indisponível. Gravando com áudio do jogo..."
-                            : "⚠ Dispositivo de áudio indisponível. Gravando apenas a tela...");
-                        RetryScreenOnly(keepFacecam: keepCam, loopbackDevice: retryLoopback);
+                            ? "⚠ Dispositivo falhou. Tentando novamente com áudio do jogo..."
+                            : "⚠ Dispositivo de áudio falhou. Tentando novamente sem áudio...");
+                        RetryScreenOnly(loopbackDevice: retryLoopback,
+                            webcamDevice: hasCamForRetry ? webcamForRetry : null,
+                            facecamPos: facecamPosForRetry);
                     }
                     else
                     {
@@ -764,7 +803,11 @@ public sealed class GameRecorderService : IDisposable
             });
 
             RecordingStateChanged?.Invoke(true);
-            StatusMessage?.Invoke($"🔴 Gravando: {Path.GetFileName(_currentOutputFile)}");
+            var features = new List<string> { "tela" };
+            if (hasLoopback) features.Add("áudio do jogo");
+            if (hasMic) features.Add("microfone");
+            if (hasCam) features.Add("facecam");
+            StatusMessage?.Invoke($"🔴 Gravando ({string.Join(" + ", features)}): {Path.GetFileName(_currentOutputFile)}");
             return true;
         }
         catch (Exception ex)
@@ -778,7 +821,8 @@ public sealed class GameRecorderService : IDisposable
     }
 
     private string BuildFfmpegArgs(RecordingResolution resolution, bool hasCam, bool hasMic, string? micDevice,
-        bool hasLoopback = false, string? loopbackDevice = null)
+        bool hasLoopback = false, string? loopbackDevice = null,
+        string? webcamDevice = null, FacecamPosition facecamPos = FacecamPosition.TopRight)
     {
         var (width, height) = resolution switch
         {
@@ -800,7 +844,13 @@ public sealed class GameRecorderService : IDisposable
 
         var inputs = "-f gdigrab -framerate 60 -i desktop";
         int nextInput = 1;
-        int loopbackIdx = -1, micIdx = -1;
+        int camIdx = -1, loopbackIdx = -1, micIdx = -1;
+
+        if (hasCam && !string.IsNullOrEmpty(webcamDevice))
+        {
+            inputs += $" -f dshow -framerate 30 -i video=\"{webcamDevice}\"";
+            camIdx = nextInput++;
+        }
 
         if (hasLoopback && !string.IsNullOrEmpty(loopbackDevice))
         {
@@ -814,30 +864,62 @@ public sealed class GameRecorderService : IDisposable
             micIdx = nextInput++;
         }
 
-        string mapArgs, audioArgs;
+        // Build filter graph (video overlay + audio mix in single -filter_complex)
+        var filters = new List<string>();
+        string videoMap;
+
+        if (hasCam)
+        {
+            var overlayPos = facecamPos switch
+            {
+                FacecamPosition.TopRight => "W-w-20:20",
+                FacecamPosition.TopLeft => "20:20",
+                FacecamPosition.BottomRight => "W-w-20:H-h-70",
+                FacecamPosition.BottomLeft => "20:H-h-70",
+                _ => "W-w-20:20"
+            };
+            filters.Add($"[{camIdx}:v]scale=480:360[cam]");
+            filters.Add($"[0:v]scale={width}:{height}[desk]");
+            filters.Add($"[desk][cam]overlay={overlayPos}[vout]");
+            videoMap = "-map \"[vout]\"";
+        }
+        else
+        {
+            videoMap = "-map 0:v";
+        }
+
+        string audioMap;
+        string audioArgs;
+
         if (hasLoopback && hasMic)
         {
-            // Mix game audio (loopback) + microphone using amix filter
-            mapArgs = $"-filter_complex \"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]\" -map 0:v -map \"[aout]\"";
+            filters.Add($"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]");
+            audioMap = "-map \"[aout]\"";
             audioArgs = "-c:a aac -b:a 192k";
         }
         else if (hasLoopback)
         {
-            mapArgs = $"-map 0:v -map {loopbackIdx}:a";
+            audioMap = $"-map {loopbackIdx}:a";
             audioArgs = "-c:a aac -b:a 192k";
         }
         else if (hasMic)
         {
-            mapArgs = $"-map 0:v -map {micIdx}:a";
+            audioMap = $"-map {micIdx}:a";
             audioArgs = "-c:a aac -b:a 128k";
         }
         else
         {
-            mapArgs = "";
+            audioMap = "";
             audioArgs = "";
         }
 
-        return $"-y {inputs} {mapArgs} {encoderArgs} -s {width}x{height} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+        var filterComplex = filters.Count > 0
+            ? $"-filter_complex \"{string.Join(';', filters)}\""
+            : "";
+
+        var sizeArg = hasCam ? "" : $"-s {width}x{height}";
+
+        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} {sizeArg} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
 
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
@@ -947,11 +1029,9 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly(bool keepFacecam = false, string? loopbackDevice = null)
+    private void RetryScreenOnly(string? loopbackDevice = null, string? webcamDevice = null,
+        FacecamPosition facecamPos = FacecamPosition.TopRight)
     {
-        if (!keepFacecam)
-            StopFacecamPreview();
-
         if (_ffmpegProcess is not null)
         {
             try { if (!_ffmpegProcess.HasExited) _ffmpegProcess.Kill(); } catch { }
@@ -961,9 +1041,10 @@ public sealed class GameRecorderService : IDisposable
 
         _lastFfmpegError = string.Empty;
         bool hasLoopback = loopbackDevice is not null;
-        var args = BuildFfmpegArgs(_currentResolution, hasCam: false, hasMic: false, micDevice: null,
-            hasLoopback, loopbackDevice);
-        Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}): {args}");
+        bool hasCam = webcamDevice is not null;
+        var args = BuildFfmpegArgs(_currentResolution, hasCam, hasMic: false, micDevice: null,
+            hasLoopback, loopbackDevice, webcamDevice, facecamPos);
+        Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}, cam={hasCam}): {args}");
 
         try
         {
@@ -994,7 +1075,6 @@ public sealed class GameRecorderService : IDisposable
             {
                 try
                 {
-                    StopFacecamPreview();
                     int exitCode = -1;
                     try { exitCode = _ffmpegProcess?.ExitCode ?? -1; } catch { }
                     if (exitCode != 0 && !_stoppingManually)
@@ -1003,16 +1083,16 @@ public sealed class GameRecorderService : IDisposable
                 }
                 catch
                 {
-                    StopFacecamPreview();
                     RecordingStateChanged?.Invoke(false);
                 }
             };
 
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
-            StatusMessage?.Invoke(hasLoopback
-                ? $"🔴 Gravando (sem microfone): {Path.GetFileName(_currentOutputFile)}"
-                : $"🔴 Gravando (sem áudio): {Path.GetFileName(_currentOutputFile)}");
+            var retryFeatures = new List<string> { "tela" };
+            if (hasLoopback) retryFeatures.Add("áudio do jogo");
+            if (hasCam) retryFeatures.Add("facecam");
+            StatusMessage?.Invoke($"🔴 Gravando ({string.Join(" + ", retryFeatures)}): {Path.GetFileName(_currentOutputFile)}");
         }
         catch (Exception ex)
         {

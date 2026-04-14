@@ -1033,6 +1033,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _ => FacecamPosition.TopRight
             };
 
+            // Feedback visual imediato ao pressionar F9
+            if (_recorder.IsRecording)
+                StatusMessage = "⏹️ Parando gravação...";
+            else
+                StatusMessage = "⏳ Iniciando gravação...";
+
             var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
             _recorder.ToggleRecording(res, mode2, facecamPos2,
                 SettingsService.Current.FacecamDevice,
