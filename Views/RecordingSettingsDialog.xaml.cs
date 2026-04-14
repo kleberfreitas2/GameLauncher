@@ -72,6 +72,9 @@ public partial class RecordingSettingsDialog : Window
             var videoDevices = GameRecorderService.ListVideoDevices();
             var audioDevices = GameRecorderService.ListAudioDevices();
 
+            bool hardwareCamExists = videoDevices.Count == 0 && GameRecorderService.HasCameraHardware();
+            bool hardwareMicExists = audioDevices.Count == 0 && GameRecorderService.HasMicrophoneHardware();
+
             Dispatcher.BeginInvoke(() =>
             {
                 WebcamCombo.Items.Clear();
@@ -93,8 +96,62 @@ public partial class RecordingSettingsDialog : Window
                     MicCombo.SelectedItem = savedMic;
                 else if (audioDevices.Count > 0)
                     MicCombo.SelectedIndex = 0;
+
+                UpdatePermissionWarning(videoDevices.Count, audioDevices.Count,
+                    hardwareCamExists, hardwareMicExists);
             });
         });
+    }
+
+    private void UpdatePermissionWarning(int camCount, int micCount,
+        bool hardwareCamExists, bool hardwareMicExists)
+    {
+        bool needsMic = ModeMic.IsChecked == true || ModeFacecam.IsChecked == true;
+        bool needsCam = ModeFacecam.IsChecked == true;
+
+        if (!needsMic && !needsCam)
+        {
+            PermissionWarning.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        bool camMissing = needsCam && camCount == 0;
+        bool micMissing = needsMic && micCount == 0;
+
+        if (!camMissing && !micMissing)
+        {
+            PermissionWarning.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        PermissionWarning.Visibility = Visibility.Visible;
+
+        if (camMissing && micMissing)
+        {
+            if (hardwareCamExists || hardwareMicExists)
+                PermissionMessage.Text = "Sua c\u00e2mera e microfone foram detectados no hardware, " +
+                    "mas o Windows est\u00e1 bloqueando o acesso. Ative nas configura\u00e7\u00f5es de privacidade:";
+            else
+                PermissionMessage.Text = "Nenhuma c\u00e2mera ou microfone encontrado. " +
+                    "Verifique se est\u00e3o conectados e ative o acesso nas configura\u00e7\u00f5es do Windows:";
+        }
+        else if (camMissing)
+        {
+            PermissionMessage.Text = hardwareCamExists
+                ? "Sua c\u00e2mera foi detectada no hardware, mas o Windows est\u00e1 bloqueando o acesso. " +
+                  "Ative nas configura\u00e7\u00f5es de privacidade:"
+                : "Nenhuma c\u00e2mera encontrada. Verifique se est\u00e1 conectada e ative o acesso:";
+        }
+        else
+        {
+            PermissionMessage.Text = hardwareMicExists
+                ? "Seu microfone foi detectado no hardware, mas o Windows est\u00e1 bloqueando o acesso. " +
+                  "Ative nas configura\u00e7\u00f5es de privacidade:"
+                : "Nenhum microfone encontrado. Verifique se est\u00e1 conectado e ative o acesso:";
+        }
+
+        OpenCameraSettingsBtn.Visibility = camMissing ? Visibility.Visible : Visibility.Collapsed;
+        OpenMicSettingsBtn.Visibility = micMissing ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void CheckFfmpeg()
@@ -110,7 +167,7 @@ public partial class RecordingSettingsDialog : Window
         {
             FfmpegIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Download;
             FfmpegIcon.Foreground = FindBrush("#FFD740");
-            FfmpegStatusText.Text = "Baixando FFmpeg (necessário para gravar)...";
+            FfmpegStatusText.Text = "Baixando FFmpeg (necess\u00e1rio para gravar)...";
             FfmpegStatusText.Foreground = FindBrush("#FFD740");
 
             var ok = await GameRecorderService.EnsureFfmpegAsync(msg =>
@@ -130,7 +187,7 @@ public partial class RecordingSettingsDialog : Window
             {
                 FfmpegIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
                 FfmpegIcon.Foreground = FindBrush("#FF5252");
-                FfmpegStatusText.Text = "Erro ao obter FFmpeg — gravação indisponível";
+                FfmpegStatusText.Text = "Erro ao obter FFmpeg \u2014 grava\u00e7\u00e3o indispon\u00edvel";
                 FfmpegStatusText.Foreground = FindBrush("#FF5252");
             }
         }
@@ -158,6 +215,9 @@ public partial class RecordingSettingsDialog : Window
         FacecamSection.Visibility = isFacecam ? Visibility.Visible : Visibility.Collapsed;
         DeviceSection.Visibility = needsMic ? Visibility.Visible : Visibility.Collapsed;
         WebcamRow.Visibility = isFacecam ? Visibility.Visible : Visibility.Collapsed;
+
+        if (!needsMic)
+            PermissionWarning.Visibility = Visibility.Collapsed;
     }
 
     private void FacecamPos_Click(object sender, MouseButtonEventArgs e)
@@ -231,6 +291,37 @@ public partial class RecordingSettingsDialog : Window
             FileName = path,
             UseShellExecute = true
         });
+    }
+
+    private void RefreshDevices_Click(object sender, RoutedEventArgs e)
+    {
+        LoadDevices();
+    }
+
+    private void OpenCameraSettings_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-settings:privacy-webcam",
+                UseShellExecute = true
+            });
+        }
+        catch { }
+    }
+
+    private void OpenMicSettings_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-settings:privacy-microphone",
+                UseShellExecute = true
+            });
+        }
+        catch { }
     }
 
     private static SolidColorBrush FindBrush(string hex)

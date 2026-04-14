@@ -985,57 +985,65 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!SettingsService.Current.RecordingEnabled) return;
 
-        if (_recorder is null)
+        try
         {
-            _recorder = new GameRecorderService();
-            _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
-            _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
+            if (_recorder is null)
             {
-                IsRecording = recording;
-                if (recording)
+                _recorder = new GameRecorderService();
+                _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
+                _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
                 {
-                    _recordingOverlay?.Close();
-                    var facecamPos = SettingsService.Current.FacecamPosition;
-                    var mode = SettingsService.Current.RecordingMode;
-                    bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
-                    _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
-                    _recordingOverlay.Show();
-                }
-                else
-                {
-                    _recordingOverlay?.Close();
-                    _recordingOverlay = null;
-                }
-            });
+                    IsRecording = recording;
+                    if (recording)
+                    {
+                        _recordingOverlay?.Close();
+                        var facecamPos = SettingsService.Current.FacecamPosition;
+                        var mode = SettingsService.Current.RecordingMode;
+                        bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
+                        _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
+                        _recordingOverlay.Show();
+                    }
+                    else
+                    {
+                        _recordingOverlay?.Close();
+                        _recordingOverlay = null;
+                    }
+                });
+            }
+
+            var res = SettingsService.Current.RecordingResolution switch
+            {
+                "720p" => RecordingResolution.HD_720p,
+                "4K" => RecordingResolution.UHD_4K,
+                _ => RecordingResolution.FHD_1080p
+            };
+
+            var mode2 = SettingsService.Current.RecordingMode switch
+            {
+                "microphone" => RecordingMode.Microphone,
+                "facecam_mic" => RecordingMode.FacecamMic,
+                _ => RecordingMode.ScreenOnly
+            };
+
+            var facecamPos2 = SettingsService.Current.FacecamPosition switch
+            {
+                "top_left" => FacecamPosition.TopLeft,
+                "bottom_right" => FacecamPosition.BottomRight,
+                "bottom_left" => FacecamPosition.BottomLeft,
+                _ => FacecamPosition.TopRight
+            };
+
+            var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
+            _recorder.ToggleRecording(res, mode2, facecamPos2,
+                SettingsService.Current.FacecamDevice,
+                SettingsService.Current.MicrophoneDevice,
+                gameName);
         }
-
-        var res = SettingsService.Current.RecordingResolution switch
+        catch (Exception ex)
         {
-            "720p" => RecordingResolution.HD_720p,
-            "4K" => RecordingResolution.UHD_4K,
-            _ => RecordingResolution.FHD_1080p
-        };
-
-        var mode2 = SettingsService.Current.RecordingMode switch
-        {
-            "microphone" => RecordingMode.Microphone,
-            "facecam_mic" => RecordingMode.FacecamMic,
-            _ => RecordingMode.ScreenOnly
-        };
-
-        var facecamPos2 = SettingsService.Current.FacecamPosition switch
-        {
-            "top_left" => FacecamPosition.TopLeft,
-            "bottom_right" => FacecamPosition.BottomRight,
-            "bottom_left" => FacecamPosition.BottomLeft,
-            _ => FacecamPosition.TopRight
-        };
-
-        var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
-        _recorder.ToggleRecording(res, mode2, facecamPos2,
-            SettingsService.Current.FacecamDevice,
-            SettingsService.Current.MicrophoneDevice,
-            gameName);
+            Debug.WriteLine($"[Recording] Error in HandleRecordingHotkey: {ex}");
+            StatusMessage = $"Erro na gravação: {ex.Message}";
+        }
     }
 
     [RelayCommand]
