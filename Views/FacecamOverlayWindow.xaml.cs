@@ -86,9 +86,10 @@ public partial class FacecamOverlayWindow : Window
                 {
                     FileName = FfmpegExe,
                     Arguments = $"-hide_banner -loglevel warning " +
-                                $"-f dshow -framerate 30 -rtbufsize 100M -i video=\"{webcamDevice}\" " +
+                                $"-fflags nobuffer -probesize 32 -analyzeduration 0 " +
+                                $"-f dshow -framerate 60 -rtbufsize 50M -i video=\"{webcamDevice}\" " +
                                 $"-vf scale={FrameWidth}:{FrameHeight}:flags=fast_bilinear " +
-                                $"-r 30 -f rawvideo -pix_fmt bgra -",
+                                $"-r 60 -f rawvideo -pix_fmt bgra -",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
