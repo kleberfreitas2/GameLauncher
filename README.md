@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.5.0 (Beta Teste)
+  # GLauncher V.2.5.1 (Beta Teste)
 
   **Launcher de jogos pessoal estilo PS5 — feito com WPF e .NET 8**
 
@@ -38,7 +38,8 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 </div>
 =======
-<img width="1915" height="1001" alt="image" src="https://github.com/user-attachments/assets/140cd580-1b7c-469a-b87e-6ace8120a492" />
+
+<img width="1918" height="1079" alt="image" src="https://github.com/user-attachments/assets/bec8187f-d6cf-4f1f-998d-7d67d6b2d396" />
 
 ---
 
