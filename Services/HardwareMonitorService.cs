@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Management;
 using System.Timers;
 using LibreHardwareMonitor.Hardware;
@@ -23,6 +24,7 @@ public sealed class HardwareMonitorService : IDisposable
     private readonly System.Timers.Timer _timer;
     private bool _disposed;
     private readonly List<string> _storageDrives;
+    private PerformanceCounter? _cpuCounter;
 
     public event Action<HardwareMetrics>? MetricsUpdated;
 
@@ -32,11 +34,15 @@ public sealed class HardwareMonitorService : IDisposable
         {
             IsCpuEnabled = true,
             IsGpuEnabled = true,
-            IsMemoryEnabled = true
+            IsMemoryEnabled = true,
+            IsMotherboardEnabled = true
         };
 
         try { _computer.Open(); }
         catch { }
+
+        try { _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"); _cpuCounter.NextValue(); }
+        catch { _cpuCounter = null; }
 
         _storageDrives = QueryStorageDrives();
 
@@ -46,6 +52,15 @@ public sealed class HardwareMonitorService : IDisposable
 
     public void Start() => _timer.Start();
     public void Stop() => _timer.Stop();
+
+    private static IEnumerable<ISensor> GetAllSensors(IHardware hw)
+    {
+        foreach (var sensor in hw.Sensors)
+            yield return sensor;
+        foreach (var sub in hw.SubHardware)
+            foreach (var sensor in sub.Sensors)
+                yield return sensor;
+    }
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
@@ -63,11 +78,13 @@ public sealed class HardwareMonitorService : IDisposable
                 foreach (var sub in hw.SubHardware)
                     sub.Update();
 
+                var allSensors = GetAllSensors(hw);
+
                 switch (hw.HardwareType)
                 {
                     case HardwareType.Cpu:
                         if (string.IsNullOrEmpty(cpuName)) cpuName = hw.Name;
-                        foreach (var sensor in hw.Sensors)
+                        foreach (var sensor in allSensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Total"))
                                 cpuUsage = sensor.Value ?? 0;
@@ -76,7 +93,7 @@ public sealed class HardwareMonitorService : IDisposable
                         }
                         if (cpuTemp == 0)
                         {
-                            foreach (var sensor in hw.Sensors)
+                            foreach (var sensor in GetAllSensors(hw))
                             {
                                 if (sensor.SensorType == SensorType.Temperature && sensor.Value > 0)
                                 { cpuTemp = sensor.Value ?? 0; break; }
@@ -88,7 +105,7 @@ public sealed class HardwareMonitorService : IDisposable
                     case HardwareType.GpuAmd:
                     case HardwareType.GpuIntel:
                         if (string.IsNullOrEmpty(gpuName)) gpuName = hw.Name;
-                        foreach (var sensor in hw.Sensors)
+                        foreach (var sensor in allSensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Core"))
                                 gpuUsage = sensor.Value ?? 0;
@@ -98,7 +115,7 @@ public sealed class HardwareMonitorService : IDisposable
                         break;
 
                     case HardwareType.Memory:
-                        foreach (var sensor in hw.Sensors)
+                        foreach (var sensor in allSensors)
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Memory"))
                                 ramUsage = sensor.Value ?? 0;
@@ -108,7 +125,42 @@ public sealed class HardwareMonitorService : IDisposable
                                 ramAvailable = sensor.Value ?? 0;
                         }
                         break;
+
+                    case HardwareType.Motherboard:
+                        if (cpuTemp == 0)
+                        {
+                            foreach (var sensor in allSensors)
+                            {
+                                if (sensor.SensorType == SensorType.Temperature &&
+                                    (sensor.Name.Contains("CPU") || sensor.Name.Contains("Package")) &&
+                                    sensor.Value > 0)
+                                { cpuTemp = sensor.Value ?? 0; break; }
+                            }
+                        }
+                        break;
                 }
+            }
+
+            if (cpuUsage == 0)
+            {
+                try { cpuUsage = _cpuCounter?.NextValue() ?? 0; }
+                catch { }
+            }
+
+            if (cpuTemp == 0)
+            {
+                try
+                {
+                    using var searcher = new ManagementObjectSearcher(@"root\WMI",
+                        "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+                    foreach (var obj in searcher.Get())
+                    {
+                        var kelvinTenths = Convert.ToSingle(obj["CurrentTemperature"]);
+                        var celsius = (kelvinTenths / 10f) - 273.15f;
+                        if (celsius is > 0 and < 150) { cpuTemp = celsius; break; }
+                    }
+                }
+                catch { }
             }
 
             var totalRam = ramUsed + ramAvailable;
@@ -157,6 +209,7 @@ public sealed class HardwareMonitorService : IDisposable
         _disposed = true;
         _timer.Stop();
         _timer.Dispose();
+        try { _cpuCounter?.Dispose(); } catch { }
         try { _computer.Close(); } catch { }
     }
 }

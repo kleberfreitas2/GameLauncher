@@ -11,6 +11,8 @@
   ![SkiaSharp](https://img.shields.io/badge/SkiaSharp-3.119-0B8AC9?style=flat-square)
   ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square)
   ![Discord](https://img.shields.io/badge/Discord-Integration-5865F2?style=flat-square&logo=discord&logoColor=white)
+  ![Epic Games](https://img.shields.io/badge/Epic_Games-Integration-2F2D2E?style=flat-square&logo=epicgames&logoColor=white)
+  ![FFmpeg](https://img.shields.io/badge/FFmpeg-Recording-007808?style=flat-square&logo=ffmpeg&logoColor=white)
   ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 </div>
@@ -19,7 +21,7 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos), **gravação de gameplay** com hotkey (FFmpeg) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
 
 
 <div align="center">
@@ -104,6 +106,37 @@ Login com conta Discord via **OAuth2** e **Rich Presence** automático ao jogar:
 - O status é limpo automaticamente quando o jogo fecha
 
 > 💡 Basta ter o Discord aberto no PC — o Rich Presence é detectado automaticamente.
+
+### 🎮 Integração Epic Games
+Importação automática de jogos instalados via **Epic Games Store**:
+
+- Detecção automática dos jogos instalados via manifestos do launcher Epic
+- Importação com **capas, logos, fundos e informações** buscadas automaticamente
+- Perfil Epic exibido no cabeçalho com nome e total de jogos
+- Botão **EPIC** com logo oficial e estilo visual dedicado
+- Detecção de plataforma: jogos Epic exibem **"Epic Games - PC (Windows)"** nos detalhes
+
+> 💡 Basta ter a Epic Games Store instalada — o GLauncher detecta os jogos automaticamente.
+
+### 🔴 Gravação de Gameplay
+Grave suas partidas com um único botão usando **FFmpeg**:
+
+- **Hotkey global F9** — inicia/para gravação a qualquer momento (mesmo com o jogo em foco)
+- Detecção automática de encoder de hardware: **NVENC** (NVIDIA), **AMF** (AMD), **QSV** (Intel), ou **libx264** (CPU)
+- Resoluções: **720p**, **1080p** ou **4K**
+- Overlay "REC" com timer em tempo real (invisível nas gravações via `WDA_EXCLUDEFROMCAPTURE`)
+- Arquivo nomeado automaticamente: `NomeDoJogo_1080p_2025-06-13_14-30-00.mp4`
+- FFmpeg baixado automaticamente na primeira utilização
+- Configurações acessíveis pelo menu ⚙️ → "Configurações de Gravação"
+
+| Configuração | Opções |
+|---|---|
+| Resolução | 720p / 1080p / 4K |
+| Encoder | Auto-detectado (GPU > CPU) |
+| Hotkey | F9 (global, funciona em qualquer app) |
+| Saída | `%LOCALAPPDATA%\GameLauncher\recordings\` |
+
+> 💡 Pressione **F9** para iniciar a gravação e **F9** novamente para parar. O overlay "🔴 REC" aparece na tela mas **não aparece no vídeo gravado**.
 
 ### 🖥️ Monitor de Hardware
 Gauges circulares em tempo real no rodapé + descrições do hardware:
@@ -191,7 +224,7 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 | Remover Jogo | Remove da biblioteca (não desinstala) |
 
 ### 📖 Manual Integrado
-- Manual interativo com **13 páginas** acessível pelo ícone ❓ no cabeçalho
+- Manual interativo com **15 páginas** acessível pelo ícone ❓ no cabeçalho
 - Navegação lateral com sidebar
 - Navegável por gamepad (D-Pad ▲▼ + B para fechar, analógico direito para scroll)
 - Cobre todas as funcionalidades do launcher
@@ -218,11 +251,16 @@ GameLauncher/
 ├── Models/
 │   ├── AppSettings.cs            # Configurações + credenciais padrão
 │   ├── DiscordProfile.cs         # Modelo de perfil Discord (avatar, username)
-│   └── Game.cs                   # Modelo de jogo (ObservableObject)
+│   ├── EpicProfile.cs            # Modelo de perfil Epic Games
+│   ├── Game.cs                   # Modelo de jogo (ObservableObject)
+│   └── GameTechInfo.cs           # Info técnica do jogo
 ├── Services/
 │   ├── DiscordRichPresenceService.cs # Rich Presence via IPC Named Pipes
 │   ├── DiscordService.cs         # Discord OAuth2 (login, perfil, token cache)
+│   ├── EpicGamesService.cs       # Integração Epic Games (detecção, importação)
+│   ├── GameRecorderService.cs    # Gravação de gameplay (FFmpeg, encoders HW)
 │   ├── GameScanner.cs            # Scanner de pasta por executáveis
+│   ├── GlobalHotkeyService.cs    # Hotkey global F9 (WH_KEYBOARD_LL)
 │   ├── HardwareMonitorService.cs # CPU/GPU/RAM + WMI para storage
 │   ├── IconExtractor.cs          # Extração de ícone de .exe
 │   ├── IgdbService.cs            # Integração IGDB (sinopse, gênero, nota)
@@ -241,9 +279,13 @@ GameLauncher/
 │   ├── CoverSearchDialog.xaml     # Busca e seleção de capas online
 │   ├── DiscordProfileDialog.xaml   # Perfil Discord (avatar, nome, logout)
 │   ├── DiscordSetupDialog.xaml    # Configuração Discord Client ID
+│   ├── EpicProfileDialog.xaml     # Perfil Epic Games (jogos, importar)
+│   ├── EpicSetupDialog.xaml       # Configuração Epic Games
 │   ├── HelpDialog.xaml            # Manual interativo (13 páginas)
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
+│   ├── RecordingOverlayWindow.xaml # Overlay REC com timer
+│   ├── RecordingSettingsDialog.xaml # Configurações de gravação
 │   ├── RenameDialog.xaml          # Renomear jogo
 │   ├── SteamProfileDialog.xaml    # Perfil Steam (avatar, jogos, importar)
 │   ├── SteamSetupDialog.xaml      # Configuração Steam ID
@@ -268,6 +310,7 @@ GameLauncher/
 | [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | 0.9.6 | Leitura de sensores (CPU, GPU, RAM, temperaturas) |
 | [SkiaSharp](https://github.com/mono/SkiaSharp) | 3.119.2 | Decodificação de WEBP/GIF animado |
 | [craftersmine.SteamGridDB.Net](https://github.com/craftersmine/SteamGridDB.Net) | 1.1.7 | API de capas, logos, fundos e ícones |
+| [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) | 4.67.2 | Xbox Live OAuth2 (MSAL) |
 | [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common) | 8.0.0 | Extração de ícones de executáveis |
 | [System.Management](https://www.nuget.org/packages/System.Management) | 10.0.2 | WMI — detecção de drives de armazenamento |
 
@@ -303,7 +346,9 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 8. Para ajuda: clique no ícone ❓ azul para abrir o manual integrado
 9. Conecte um **controle Xbox ou PlayStation** para navegar com gamepad
 10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
-11. Clique em **`DISCORD`** no cabeçalho para login — o **Rich Presence** mostra o jogo no Discord automaticamente
+11. Clique em **`EPIC`** no cabeçalho para importar jogos da **Epic Games Store**
+12. Clique em **`DISCORD`** no cabeçalho para login — o **Rich Presence** mostra o jogo no Discord automaticamente
+13. Pressione **F9** durante o jogo para **gravar gameplay** (configure em ⚙️ → Gravação)
 
 ---
 
@@ -311,7 +356,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  🟢 GLauncher  [+ ADICIONAR JOGO] [TEMA] [XBOX] [STEAM] [DISCORD] [❓] [⚙️] 14:30 [👤] │  ← Header
+│  🟢 GLauncher  [+ ADICIONAR] [TEMA] [XBOX] [STEAM] [EPIC] [DISCORD] [❓] [⚙️] 14:30 [👤] │  ← Header
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │          ┌─────────────────────────────────────────────┐                 │
@@ -355,7 +400,8 @@ Todos os dados são salvos em `%AppData%\GameLauncher\`:
 ├── discord_token.json # Token de sessão Discord (OAuth2 refresh token)
 ├── icons/           # Cache de ícones extraídos (.png)
 ├── covers/          # Capas e logos baixados do SteamGridDB
-└── backgrounds/     # Fundos animados (WEBP/GIF)
+├── backgrounds/     # Fundos animados (WEBP/GIF)
+└── recordings/      # Gravações de gameplay (.mp4)
 ```
 
 ---

@@ -201,12 +201,6 @@ public partial class MainWindow : Window
             ToggleFullscreen();
             e.Handled = true;
         }
-        else if (e.Key == Key.F9)
-        {
-            if (DataContext is MainViewModel vm)
-                vm.HandleRecordingHotkey();
-            e.Handled = true;
-        }
     }
 
     private void ToggleFullscreen()
