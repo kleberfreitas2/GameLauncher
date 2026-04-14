@@ -39,7 +39,8 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 </div>
 =======
 
-<img width="1918" height="1079" alt="image" src="https://github.com/user-attachments/assets/bec8187f-d6cf-4f1f-998d-7d67d6b2d396" />
+<img width="1918" height="1079" alt="image" src="https://github.com/user-attachments/assets/8ebb6caa-359b-462c-96e0-b98d7fdd1209" />
+
 
 ---
 
