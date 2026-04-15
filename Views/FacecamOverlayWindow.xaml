@@ -5,7 +5,6 @@
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True"
         ShowInTaskbar="False" ResizeMode="NoResize">
-    <!-- Outer glow / shadow layer -->
     <Grid Margin="8">
         <!-- Soft ambient glow behind the facecam -->
         <Border CornerRadius="14"
@@ -24,13 +23,12 @@
                 <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="2" Opacity="0.6"/>
             </Border.Effect>
 
-            <!-- Camera feed (mirrored) -->
+            <!-- Camera feed (mirrored via LayoutTransform so clipping works) -->
             <Image x:Name="CameraImage" Stretch="Fill"
-                   RenderOptions.BitmapScalingMode="LowQuality"
-                   RenderTransformOrigin="0.5,0.5">
-                <Image.RenderTransform>
+                   RenderOptions.BitmapScalingMode="LowQuality">
+                <Image.LayoutTransform>
                     <ScaleTransform ScaleX="-1"/>
-                </Image.RenderTransform>
+                </Image.LayoutTransform>
             </Image>
         </Border>
     </Grid>

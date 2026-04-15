@@ -1,12 +1,15 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Pipes;
 using System.Management;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using GameLauncher.Views;
 using Microsoft.Win32;
+using NAudio.CoreAudioApi;
+using NAudio.Wave;
 
 namespace GameLauncher.Services;
 
@@ -51,11 +54,19 @@ public sealed class GameRecorderService : IDisposable
     private volatile bool _stoppingManually;
     private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
-    private string? _resolvedLoopbackDevice;
     private FacecamOverlayWindow? _facecamWindow;
+
+    // WASAPI loopback capture (game audio)
+    private WasapiLoopbackCapture? _loopbackCapture;
+    private NamedPipeServerStream? _loopbackPipe;
+    private string? _loopbackPipeName;
+    private string? _loopbackFfmpegInput;
 
     [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetThreadDpiAwarenessContext(IntPtr dpiContext);
 
     public bool IsRecording => _ffmpegProcess is not null && !_ffmpegProcess.HasExited;
     public string? CurrentFile => _currentOutputFile;
@@ -487,136 +498,6 @@ public sealed class GameRecorderService : IDisposable
         catch { return false; }
     }
 
-    private static string? FindSystemLoopbackDevice()
-    {
-        // Search dshow listing first
-        var dshowAudio = ListDshowDevices("audio");
-        foreach (var d in dshowAudio)
-        {
-            if (IsLoopbackDeviceName(d))
-            {
-                Debug.WriteLine($"[Recording] Loopback device found (dshow): '{d}'");
-                return d;
-            }
-        }
-
-        // Registry fallback — search active capture devices for loopback keywords
-        try
-        {
-            using var captureKey = Registry.LocalMachine.OpenSubKey(
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture");
-            if (captureKey is null) return null;
-
-            string? cachedAdapter = null;
-            bool adapterResolved = false;
-
-            foreach (var subKeyName in captureKey.GetSubKeyNames())
-            {
-                try
-                {
-                    using var deviceKey = captureKey.OpenSubKey(subKeyName);
-                    if (deviceKey is null) continue;
-
-                    var state = deviceKey.GetValue("DeviceState");
-                    if (state is not int stateVal || stateVal != 1) continue;
-
-                    using var propsKey = deviceKey.OpenSubKey("Properties");
-                    if (propsKey is null) continue;
-
-                    var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
-                    if (!string.IsNullOrEmpty(fullName) && IsLoopbackDeviceName(fullName))
-                    {
-                        Debug.WriteLine($"[Recording] Loopback device found (registry full): '{fullName}'");
-                        return fullName;
-                    }
-
-                    var endpointName = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
-                    if (!string.IsNullOrEmpty(endpointName) && IsLoopbackDeviceName(endpointName))
-                    {
-                        if (!endpointName.Contains('('))
-                        {
-                            // Use per-device adapter from {b3f8fa53...},6 when available
-                            if (!string.IsNullOrEmpty(fullName))
-                            {
-                                var built = $"{endpointName} ({fullName})";
-                                Debug.WriteLine($"[Recording] Loopback device found (device-specific adapter): '{built}'");
-                                return built;
-                            }
-
-                            // Global fallback — use WMI physical audio adapter name
-                            if (!adapterResolved)
-                            {
-                                cachedAdapter = GetPhysicalAudioAdapterName();
-                                adapterResolved = true;
-                            }
-                            if (cachedAdapter is not null)
-                            {
-                                var built = $"{endpointName} ({cachedAdapter})";
-                                Debug.WriteLine($"[Recording] Loopback device found (registry built): '{built}'");
-                                return built;
-                            }
-                        }
-                        Debug.WriteLine($"[Recording] Loopback device found (registry endpoint): '{endpointName}'");
-                        return endpointName;
-                    }
-                }
-                catch { continue; }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[Recording] FindSystemLoopbackDevice registry error: {ex.Message}");
-        }
-
-        return null;
-    }
-
-    private static bool IsLoopbackDeviceName(string name)
-    {
-        var lower = name.ToLowerInvariant();
-        return lower.Contains("stereo mix") || lower.Contains("mixagem est") ||
-               lower.Contains("mezcla est") || lower.Contains("stereomix") ||
-               lower.Contains("what u hear") || lower.Contains("wave out mix") ||
-               lower.Contains("loopback");
-    }
-
-    private static bool HasDisabledLoopbackDevice()
-    {
-        try
-        {
-            using var captureKey = Registry.LocalMachine.OpenSubKey(
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture");
-            if (captureKey is null) return false;
-            foreach (var subKeyName in captureKey.GetSubKeyNames())
-            {
-                try
-                {
-                    using var deviceKey = captureKey.OpenSubKey(subKeyName);
-                    if (deviceKey is null) continue;
-                    var state = deviceKey.GetValue("DeviceState");
-                    if (state is not int stateVal || stateVal != 2) continue;
-                    using var propsKey = deviceKey.OpenSubKey("Properties");
-                    if (propsKey is null) continue;
-                    var fullName = propsKey.GetValue("{b3f8fa53-0004-438e-9003-51a46e139bfc},6")?.ToString();
-                    if (!string.IsNullOrEmpty(fullName) && IsLoopbackDeviceName(fullName))
-                    {
-                        Debug.WriteLine($"[Recording] Disabled loopback found: '{fullName}'");
-                        return true;
-                    }
-                    var endpointName = propsKey.GetValue("{a45c254e-df1c-4efd-8020-67d146a850e0},2")?.ToString();
-                    if (!string.IsNullOrEmpty(endpointName) && IsLoopbackDeviceName(endpointName))
-                    {
-                        Debug.WriteLine($"[Recording] Disabled loopback found: '{endpointName}'");
-                        return true;
-                    }
-                }
-                catch { continue; }
-            }
-        }
-        catch { }
-        return false;
-    }
-
     public bool StartRecording(RecordingResolution resolution, RecordingMode mode = RecordingMode.ScreenOnly,
         FacecamPosition facecamPos = FacecamPosition.TopRight,
         string? webcamDevice = null, string? micDevice = null, string? gameName = null)
@@ -672,38 +553,18 @@ public sealed class GameRecorderService : IDisposable
             }
         }
 
-        // Detect loopback device (Stereo Mix / Mixagem estéreo) for game audio capture
-        _resolvedLoopbackDevice = FindSystemLoopbackDevice();
-        bool hasLoopback = _resolvedLoopbackDevice is not null;
-        if (hasLoopback)
+        // Capture game audio via WASAPI loopback (captures ALL system audio output —
+        // works with USB headsets, HDMI, Bluetooth, onboard — no Stereo Mix needed)
+        bool hasLoopback = StartLoopbackCapture();
+        if (!hasLoopback)
         {
-            // Resolve loopback device name via dshow (like mic) to ensure exact name match
-            _resolvedLoopbackDevice = ResolveDshowAudioDevice(_resolvedLoopbackDevice!);
-            Debug.WriteLine($"[Recording] Loopback device resolved: '{_resolvedLoopbackDevice}'");
-        }
-        else
-        {
-            if (HasDisabledLoopbackDevice())
-                StatusMessage?.Invoke("⚠ 'Mixagem estéreo' está desativada — ative em: Painel de Controle → Som → aba Gravação → clique direito → Mostrar dispositivos desativados → Mixagem estéreo → Ativar.");
-            else
-            {
-                Debug.WriteLine("[Recording] No loopback device available — game audio will not be captured");
-                StatusMessage?.Invoke("⚠ Áudio do jogo não será capturado — 'Mixagem estéreo' não encontrada. Ative em: Painel de Controle → Som → aba Gravação → clique direito → Mostrar dispositivos desativados.");
-            }
-        }
-
-        // Don't use the same device as both mic and loopback
-        if (hasMic && hasLoopback &&
-            micDevice!.Equals(_resolvedLoopbackDevice, StringComparison.OrdinalIgnoreCase))
-        {
-            Debug.WriteLine("[Recording] Mic device same as loopback — skipping duplicate");
-            hasMic = false;
+            Debug.WriteLine("[Recording] WASAPI loopback unavailable — game audio will not be captured");
+            StatusMessage?.Invoke("⚠ Não foi possível capturar áudio do jogo (WASAPI loopback falhou).");
         }
 
         Debug.WriteLine($"[Recording] Config: mode={mode}, hasMic={hasMic}, hasCam={hasCam}, hasLoopback={hasLoopback}");
-        var args = BuildFfmpegArgs(resolution, hasMic, micDevice, hasLoopback, _resolvedLoopbackDevice);
+        var args = BuildFfmpegArgs(resolution, hasMic, micDevice, hasLoopback ? _loopbackFfmpegInput : null);
         Debug.WriteLine($"[Recording] FFmpeg args: {args}");
-        // _pendingRetry covers only mic/loopback because the health check only retries for those.
         _pendingRetry = hasMic || hasLoopback;
 
         try
@@ -793,13 +654,12 @@ public sealed class GameRecorderService : IDisposable
 
                     if (hasMicForRetry || hasLoopbackForRetry)
                     {
-                        // Retry: drop mic (most likely cause), keep loopback
-                        string? retryLoopback = hasLoopbackForRetry ? _resolvedLoopbackDevice : null;
-                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={retryLoopback is not null})...");
-                        StatusMessage?.Invoke(retryLoopback is not null
+                        // Retry: drop mic (most likely cause), restart loopback pipe
+                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={hasLoopbackForRetry})...");
+                        StatusMessage?.Invoke(hasLoopbackForRetry
                             ? "⚠ Dispositivo falhou. Tentando novamente com áudio do jogo..."
                             : "⚠ Dispositivo de áudio falhou. Tentando novamente sem áudio...");
-                        RetryScreenOnly(loopbackDevice: retryLoopback);
+                        RetryScreenOnly(withLoopback: hasLoopbackForRetry);
                     }
                     else
                     {
@@ -833,18 +693,116 @@ public sealed class GameRecorderService : IDisposable
 
     private static (int width, int height) GetPrimaryScreenSize()
     {
+        // Use DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 to get physical pixel dimensions
+        // (GetSystemMetrics returns logical/scaled pixels without this)
+        IntPtr prev = IntPtr.Zero;
+        try
+        {
+            prev = SetThreadDpiAwarenessContext(new IntPtr(-4));
+        }
+        catch { }
+
         try
         {
             var w = GetSystemMetrics(0); // SM_CXSCREEN
             var h = GetSystemMetrics(1); // SM_CYSCREEN
+            Debug.WriteLine($"[Recording] GetPrimaryScreenSize: {w}x{h} (DPI-aware)");
             if (w > 0 && h > 0) return (w, h);
         }
         catch { }
+        finally
+        {
+            if (prev != IntPtr.Zero)
+            {
+                try { SetThreadDpiAwarenessContext(prev); } catch { }
+            }
+        }
         return (1920, 1080);
     }
 
+    /// <summary>
+    /// Starts WASAPI loopback capture (captures ALL system audio output, regardless of device type).
+    /// Audio is piped to ffmpeg via a named pipe. Returns true if successfully initialized.
+    /// </summary>
+    private bool StartLoopbackCapture()
+    {
+        StopLoopbackCapture();
+
+        try
+        {
+            var capture = new WasapiLoopbackCapture();
+            var wf = capture.WaveFormat;
+
+            _loopbackPipeName = $"glauncher_audio_{Environment.ProcessId}";
+            _loopbackPipe = new NamedPipeServerStream(_loopbackPipeName,
+                PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+
+            _loopbackCapture = capture;
+
+            capture.DataAvailable += (_, e) =>
+            {
+                try
+                {
+                    if (_loopbackPipe is { IsConnected: true } && e.BytesRecorded > 0)
+                        _loopbackPipe.Write(e.Buffer, 0, e.BytesRecorded);
+                }
+                catch { /* pipe closed or ffmpeg disconnected */ }
+            };
+
+            capture.RecordingStopped += (_, args) =>
+            {
+                if (args.Exception is not null)
+                    Debug.WriteLine($"[Recording] WASAPI loopback error: {args.Exception.Message}");
+                else
+                    Debug.WriteLine("[Recording] WASAPI loopback stopped");
+            };
+
+            // Wait for ffmpeg to connect to the pipe, then start WASAPI capture
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (_loopbackPipe is null) return;
+                    await _loopbackPipe.WaitForConnectionAsync();
+                    Debug.WriteLine("[Recording] Loopback pipe connected — starting WASAPI capture");
+                    _loopbackCapture?.StartRecording();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[Recording] Loopback pipe wait failed: {ex.Message}");
+                }
+            });
+
+            // Build the ffmpeg input string for this pipe
+            string fmt = wf.Encoding == WaveFormatEncoding.IeeeFloat ? "f32le" : $"s{wf.BitsPerSample}le";
+            string pipePath = $@"\\.\pipe\{_loopbackPipeName}";
+            _loopbackFfmpegInput = $"-f {fmt} -ar {wf.SampleRate} -ac {wf.Channels} -i \"{pipePath}\"";
+
+            Debug.WriteLine($"[Recording] WASAPI loopback initialized: {wf.SampleRate}Hz, {wf.Channels}ch, {wf.BitsPerSample}bit {wf.Encoding}");
+            Debug.WriteLine($"[Recording] Loopback ffmpeg input: {_loopbackFfmpegInput}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] WASAPI loopback init failed: {ex.Message}");
+            StopLoopbackCapture();
+            return false;
+        }
+    }
+
+    private void StopLoopbackCapture()
+    {
+        try { _loopbackCapture?.StopRecording(); } catch { }
+        try { _loopbackCapture?.Dispose(); } catch { }
+        _loopbackCapture = null;
+        try { _loopbackPipe?.Dispose(); } catch { }
+        _loopbackPipe = null;
+        _loopbackPipeName = null;
+        _loopbackFfmpegInput = null;
+    }
+
     private string BuildFfmpegArgs(RecordingResolution resolution, bool hasMic, string? micDevice,
-        bool hasLoopback = false, string? loopbackDevice = null)
+        string? loopbackInput = null)
     {
         var (width, height) = resolution switch
         {
@@ -867,13 +825,14 @@ public sealed class GameRecorderService : IDisposable
         // Capture only the primary monitor (avoids multi-monitor full virtual desktop capture)
         var (screenW, screenH) = GetPrimaryScreenSize();
         Debug.WriteLine($"[Recording] Primary screen: {screenW}x{screenH}, target: {width}x{height}");
-        var inputs = $"-f gdigrab -framerate 60 -video_size {screenW}x{screenH} -i desktop";
+        var inputs = $"-f gdigrab -framerate 30 -video_size {screenW}x{screenH} -i desktop";
         int nextInput = 1;
         int loopbackIdx = -1, micIdx = -1;
+        bool hasLoopback = !string.IsNullOrEmpty(loopbackInput);
 
-        if (hasLoopback && !string.IsNullOrEmpty(loopbackDevice))
+        if (hasLoopback)
         {
-            inputs += $" -f dshow -i audio=\"{loopbackDevice}\"";
+            inputs += $" {loopbackInput}";
             loopbackIdx = nextInput++;
         }
 
@@ -915,7 +874,7 @@ public sealed class GameRecorderService : IDisposable
 
         var filterComplex = $"-filter_complex \"{string.Join(";", filters)}\"";
 
-        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} -r 30 -vsync cfr -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
 
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
@@ -960,7 +919,7 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly(string? loopbackDevice = null)
+    private void RetryScreenOnly(bool withLoopback = false)
     {
         if (_ffmpegProcess is not null)
         {
@@ -970,9 +929,18 @@ public sealed class GameRecorderService : IDisposable
         }
 
         _lastFfmpegError = string.Empty;
-        bool hasLoopback = loopbackDevice is not null;
-        var args = BuildFfmpegArgs(_currentResolution, hasMic: false, micDevice: null,
-            hasLoopback, loopbackDevice);
+
+        // Restart WASAPI loopback pipe for the new ffmpeg process
+        StopLoopbackCapture();
+        string? loopbackInput = null;
+        if (withLoopback)
+        {
+            if (StartLoopbackCapture())
+                loopbackInput = _loopbackFfmpegInput;
+        }
+
+        bool hasLoopback = loopbackInput is not null;
+        var args = BuildFfmpegArgs(_currentResolution, hasMic: false, micDevice: null, loopbackInput);
         Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}): {args}");
 
         try
@@ -1007,7 +975,10 @@ public sealed class GameRecorderService : IDisposable
                     int exitCode = -1;
                     try { exitCode = _ffmpegProcess?.ExitCode ?? -1; } catch { }
                     if (exitCode != 0 && !_stoppingManually)
+                    {
+                        StopLoopbackCapture();
                         StatusMessage?.Invoke($"❌ Erro na gravação: {_lastFfmpegError}");
+                    }
                     RecordingStateChanged?.Invoke(false);
                 }
                 catch
@@ -1025,6 +996,7 @@ public sealed class GameRecorderService : IDisposable
         catch (Exception ex)
         {
             Debug.WriteLine($"[Recording] Retry failed: {ex}");
+            StopLoopbackCapture();
             StatusMessage?.Invoke($"❌ Falha total na gravação: {ex.Message}");
             _ffmpegProcess?.Dispose();
             _ffmpegProcess = null;
@@ -1036,6 +1008,9 @@ public sealed class GameRecorderService : IDisposable
     {
         _stoppingManually = true;
         _pendingRetry = false;
+
+        // Stop WASAPI loopback first — this closes the pipe, signaling EOF to ffmpeg
+        StopLoopbackCapture();
 
         if (_ffmpegProcess is null || _ffmpegProcess.HasExited)
         {
@@ -1202,6 +1177,7 @@ public sealed class GameRecorderService : IDisposable
         if (IsRecording)
             StopRecording();
         StopFacecamPreview();
+        StopLoopbackCapture();
         _ffmpegProcess?.Dispose();
     }
 }

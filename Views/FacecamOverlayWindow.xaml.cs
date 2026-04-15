@@ -25,6 +25,8 @@ public partial class FacecamOverlayWindow : Window
     private string _lastError = string.Empty;
     private volatile bool _renderPending;
     private volatile bool _stopped;
+    private string? _webcamDevice;
+    private bool _retriedLowerFps;
 
     public event Action<string>? CaptureFailed;
 
@@ -66,7 +68,7 @@ public partial class FacecamOverlayWindow : Window
         };
     }
 
-    private void StartCapture(string webcamDevice)
+    private void StartCapture(string webcamDevice, int fps = 60)
     {
         if (!File.Exists(FfmpegExe))
         {
@@ -74,6 +76,7 @@ public partial class FacecamOverlayWindow : Window
             return;
         }
 
+        _webcamDevice = webcamDevice;
         _bitmap = new WriteableBitmap(FrameWidth, FrameHeight, 96, 96, PixelFormats.Bgra32, null);
         CameraImage.Source = _bitmap;
         _cts = new CancellationTokenSource();
@@ -87,9 +90,9 @@ public partial class FacecamOverlayWindow : Window
                     FileName = FfmpegExe,
                     Arguments = $"-hide_banner -loglevel warning " +
                                 $"-fflags nobuffer -probesize 32 -analyzeduration 0 " +
-                                $"-f dshow -framerate 60 -rtbufsize 50M -i video=\"{webcamDevice}\" " +
+                                $"-f dshow -framerate {fps} -rtbufsize 50M -i video=\"{webcamDevice}\" " +
                                 $"-vf scale={FrameWidth}:{FrameHeight}:flags=fast_bilinear " +
-                                $"-r 60 -f rawvideo -pix_fmt bgra -",
+                                $"-r {fps} -f rawvideo -pix_fmt bgra -",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -112,7 +115,20 @@ public partial class FacecamOverlayWindow : Window
             {
                 int code = -1;
                 try { code = _captureProcess?.ExitCode ?? -1; } catch { }
-                Debug.WriteLine($"[Facecam] FFmpeg exited (code {code}), last error: {_lastError}");
+                Debug.WriteLine($"[Facecam] FFmpeg exited (code {code}, fps={fps}), last error: {_lastError}");
+
+                // If 60fps failed and we haven't retried yet, fallback to 30fps
+                if (code != 0 && !_stopped && !_retriedLowerFps && fps > 30)
+                {
+                    _retriedLowerFps = true;
+                    Debug.WriteLine("[Facecam] Retrying with 30fps fallback...");
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        CleanupProcess();
+                        StartCapture(webcamDevice, 30);
+                    });
+                    return;
+                }
 
                 if (code != 0 && !_stopped)
                 {
@@ -123,6 +139,7 @@ public partial class FacecamOverlayWindow : Window
                 }
             };
 
+            Debug.WriteLine($"[Facecam] Starting capture at {fps}fps...");
             _captureProcess.Start();
             _captureProcess.BeginErrorReadLine();
 
@@ -130,13 +147,26 @@ public partial class FacecamOverlayWindow : Window
             var ct = _cts.Token;
             _ = Task.Run(() => ReadFrames(stdout, ct), ct);
 
-            Debug.WriteLine($"[Facecam] Capture started (PID: {_captureProcess.Id})");
+            Debug.WriteLine($"[Facecam] Capture started (PID: {_captureProcess.Id}, {fps}fps)");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[Facecam] Failed to start capture: {ex.Message}");
             CaptureFailed?.Invoke(ex.Message);
         }
+    }
+
+    private void CleanupProcess()
+    {
+        _cts?.Cancel();
+        if (_captureProcess is not null && !_captureProcess.HasExited)
+        {
+            try { _captureProcess.Kill(); } catch { }
+        }
+        _captureProcess?.Dispose();
+        _captureProcess = null;
+        _cts?.Dispose();
+        _cts = null;
     }
 
     private void ReadFrames(Stream stdout, CancellationToken ct)

@@ -85,6 +85,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private GameRecorderService? _recorder;
     private RecordingOverlayWindow? _recordingOverlay;
+    private RecordingStartPopup? _recordingStartPopup;
     private string? _runningGameName;
 
     private GpuCapabilities? _gpuCaps;
@@ -302,6 +303,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _recorder?.Dispose();
         _recordingOverlay?.Close();
         _recordingOverlay = null;
+        _recordingStartPopup?.Close();
+        _recordingStartPopup = null;
     }
 
     private void ScanGameTech(Game game)
@@ -996,6 +999,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     IsRecording = recording;
                     if (recording)
                     {
+                        // Dismiss the "Iniciando gravação" popup
+                        _recordingStartPopup?.Dismiss();
+                        _recordingStartPopup = null;
+
                         _recordingOverlay?.Close();
                         var facecamPos = SettingsService.Current.FacecamPosition;
                         var mode = SettingsService.Current.RecordingMode;
@@ -1005,6 +1012,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     }
                     else
                     {
+                        _recordingStartPopup?.Close();
+                        _recordingStartPopup = null;
                         _recordingOverlay?.Close();
                         _recordingOverlay = null;
                     }
@@ -1035,9 +1044,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             // Feedback visual imediato ao pressionar F9
             if (_recorder.IsRecording)
+            {
                 StatusMessage = "⏹️ Parando gravação...";
+            }
             else
+            {
                 StatusMessage = "⏳ Iniciando gravação...";
+                _recordingStartPopup?.Close();
+                _recordingStartPopup = new RecordingStartPopup();
+                _recordingStartPopup.Show();
+            }
 
             var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
             _recorder.ToggleRecording(res, mode2, facecamPos2,
