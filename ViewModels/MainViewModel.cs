@@ -86,6 +86,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private GameRecorderService? _recorder;
     private RecordingOverlayWindow? _recordingOverlay;
     private RecordingStartPopup? _recordingStartPopup;
+    private RecordingHintOverlay? _recordingHintOverlay;
     private string? _runningGameName;
 
     private GpuCapabilities? _gpuCaps;
@@ -876,6 +877,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _fpsOverlay.Show();
             }
 
+            if (SettingsService.Current.RecordingEnabled)
+            {
+                _recordingHintOverlay?.Dismiss();
+                _recordingHintOverlay = new RecordingHintOverlay();
+                _recordingHintOverlay.Show();
+            }
+
             if (proc is not null)
             {
                 _ = Task.Run(() =>
@@ -899,6 +907,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
+                        _recordingHintOverlay?.Dismiss();
+                        _recordingHintOverlay = null;
 
                         if (mainWin is not null)
                         {
@@ -933,6 +943,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                         _fpsOverlay?.Close();
                         _fpsOverlay = null;
+                        _recordingHintOverlay?.Dismiss();
+                        _recordingHintOverlay = null;
                         _xinput.Start();
                     });
                 });
@@ -949,6 +961,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IsRecording = false;
             _fpsOverlay?.Close();
             _fpsOverlay = null;
+            _recordingHintOverlay?.Dismiss();
+            _recordingHintOverlay = null;
             _xinput.Start();
             StatusMessage = $"Erro ao iniciar {game.DisplayName}: {ex.Message}";
         }
@@ -1050,6 +1064,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             else
             {
                 StatusMessage = "⏳ Iniciando gravação...";
+                _recordingHintOverlay?.Dismiss();
+                _recordingHintOverlay = null;
                 _recordingStartPopup?.Close();
                 _recordingStartPopup = new RecordingStartPopup();
                 _recordingStartPopup.Show();

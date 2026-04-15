@@ -816,39 +816,47 @@ public sealed class GameRecorderService : IDisposable
 
         var encoderArgs = hwAccel switch
         {
-            "h264_nvenc" => "-c:v h264_nvenc -preset p4 -tune hq -rc vbr -cq 23",
+            "h264_nvenc" => "-c:v h264_nvenc -preset p4 -tune ll -rc vbr -cq 23",
             "h264_amf" => "-c:v h264_amf -quality balanced -rc cqp -qp_i 23 -qp_p 23",
             "h264_qsv" => "-c:v h264_qsv -preset medium -global_quality 23",
             _ => "-c:v libx264 -preset ultrafast -crf 23"
         };
 
-        // Capture only the primary monitor (avoids multi-monitor full virtual desktop capture)
         var (screenW, screenH) = GetPrimaryScreenSize();
-        Debug.WriteLine($"[Recording] Primary screen: {screenW}x{screenH}, target: {width}x{height}");
-        var inputs = $"-f gdigrab -framerate 30 -video_size {screenW}x{screenH} -i desktop";
+        bool needsScale = screenW != width || screenH != height;
+        Debug.WriteLine($"[Recording] Primary screen: {screenW}x{screenH}, target: {width}x{height}, scale={needsScale}");
+
+        var inputs = $"-thread_queue_size 1024 -f gdigrab -framerate 30 -video_size {screenW}x{screenH} -i desktop";
         int nextInput = 1;
         int loopbackIdx = -1, micIdx = -1;
         bool hasLoopback = !string.IsNullOrEmpty(loopbackInput);
 
         if (hasLoopback)
         {
-            inputs += $" {loopbackInput}";
+            inputs += $" -thread_queue_size 512 -probesize 32 -analyzeduration 0 {loopbackInput}";
             loopbackIdx = nextInput++;
         }
 
         if (hasMic && !string.IsNullOrEmpty(micDevice))
         {
-            inputs += $" -f dshow -i audio=\"{micDevice}\"";
+            inputs += $" -thread_queue_size 512 -f dshow -i audio=\"{micDevice}\"";
             micIdx = nextInput++;
         }
 
-        // Build filter_complex: always scale video to target resolution, optionally mix audio
         var filters = new List<string>();
-        filters.Add($"[0:v]scale={width}:{height}[vout]");
-
-        string videoMap = "-map \"[vout]\"";
+        string videoMap;
         string audioMap;
         string audioArgs;
+
+        if (needsScale)
+        {
+            filters.Add($"[0:v]scale={width}:{height}[vout]");
+            videoMap = "-map \"[vout]\"";
+        }
+        else
+        {
+            videoMap = "-map 0:v";
+        }
 
         if (hasLoopback && hasMic)
         {
@@ -872,9 +880,11 @@ public sealed class GameRecorderService : IDisposable
             audioArgs = "";
         }
 
-        var filterComplex = $"-filter_complex \"{string.Join(";", filters)}\"";
+        var filterArg = filters.Count > 0
+            ? $"-filter_complex \"{string.Join(";", filters)}\""
+            : "";
 
-        return $"-y {inputs} {filterComplex} {videoMap} {audioMap} {encoderArgs} -r 30 -vsync cfr -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+        return $"-y {inputs} {filterArg} {videoMap} {audioMap} {encoderArgs} -r 30 -vsync cfr -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
 
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
