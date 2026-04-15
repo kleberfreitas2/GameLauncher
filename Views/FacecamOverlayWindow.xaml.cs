@@ -11,7 +11,7 @@ public partial class FacecamOverlayWindow : Window
 {
     private const int FrameWidth = 320;
     private const int FrameHeight = 180;
-    private const int BytesPerPixel = 4; // BGRA
+    private const int BytesPerPixel = 3; // BGR24
     private const int FrameSize = FrameWidth * FrameHeight * BytesPerPixel;
 
     private static readonly string FfmpegExe = Path.Combine(
@@ -68,7 +68,7 @@ public partial class FacecamOverlayWindow : Window
         };
     }
 
-    private void StartCapture(string webcamDevice, int fps = 60)
+    private void StartCapture(string webcamDevice, int fps = 30)
     {
         if (!File.Exists(FfmpegExe))
         {
@@ -77,7 +77,7 @@ public partial class FacecamOverlayWindow : Window
         }
 
         _webcamDevice = webcamDevice;
-        _bitmap = new WriteableBitmap(FrameWidth, FrameHeight, 96, 96, PixelFormats.Bgra32, null);
+        _bitmap = new WriteableBitmap(FrameWidth, FrameHeight, 96, 96, PixelFormats.Bgr24, null);
         CameraImage.Source = _bitmap;
         _cts = new CancellationTokenSource();
 
@@ -92,7 +92,7 @@ public partial class FacecamOverlayWindow : Window
                                 $"-fflags nobuffer -probesize 32 -analyzeduration 0 " +
                                 $"-f dshow -framerate {fps} -rtbufsize 50M -i video=\"{webcamDevice}\" " +
                                 $"-vf scale={FrameWidth}:{FrameHeight}:flags=fast_bilinear " +
-                                $"-r {fps} -f rawvideo -pix_fmt bgra -",
+                                $"-f rawvideo -pix_fmt bgr24 -",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -117,15 +117,15 @@ public partial class FacecamOverlayWindow : Window
                 try { code = _captureProcess?.ExitCode ?? -1; } catch { }
                 Debug.WriteLine($"[Facecam] FFmpeg exited (code {code}, fps={fps}), last error: {_lastError}");
 
-                // If 60fps failed and we haven't retried yet, fallback to 30fps
-                if (code != 0 && !_stopped && !_retriedLowerFps && fps > 30)
+                // If first attempt failed and we haven't retried yet, fallback to 15fps
+                if (code != 0 && !_stopped && !_retriedLowerFps && fps > 15)
                 {
                     _retriedLowerFps = true;
-                    Debug.WriteLine("[Facecam] Retrying with 30fps fallback...");
+                    Debug.WriteLine("[Facecam] Retrying with 15fps fallback...");
                     Dispatcher.BeginInvoke(() =>
                     {
                         CleanupProcess();
-                        StartCapture(webcamDevice, 30);
+                        StartCapture(webcamDevice, 15);
                     });
                     return;
                 }

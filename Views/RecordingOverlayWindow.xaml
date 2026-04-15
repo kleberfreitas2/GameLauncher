@@ -4,7 +4,7 @@
         Title="Rec" Width="110" Height="36"
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True"
-        ShowInTaskbar="False" ResizeMode="NoResize">
+        ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize">
     <Border Background="#CC000000" CornerRadius="10" Padding="10,4" VerticalAlignment="Center"
             HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

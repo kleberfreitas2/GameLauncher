@@ -882,6 +882,37 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _recordingHintOverlay?.Dismiss();
                 _recordingHintOverlay = new RecordingHintOverlay();
                 _recordingHintOverlay.Show();
+
+                // Pre-create recorder and warm up encoder cache in background
+                // so F9 press is instant (encoder detection can take seconds)
+                if (_recorder is null)
+                {
+                    _recorder = new GameRecorderService();
+                    _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
+                    _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
+                    {
+                        IsRecording = recording;
+                        if (recording)
+                        {
+                            _recordingStartPopup?.Dismiss();
+                            _recordingStartPopup = null;
+                            _recordingOverlay?.Close();
+                            var facecamPos = SettingsService.Current.FacecamPosition;
+                            var mode = SettingsService.Current.RecordingMode;
+                            bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
+                            _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
+                            _recordingOverlay.Show();
+                        }
+                        else
+                        {
+                            _recordingStartPopup?.Close();
+                            _recordingStartPopup = null;
+                            _recordingOverlay?.Close();
+                            _recordingOverlay = null;
+                        }
+                    });
+                }
+                _ = Task.Run(() => _recorder.WarmupEncoder());
             }
 
             if (proc is not null)
@@ -998,7 +1029,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
     }
 
-    public void HandleRecordingHotkey()
+    public async void HandleRecordingHotkey()
     {
         if (!SettingsService.Current.RecordingEnabled) return;
 
@@ -1072,10 +1103,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
-            _recorder.ToggleRecording(res, mode2, facecamPos2,
-                SettingsService.Current.FacecamDevice,
-                SettingsService.Current.MicrophoneDevice,
-                gameName);
+            var facecamDevice = SettingsService.Current.FacecamDevice;
+            var micDevice = SettingsService.Current.MicrophoneDevice;
+
+            // Run heavy recording work (device resolution, encoder detection, ffmpeg start)
+            // on a background thread to keep the UI responsive
+            await Task.Run(() => _recorder.ToggleRecording(res, mode2, facecamPos2,
+                facecamDevice, micDevice, gameName));
         }
         catch (Exception ex)
         {

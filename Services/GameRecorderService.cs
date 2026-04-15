@@ -816,9 +816,9 @@ public sealed class GameRecorderService : IDisposable
 
         var encoderArgs = hwAccel switch
         {
-            "h264_nvenc" => "-c:v h264_nvenc -preset p4 -tune ll -rc vbr -cq 23",
-            "h264_amf" => "-c:v h264_amf -quality balanced -rc cqp -qp_i 23 -qp_p 23",
-            "h264_qsv" => "-c:v h264_qsv -preset medium -global_quality 23",
+            "h264_nvenc" => "-c:v h264_nvenc -preset p1 -tune ll -rc vbr -cq 23",
+            "h264_amf" => "-c:v h264_amf -quality speed -rc cqp -qp_i 23 -qp_p 23",
+            "h264_qsv" => "-c:v h264_qsv -preset veryfast -global_quality 23",
             _ => "-c:v libx264 -preset ultrafast -crf 23"
         };
 
@@ -887,8 +887,17 @@ public sealed class GameRecorderService : IDisposable
         return $"-y {inputs} {filterArg} {videoMap} {audioMap} {encoderArgs} -r 30 -vsync cfr -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
     }
 
+    public void WarmupEncoder() => DetectHardwareEncoder();
+
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
     {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(() => StartFacecamPreview(webcamDevice, position));
+            return;
+        }
+
         StopFacecamPreview();
 
         var posStr = position switch

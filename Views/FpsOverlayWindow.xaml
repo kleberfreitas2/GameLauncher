@@ -8,6 +8,7 @@
         Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
+        ShowActivated="False"
         ResizeMode="NoResize"
         WindowStartupLocation="Manual">
     <Border Background="#CC0A0A18" CornerRadius="10" Padding="12,6"

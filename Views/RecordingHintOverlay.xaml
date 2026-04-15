@@ -4,7 +4,7 @@
         Title="RecHint" Width="420" Height="90"
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Topmost="True"
-        ShowInTaskbar="False" ResizeMode="NoResize"
+        ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
         WindowStartupLocation="Manual">
     <Grid Margin="14">
         <Border Background="#E61A1A2E" CornerRadius="14"
