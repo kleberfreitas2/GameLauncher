@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using GameLauncher.Views;
 using Microsoft.Win32;
-using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
 namespace GameLauncher.Services;
@@ -54,6 +53,8 @@ public sealed class GameRecorderService : IDisposable
     private volatile bool _stoppingManually;
     private volatile bool _pendingRetry;
     private static string? _cachedEncoder;
+    private static bool? _ddagrabAvailable;
+    private static int? _cachedRefreshRate;
     private FacecamOverlayWindow? _facecamWindow;
 
     // WASAPI loopback capture (game audio)
@@ -518,7 +519,8 @@ public sealed class GameRecorderService : IDisposable
 
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         var safeName = string.IsNullOrEmpty(gameName) ? "Recording" : SanitizeFileName(gameName);
-        _currentOutputFile = Path.Combine(OutputDir, $"{safeName}_{timestamp}.mp4");
+        // Gravar em MKV (VFR nativo, tolerante a falhas) — remux para MP4 ao parar
+        _currentOutputFile = Path.Combine(OutputDir, $"{safeName}_{timestamp}.mkv");
 
         bool hasMic = mode != RecordingMode.ScreenOnly && !string.IsNullOrEmpty(micDevice);
         bool hasCam = mode == RecordingMode.FacecamMic && !string.IsNullOrEmpty(webcamDevice);
@@ -596,10 +598,13 @@ public sealed class GameRecorderService : IDisposable
             {
                 try
                 {
+                    // StopRecording already handles cleanup and state notification
+                    if (_stoppingManually) return;
+
                     var proc = _ffmpegProcess;
                     int exitCode = -1;
                     try { exitCode = proc?.ExitCode ?? -1; } catch { }
-                    bool crashed = exitCode != 0 && !_stoppingManually;
+                    bool crashed = exitCode != 0;
 
                     // If retry is pending, let the health monitor handle the failure
                     if (crashed && _pendingRetry)
@@ -623,7 +628,7 @@ public sealed class GameRecorderService : IDisposable
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[Recording] Exited handler error: {ex}");
-                    if (!_pendingRetry)
+                    if (!_pendingRetry && !_stoppingManually)
                         RecordingStateChanged?.Invoke(false);
                 }
             };
@@ -635,39 +640,70 @@ public sealed class GameRecorderService : IDisposable
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginErrorReadLine();
 
-            // Monitor process health asynchronously — retry without mic if device failed
+            // Monitor de saúde: verifica se o processo caiu e se o arquivo está crescendo
             var hasMicForRetry = hasMic;
             var hasLoopbackForRetry = hasLoopback;
+            var usedDdagrab = IsDdagrabAvailable();
             _ = Task.Run(async () =>
             {
+                // Fase 1: Verificar se o processo caiu nos primeiros 2 segundos
                 await Task.Delay(2000);
                 _pendingRetry = false;
                 try
                 {
                     var proc = _ffmpegProcess;
                     if (proc is null || _stoppingManually) return;
-                    if (!proc.HasExited) return; // Still running = success
 
-                    int exitCode = -1;
-                    try { exitCode = proc.ExitCode; } catch { }
-                    if (exitCode == 0) return;
+                    if (proc.HasExited)
+                    {
+                        int exitCode = -1;
+                        try { exitCode = proc.ExitCode; } catch { }
+                        if (exitCode == 0) return;
 
-                    if (hasMicForRetry || hasLoopbackForRetry)
-                    {
-                        // Retry: drop mic (most likely cause), restart loopback pipe
-                        Debug.WriteLine($"[Recording] FFmpeg failed (exit {exitCode}), retrying without mic (loopback={hasLoopbackForRetry})...");
-                        StatusMessage?.Invoke(hasLoopbackForRetry
-                            ? "⚠ Dispositivo falhou. Tentando novamente com áudio do jogo..."
-                            : "⚠ Dispositivo de áudio falhou. Tentando novamente sem áudio...");
-                        RetryScreenOnly(withLoopback: hasLoopbackForRetry);
-                    }
-                    else
-                    {
+                        // Se ddagrab causou a falha, desativar e tentar gdigrab
+                        if (usedDdagrab)
+                        {
+                            _ddagrabAvailable = false;
+                            Debug.WriteLine($"[Recording] ddagrab falhou (exit {exitCode}), tentando gdigrab...");
+                            StatusMessage?.Invoke("⚠ Captura avançada falhou. Tentando método alternativo...");
+                            RetryScreenOnly(withLoopback: hasLoopbackForRetry);
+                            return;
+                        }
+
+                        if (hasMicForRetry || hasLoopbackForRetry)
+                        {
+                            Debug.WriteLine($"[Recording] FFmpeg caiu (exit {exitCode}), tentando sem mic (loopback={hasLoopbackForRetry})...");
+                            StatusMessage?.Invoke(hasLoopbackForRetry
+                                ? "⚠ Dispositivo falhou. Tentando novamente com áudio do jogo..."
+                                : "⚠ Dispositivo de áudio falhou. Tentando novamente sem áudio...");
+                            RetryScreenOnly(withLoopback: hasLoopbackForRetry);
+                            return;
+                        }
+
                         var errorDetail = !string.IsNullOrEmpty(_lastFfmpegError)
                             ? _lastFfmpegError
                             : "FFmpeg não conseguiu iniciar a gravação";
                         StatusMessage?.Invoke($"❌ Falha: {errorDetail}");
                         RecordingStateChanged?.Invoke(false);
+                        return;
+                    }
+
+                    // Fase 2: Após 5s total, verificar se o arquivo está crescendo
+                    await Task.Delay(3000);
+                    proc = _ffmpegProcess;
+                    if (proc is null || _stoppingManually) return;
+                    if (proc.HasExited) return;
+
+                    if (!string.IsNullOrEmpty(_currentOutputFile) && File.Exists(_currentOutputFile))
+                    {
+                        var fi = new FileInfo(_currentOutputFile);
+                        if (fi.Length < 50 * 1024) // Menos de 50KB após 5s = encoder com problema
+                        {
+                            Debug.WriteLine($"[Recording] Arquivo muito pequeno ({fi.Length} bytes) após 5s — forçando libx264");
+                            StatusMessage?.Invoke("⚠ Encoder com problema. Reiniciando com codificação por software...");
+                            _cachedEncoder = null;
+                            RetryScreenOnly(withLoopback: hasLoopbackForRetry, forceLibx264: true);
+                        }
                     }
                 }
                 catch { }
@@ -691,33 +727,30 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private static (int width, int height) GetPrimaryScreenSize()
+    private static int GetDisplayRefreshRate()
     {
-        // Use DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 to get physical pixel dimensions
-        // (GetSystemMetrics returns logical/scaled pixels without this)
-        IntPtr prev = IntPtr.Zero;
+        if (_cachedRefreshRate.HasValue) return _cachedRefreshRate.Value;
         try
         {
-            prev = SetThreadDpiAwarenessContext(new IntPtr(-4));
-        }
-        catch { }
-
-        try
-        {
-            var w = GetSystemMetrics(0); // SM_CXSCREEN
-            var h = GetSystemMetrics(1); // SM_CYSCREEN
-            Debug.WriteLine($"[Recording] GetPrimaryScreenSize: {w}x{h} (DPI-aware)");
-            if (w > 0 && h > 0) return (w, h);
-        }
-        catch { }
-        finally
-        {
-            if (prev != IntPtr.Zero)
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT CurrentRefreshRate FROM Win32_VideoController");
+            foreach (ManagementObject obj in searcher.Get())
             {
-                try { SetThreadDpiAwarenessContext(prev); } catch { }
+                var rate = obj["CurrentRefreshRate"];
+                if (rate is uint r && r > 30)
+                {
+                    Debug.WriteLine($"[Recording] Display refresh rate: {r}Hz");
+                    _cachedRefreshRate = (int)r;
+                    return (int)r;
+                }
             }
         }
-        return (1920, 1080);
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] GetDisplayRefreshRate error: {ex.Message}");
+        }
+        _cachedRefreshRate = 60;
+        return 60;
     }
 
     /// <summary>
@@ -735,7 +768,7 @@ public sealed class GameRecorderService : IDisposable
 
             _loopbackPipeName = $"glauncher_audio_{Environment.ProcessId}";
             _loopbackPipe = new NamedPipeServerStream(_loopbackPipeName,
-                PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 4 * 1024 * 1024);
 
             _loopbackCapture = capture;
 
@@ -792,102 +825,174 @@ public sealed class GameRecorderService : IDisposable
 
     private void StopLoopbackCapture()
     {
-        try { _loopbackCapture?.StopRecording(); } catch { }
-        try { _loopbackCapture?.Dispose(); } catch { }
-        _loopbackCapture = null;
-        try { _loopbackPipe?.Dispose(); } catch { }
+        // Dispose pipe FIRST to unblock any Write() stuck in the DataAvailable handler.
+        // WasapiLoopbackCapture.StopRecording() waits for the capture thread to finish,
+        // but the capture thread may be blocked on pipe.Write() if the buffer is full.
+        // Disposing the pipe causes Write() to throw (caught by empty catch), unblocking it.
+        var pipe = _loopbackPipe;
         _loopbackPipe = null;
         _loopbackPipeName = null;
         _loopbackFfmpegInput = null;
+        try { pipe?.Dispose(); } catch { }
+
+        try { _loopbackCapture?.StopRecording(); } catch { }
+        try { _loopbackCapture?.Dispose(); } catch { }
+        _loopbackCapture = null;
     }
 
     private string BuildFfmpegArgs(RecordingResolution resolution, bool hasMic, string? micDevice,
-        string? loopbackInput = null)
+        string? loopbackInput = null, bool forceLibx264 = false)
     {
-        var (width, height) = resolution switch
+        // Detectar taxa de atualização nativa do monitor para captura fluida
+        // (60Hz, 75Hz, 120Hz, 144Hz — capturar na frequência nativa elimina frame skipping)
+        int captureRate = Math.Clamp(GetDisplayRefreshRate(), 30, 120);
+        int gopSize = captureRate * 2; // Keyframe a cada 2 segundos
+
+        // Bitrate base a 60fps — escalar proporcionalmente para refresh rates mais altos
+        var (baseBr, baseMax) = resolution switch
         {
-            RecordingResolution.HD_720p => (1280, 720),
-            RecordingResolution.FHD_1080p => (1920, 1080),
-            RecordingResolution.UHD_4K => (3840, 2160),
-            _ => (1920, 1080)
+            RecordingResolution.HD_720p => (8, 12),
+            RecordingResolution.FHD_1080p => (12, 18),
+            RecordingResolution.UHD_4K => (35, 50),
+            _ => (12, 18)
         };
 
-        var hwAccel = DetectHardwareEncoder();
+        double rateScale = captureRate / 60.0;
+        var bitrate = $"{(int)Math.Ceiling(baseBr * rateScale)}M";
+        var maxrate = $"{(int)Math.Ceiling(baseMax * rateScale)}M";
+
+        var hwAccel = forceLibx264 ? "libx264" : DetectHardwareEncoder();
 
         var encoderArgs = hwAccel switch
         {
-            "h264_nvenc" => "-c:v h264_nvenc -preset p1 -tune ll -rc vbr -cq 23",
-            "h264_amf" => "-c:v h264_amf -quality speed -rc cqp -qp_i 23 -qp_p 23",
-            "h264_qsv" => "-c:v h264_qsv -preset veryfast -global_quality 23",
-            _ => "-c:v libx264 -preset ultrafast -crf 23"
+            "h264_nvenc" => $"-c:v h264_nvenc -preset p1 -tune ll -b:v {bitrate} -maxrate {maxrate} -bufsize {maxrate} -profile:v high -bf 0 -g {gopSize}",
+            "h264_amf" => $"-c:v h264_amf -quality speed -b:v {bitrate} -maxrate {maxrate} -bufsize {maxrate} -profile:v high -bf 0 -g {gopSize}",
+            "h264_qsv" => $"-c:v h264_qsv -preset fast -b:v {bitrate} -maxrate {maxrate} -bufsize {maxrate} -bf 0 -g {gopSize}",
+            _ => $"-c:v libx264 -preset ultrafast -crf 23 -profile:v high -bf 0 -g {gopSize}"
         };
 
-        var (screenW, screenH) = GetPrimaryScreenSize();
-        bool needsScale = screenW != width || screenH != height;
-        Debug.WriteLine($"[Recording] Primary screen: {screenW}x{screenH}, target: {width}x{height}, scale={needsScale}");
+        // ddagrab captura jogos fullscreen via Desktop Duplication API; gdigrab é fallback
+        bool useDdagrab = IsDdagrabAvailable();
 
-        var inputs = $"-thread_queue_size 1024 -f gdigrab -framerate 30 -video_size {screenW}x{screenH} -i desktop";
+        string inputs;
+        if (useDdagrab)
+        {
+            inputs = $"-thread_queue_size 512 -probesize 32 -analyzeduration 0 -f ddagrab -framerate {captureRate} -i 0";
+            Debug.WriteLine($"[Recording] Usando ddagrab (Desktop Duplication API) @ {captureRate}fps");
+        }
+        else
+        {
+            inputs = $"-f gdigrab -framerate {captureRate} -rtbufsize 512M -i desktop";
+            Debug.WriteLine($"[Recording] Usando gdigrab @ {captureRate}fps");
+        }
+
+        Debug.WriteLine($"[Recording] Encoder: {hwAccel}, CaptureRate: {captureRate}fps, Bitrate: {bitrate}/{maxrate}, ForceLibx264: {forceLibx264}");
+
         int nextInput = 1;
         int loopbackIdx = -1, micIdx = -1;
         bool hasLoopback = !string.IsNullOrEmpty(loopbackInput);
 
         if (hasLoopback)
         {
-            inputs += $" -thread_queue_size 512 -probesize 32 -analyzeduration 0 {loopbackInput}";
+            inputs += $" -thread_queue_size 2048 -use_wallclock_as_timestamps 1 -probesize 32 -analyzeduration 0 {loopbackInput}";
             loopbackIdx = nextInput++;
         }
 
         if (hasMic && !string.IsNullOrEmpty(micDevice))
         {
-            inputs += $" -thread_queue_size 512 -f dshow -i audio=\"{micDevice}\"";
+            inputs += $" -thread_queue_size 1024 -use_wallclock_as_timestamps 1 -f dshow -i audio=\"{micDevice}\"";
             micIdx = nextInput++;
         }
 
+        // Filtros e mapeamentos
         var filters = new List<string>();
-        string videoMap;
-        string audioMap;
+        var maps = new List<string>();
         string audioArgs;
 
-        if (needsScale)
+        // ddagrab produz frames D3D11. Cada encoder precisa de formato específico:
+        // NVENC: D3D11 → CUDA via hwmap (NVENC não aceita D3D11 direto)
+        // AMF: D3D11 direto (AMF é nativo D3D11, mesmo device da ddagrab)
+        // QSV: D3D11 → QSV via hwmap
+        // libx264: D3D11 → CPU via hwdownload (software encoder)
+        bool ddagrabDirect = false;
+        if (useDdagrab)
         {
-            filters.Add($"[0:v]scale={width}:{height}[vout]");
-            videoMap = "-map \"[vout]\"";
+            if (hwAccel == "h264_nvenc")
+            {
+                // hwmap converte D3D11→CUDA inteiramente na GPU (zero transferência CPU)
+                filters.Add("[0:v]hwmap=derive_device=cuda,format=cuda[vout]");
+                maps.Add("-map \"[vout]\"");
+                Debug.WriteLine("[Recording] ddagrab → hwmap D3D11→CUDA → NVENC (zero-copy GPU)");
+            }
+            else if (hwAccel == "h264_amf")
+            {
+                // AMF aceita D3D11 frames nativamente (mesmo device da captura)
+                ddagrabDirect = true;
+                Debug.WriteLine("[Recording] ddagrab → AMF direto (D3D11 nativo)");
+            }
+            else if (hwAccel == "h264_qsv")
+            {
+                filters.Add("[0:v]hwmap=derive_device=qsv,format=qsv[vout]");
+                maps.Add("-map \"[vout]\"");
+                Debug.WriteLine("[Recording] ddagrab → hwmap → QSV");
+            }
+            else
+            {
+                filters.Add("[0:v]hwdownload,format=bgra[vout]");
+                maps.Add("-map \"[vout]\"");
+                Debug.WriteLine("[Recording] ddagrab → hwdownload → libx264");
+            }
         }
-        else
-        {
-            videoMap = "-map 0:v";
-        }
+
+        bool needsExplicitVideoMap = !useDdagrab || ddagrabDirect;
 
         if (hasLoopback && hasMic)
         {
             filters.Add($"[{loopbackIdx}:a][{micIdx}:a]amix=inputs=2:duration=longest[aout]");
-            audioMap = "-map \"[aout]\"";
+            if (needsExplicitVideoMap) maps.Add("-map 0:v");
+            maps.Add("-map \"[aout]\"");
             audioArgs = "-c:a aac -b:a 192k";
         }
         else if (hasLoopback)
         {
-            audioMap = $"-map {loopbackIdx}:a";
+            if (needsExplicitVideoMap) maps.Add("-map 0:v");
+            maps.Add($"-map {loopbackIdx}:a");
             audioArgs = "-c:a aac -b:a 192k";
         }
         else if (hasMic)
         {
-            audioMap = $"-map {micIdx}:a";
+            if (needsExplicitVideoMap) maps.Add("-map 0:v");
+            maps.Add($"-map {micIdx}:a");
             audioArgs = "-c:a aac -b:a 128k";
         }
         else
         {
-            audioMap = "";
+            if (needsExplicitVideoMap) maps.Add("-map 0:v");
             audioArgs = "";
         }
 
         var filterArg = filters.Count > 0
             ? $"-filter_complex \"{string.Join(";", filters)}\""
             : "";
+        var mapsStr = string.Join(" ", maps);
 
-        return $"-y {inputs} {filterArg} {videoMap} {audioMap} {encoderArgs} -r 30 -vsync cfr -pix_fmt yuv420p {audioArgs} -movflags +faststart \"{_currentOutputFile}\"";
+        // pix_fmt só para caminhos CPU (gdigrab, ddagrab+libx264)
+        // HW encoders com ddagrab zero-copy lidam com formato internamente
+        string pixFmt = (!useDdagrab || hwAccel == "libx264") ? "-pix_fmt yuv420p" : "";
+
+        // CFR (Constant Frame Rate): ddagrab entrega frames com timestamps irregulares do Desktop Duplication API.
+        // Sem regularização, os intervalos desiguais causam vídeo acelerado/não suave.
+        // -r {captureRate} + -fps_mode:v cfr força timestamps uniformes (ex: 16.67ms a 60fps),
+        // garantindo reprodução fluida. MKV suporta CFR nativamente; remux para MP4 ao parar.
+
+        return $"-y {inputs} {filterArg} {mapsStr} {encoderArgs} {pixFmt} {audioArgs} -r {captureRate} -fps_mode:v cfr -max_muxing_queue_size 2048 \"{_currentOutputFile}\"";
     }
 
-    public void WarmupEncoder() => DetectHardwareEncoder();
+    public void WarmupEncoder()
+    {
+        DetectHardwareEncoder();
+        IsDdagrabAvailable();
+    }
 
     private void StartFacecamPreview(string webcamDevice, FacecamPosition position)
     {
@@ -938,7 +1043,7 @@ public sealed class GameRecorderService : IDisposable
         }
     }
 
-    private void RetryScreenOnly(bool withLoopback = false)
+    private void RetryScreenOnly(bool withLoopback = false, bool forceLibx264 = false)
     {
         if (_ffmpegProcess is not null)
         {
@@ -949,7 +1054,7 @@ public sealed class GameRecorderService : IDisposable
 
         _lastFfmpegError = string.Empty;
 
-        // Restart WASAPI loopback pipe for the new ffmpeg process
+        // Reiniciar pipe WASAPI loopback para o novo processo ffmpeg
         StopLoopbackCapture();
         string? loopbackInput = null;
         if (withLoopback)
@@ -959,7 +1064,7 @@ public sealed class GameRecorderService : IDisposable
         }
 
         bool hasLoopback = loopbackInput is not null;
-        var args = BuildFfmpegArgs(_currentResolution, hasMic: false, micDevice: null, loopbackInput);
+        var args = BuildFfmpegArgs(_currentResolution, hasMic: false, micDevice: null, loopbackInput, forceLibx264: forceLibx264);
         Debug.WriteLine($"[Recording] Retry args (loopback={hasLoopback}): {args}");
 
         try
@@ -991,9 +1096,12 @@ public sealed class GameRecorderService : IDisposable
             {
                 try
                 {
+                    // StopRecording already handles cleanup and state notification
+                    if (_stoppingManually) return;
+
                     int exitCode = -1;
                     try { exitCode = _ffmpegProcess?.ExitCode ?? -1; } catch { }
-                    if (exitCode != 0 && !_stoppingManually)
+                    if (exitCode != 0)
                     {
                         StopLoopbackCapture();
                         StatusMessage?.Invoke($"❌ Erro na gravação: {_lastFfmpegError}");
@@ -1002,7 +1110,8 @@ public sealed class GameRecorderService : IDisposable
                 }
                 catch
                 {
-                    RecordingStateChanged?.Invoke(false);
+                    if (!_stoppingManually)
+                        RecordingStateChanged?.Invoke(false);
                 }
             };
 
@@ -1028,45 +1137,122 @@ public sealed class GameRecorderService : IDisposable
         _stoppingManually = true;
         _pendingRetry = false;
 
-        // Stop WASAPI loopback first — this closes the pipe, signaling EOF to ffmpeg
+        // Stop WASAPI loopback — closes the pipe, signaling EOF to ffmpeg audio input
         StopLoopbackCapture();
+        StopFacecamPreview();
 
-        if (_ffmpegProcess is null || _ffmpegProcess.HasExited)
+        var proc = _ffmpegProcess;
+        var outputFile = _currentOutputFile;
+        _ffmpegProcess = null; // IsRecording → false immediately
+
+        if (proc is null || proc.HasExited)
         {
-            _ffmpegProcess?.Dispose();
-            _ffmpegProcess = null;
-            StopFacecamPreview();
+            try { proc?.Dispose(); } catch { }
             RecordingStateChanged?.Invoke(false);
             return;
         }
 
+        // Close stdin — most reliable way to stop ffmpeg gracefully
+        // (Write("q") may not work when ddagrab is actively capturing)
+        try { proc.StandardInput.Close(); } catch { }
+
+        // Notify UI immediately — recording is "stopped" from the user's perspective
+        RecordingStateChanged?.Invoke(false);
+
+        // Background: wait for ffmpeg to exit, kill if needed, then remux MKV → MP4
+        _ = Task.Run(() => FinalizeRecording(proc, outputFile));
+    }
+
+    private void FinalizeRecording(Process proc, string? outputFile)
+    {
         try
         {
-            _ffmpegProcess.StandardInput.Write("q");
-            _ffmpegProcess.StandardInput.Flush();
-
-            if (!_ffmpegProcess.WaitForExit(5000))
+            if (!proc.WaitForExit(7000))
             {
-                _ffmpegProcess.Kill();
+                Debug.WriteLine("[Recording] FFmpeg não respondeu em 7s — forçando encerramento");
+                try { proc.Kill(); } catch { }
+                proc.WaitForExit(3000);
             }
-
-            var file = _currentOutputFile;
-            StatusMessage?.Invoke(
-                File.Exists(file)
-                    ? $"✅ Vídeo salvo: {Path.GetFileName(file)}"
-                    : "Gravação finalizada.");
         }
-        catch
+        catch (Exception ex)
         {
-            try { _ffmpegProcess?.Kill(); } catch { }
-            StatusMessage?.Invoke("Gravação parada.");
+            Debug.WriteLine($"[Recording] FinalizeRecording wait error: {ex.Message}");
+            try { proc.Kill(); } catch { }
         }
         finally
         {
-            _ffmpegProcess?.Dispose();
-            _ffmpegProcess = null;
-            StopFacecamPreview();
-            RecordingStateChanged?.Invoke(false);
+            try { proc.Dispose(); } catch { }
+        }
+
+        // Remux MKV → MP4 (cópia instantânea sem re-encoding)
+        if (!string.IsNullOrEmpty(outputFile) && File.Exists(outputFile) &&
+            outputFile.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase))
+        {
+            StatusMessage?.Invoke("⏳ Finalizando vídeo...");
+            var mp4File = RemuxToMp4(outputFile);
+            _currentOutputFile = mp4File;
+            StatusMessage?.Invoke($"✅ Vídeo salvo: {Path.GetFileName(mp4File)}");
+        }
+        else
+        {
+            StatusMessage?.Invoke(
+                !string.IsNullOrEmpty(outputFile) && File.Exists(outputFile)
+                    ? $"✅ Vídeo salvo: {Path.GetFileName(outputFile)}"
+                    : "Gravação finalizada.");
+        }
+    }
+
+    /// <summary>
+    /// Remux MKV → MP4 sem re-encoding (cópia instantânea de streams).
+    /// Adiciona faststart para streaming/reprodução rápida.
+    /// </summary>
+    private string RemuxToMp4(string mkvPath)
+    {
+        var mp4Path = Path.ChangeExtension(mkvPath, ".mp4");
+        try
+        {
+            Debug.WriteLine($"[Recording] Remuxing: {Path.GetFileName(mkvPath)} → {Path.GetFileName(mp4Path)}");
+
+            using var proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = FfmpegExe,
+                Arguments = $"-i \"{mkvPath}\" -c copy -movflags +faststart \"{mp4Path}\" -y",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
+            });
+
+            if (proc is null)
+            {
+                Debug.WriteLine("[Recording] Remux: failed to start ffmpeg");
+                return mkvPath;
+            }
+
+            // Timeout proporcional ao tamanho (remux é cópia — ~30s por GB em SSD, mínimo 60s)
+            var mkvSize = new FileInfo(mkvPath).Length;
+            int timeoutMs = Math.Max(60000, (int)(mkvSize / (100.0 * 1024 * 1024) * 30000));
+            proc.WaitForExit(timeoutMs);
+            if (!proc.HasExited)
+            {
+                try { proc.Kill(); } catch { }
+                Debug.WriteLine("[Recording] Remux: timeout");
+                return mkvPath;
+            }
+
+            if (proc.ExitCode == 0 && File.Exists(mp4Path) && new FileInfo(mp4Path).Length > 1024)
+            {
+                Debug.WriteLine($"[Recording] Remux OK: {new FileInfo(mp4Path).Length} bytes");
+                try { File.Delete(mkvPath); } catch { }
+                return mp4Path;
+            }
+
+            Debug.WriteLine($"[Recording] Remux failed (exit {proc.ExitCode}), keeping MKV");
+            return mkvPath;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Recording] Remux exception: {ex.Message}");
+            return mkvPath;
         }
     }
 
@@ -1084,44 +1270,127 @@ public sealed class GameRecorderService : IDisposable
     {
         var gpuName = SettingsService.Current.RecordingEncoder;
         if (!string.IsNullOrEmpty(gpuName) && gpuName != "auto")
-            return gpuName;
+        {
+            if (TestEncoder(gpuName))
+            {
+                Debug.WriteLine($"[Encoder] Using user-selected: {gpuName}");
+                return gpuName;
+            }
+            Debug.WriteLine($"[Encoder] User-selected '{gpuName}' failed test, falling back to auto-detect");
+        }
 
         if (_cachedEncoder is not null)
             return _cachedEncoder;
 
-        if (TestEncoder("h264_nvenc")) { _cachedEncoder = "h264_nvenc"; return _cachedEncoder; }
-        if (TestEncoder("h264_amf")) { _cachedEncoder = "h264_amf"; return _cachedEncoder; }
-        if (TestEncoder("h264_qsv")) { _cachedEncoder = "h264_qsv"; return _cachedEncoder; }
+        // Priority: NVENC (NVIDIA) → AMF (AMD) → QSV (Intel) → libx264 (software)
+        foreach (var enc in new[] { "h264_nvenc", "h264_amf", "h264_qsv" })
+        {
+            if (TestEncoder(enc))
+            {
+                _cachedEncoder = enc;
+                Debug.WriteLine($"[Encoder] Auto-detected: {enc}");
+                return enc;
+            }
+        }
+
         _cachedEncoder = "libx264";
+        Debug.WriteLine("[Encoder] No hardware encoder available, using libx264 software fallback");
         return _cachedEncoder;
     }
 
+    /// <summary>
+    /// Tests if a hardware encoder is functional by encoding a short clip with explicit bitrate.
+    /// Uses VBR + -b:v (the universally compatible mode) instead of QP/CQP which is driver-dependent.
+    /// </summary>
     private bool TestEncoder(string encoder)
     {
         try
         {
             var testFile = Path.Combine(Path.GetTempPath(), $"glauncher_test_{encoder}.mp4");
+            try { File.Delete(testFile); } catch { }
+
+            // Test with explicit bitrate (VBR) — works on ALL GPU vendors and drivers.
+            // testsrc generates varied frames that actually exercise the encoder.
             var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = FfmpegExe,
-                Arguments = $"-f lavfi -i nullsrc=s=256x256:d=0.1 -c:v {encoder} -frames:v 1 \"{testFile}\" -y",
+                Arguments = $"-f lavfi -i testsrc=duration=0.5:size=320x240:rate=30 -c:v {encoder} -b:v 1M -pix_fmt yuv420p -frames:v 10 \"{testFile}\" -y",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true
             });
 
-            proc?.WaitForExit(5000);
-            var success = proc?.ExitCode == 0;
+            if (proc is null) return false;
+            string stderr = "";
+            proc.ErrorDataReceived += (_, e) => { if (e.Data is not null) stderr += e.Data + "\n"; };
+            proc.BeginErrorReadLine();
+            proc.WaitForExit(10000);
+            if (!proc.HasExited) { try { proc.Kill(); } catch { } return false; }
+
+            var success = proc.ExitCode == 0;
+
+            if (success)
+            {
+                var fi = new FileInfo(testFile);
+                if (!fi.Exists || fi.Length < 2048)
+                {
+                    Debug.WriteLine($"[Encoder] {encoder} exit=0 but output too small: {(fi.Exists ? fi.Length : 0)} bytes");
+                    success = false;
+                }
+            }
+            else
+            {
+                Debug.WriteLine($"[Encoder] {encoder} failed (exit {proc.ExitCode}): {stderr.Trim().Split('\n').LastOrDefault()}");
+            }
+
+            Debug.WriteLine($"[Encoder] Test {encoder}: {(success ? "OK" : "FAIL")}");
             try { File.Delete(testFile); } catch { }
             return success;
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
-        }
-    }
+                Debug.WriteLine($"[Encoder] Test {encoder} exception: {ex.Message}");
+                    return false;
+                }
+            }
 
-    private static string SanitizeFileName(string name)
+            private static bool IsDdagrabAvailable()
+            {
+                if (_ddagrabAvailable.HasValue) return _ddagrabAvailable.Value;
+                if (!File.Exists(FfmpegExe)) { _ddagrabAvailable = false; return false; }
+
+                try
+                {
+                    var testFile = Path.Combine(Path.GetTempPath(), "glauncher_ddagrab_test.mp4");
+                    try { File.Delete(testFile); } catch { }
+
+                    using var proc = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = FfmpegExe,
+                        Arguments = $"-f ddagrab -framerate 30 -i 0 -frames:v 3 -vf \"hwdownload,format=bgra\" -c:v libx264 -preset ultrafast -pix_fmt yuv420p \"{testFile}\" -y",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+
+                    if (proc is null) { _ddagrabAvailable = false; return false; }
+                    proc.WaitForExit(8000);
+                    if (!proc.HasExited) { try { proc.Kill(); } catch { } _ddagrabAvailable = false; return false; }
+
+                    var success = proc.ExitCode == 0 && File.Exists(testFile) && new FileInfo(testFile).Length > 1024;
+                    _ddagrabAvailable = success;
+                    Debug.WriteLine($"[Recording] ddagrab disponível: {success}");
+                    try { File.Delete(testFile); } catch { }
+                    return success;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[Recording] Teste ddagrab falhou: {ex.Message}");
+                    _ddagrabAvailable = false;
+                    return false;
+                }
+            }
+
+            private static string SanitizeFileName(string name)
     {
         var invalid = Path.GetInvalidFileNameChars();
         return new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
@@ -1174,13 +1443,17 @@ public sealed class GameRecorderService : IDisposable
 
     public static string GetOutputDirectory() => OutputDir;
 
-    public static string GetResolutionLabel(RecordingResolution res) => res switch
+    public static string GetResolutionLabel(RecordingResolution res)
     {
-        RecordingResolution.HD_720p => "720p (1280×720) — 60 FPS",
-        RecordingResolution.FHD_1080p => "1080p (1920×1080) — 60 FPS",
-        RecordingResolution.UHD_4K => "4K (3840×2160) — 60 FPS",
-        _ => "1080p"
-    };
+        int hz = Math.Clamp(GetDisplayRefreshRate(), 30, 120);
+        return res switch
+        {
+            RecordingResolution.HD_720p => $"720p (1280×720) — {hz} FPS",
+            RecordingResolution.FHD_1080p => $"1080p (1920×1080) — {hz} FPS",
+            RecordingResolution.UHD_4K => $"4K (3840×2160) — {hz} FPS",
+            _ => "1080p"
+        };
+    }
 
     public static string GetFacecamPositionLabel(FacecamPosition pos) => pos switch
     {
@@ -1193,10 +1466,22 @@ public sealed class GameRecorderService : IDisposable
 
     public void Dispose()
     {
-        if (IsRecording)
-            StopRecording();
-        StopFacecamPreview();
+        _stoppingManually = true;
+        _pendingRetry = false;
         StopLoopbackCapture();
-        _ffmpegProcess?.Dispose();
+        StopFacecamPreview();
+
+        var proc = _ffmpegProcess;
+        _ffmpegProcess = null;
+        if (proc is not null)
+        {
+            if (!proc.HasExited)
+            {
+                try { proc.StandardInput.Close(); } catch { }
+                if (!proc.WaitForExit(3000))
+                    try { proc.Kill(); } catch { }
+            }
+            try { proc.Dispose(); } catch { }
+        }
     }
 }

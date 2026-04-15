@@ -879,9 +879,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             if (SettingsService.Current.RecordingEnabled)
             {
-                _recordingHintOverlay?.Dismiss();
-                _recordingHintOverlay = new RecordingHintOverlay();
-                _recordingHintOverlay.Show();
+                // Só mostra o hint overlay se não estiver gravando (F9 já foi pressionado antes)
+                if (!IsRecording)
+                {
+                    _recordingHintOverlay?.Dismiss();
+                    _recordingHintOverlay = new RecordingHintOverlay();
+                    _recordingHintOverlay.Show();
+                }
 
                 // Pre-create recorder and warm up encoder cache in background
                 // so F9 press is instant (encoder detection can take seconds)

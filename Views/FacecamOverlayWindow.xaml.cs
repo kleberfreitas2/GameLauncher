@@ -229,18 +229,9 @@ public partial class FacecamOverlayWindow : Window
 
         if (_captureProcess is not null && !_captureProcess.HasExited)
         {
-            try
-            {
-                // Graceful stop via stdin 'q'
-                _captureProcess.StandardInput.Write("q");
-                _captureProcess.StandardInput.Flush();
-                if (!_captureProcess.WaitForExit(2000))
-                    _captureProcess.Kill();
-            }
-            catch
-            {
-                try { _captureProcess.Kill(); } catch { }
-            }
+            // Kill immediately — facecam has no output file to finalize,
+            // so no need for graceful shutdown (avoids blocking the UI thread)
+            try { _captureProcess.Kill(); } catch { }
         }
 
         _captureProcess?.Dispose();
