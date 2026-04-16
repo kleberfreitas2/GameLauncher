@@ -957,11 +957,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SoundService.PlayLaunch();
             _runningGameName = game.DisplayName;
+
+            var workDir = string.IsNullOrEmpty(game.InstallDirectory)
+                ? Path.GetDirectoryName(game.ExecutablePath) ?? string.Empty
+                : game.InstallDirectory;
+
             var proc = Process.Start(new ProcessStartInfo
             {
                 FileName = game.ExecutablePath,
                 UseShellExecute = true,
-                WorkingDirectory = game.InstallDirectory
+                WorkingDirectory = workDir
             });
             game.LastPlayed = DateTime.Now;
             SaveGames();
@@ -980,41 +985,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _fpsOverlay.Show();
             }
 
-            if (proc is not null)
+            var launchTime = DateTime.UtcNow;
+            _ = Task.Run(async () =>
             {
-                var launchTime = DateTime.UtcNow;
-                _ = Task.Run(() =>
-                {
-                    try { proc.WaitForExit(); } catch { }
-                    var playedMinutes = (DateTime.UtcNow - launchTime).TotalMinutes;
-                    _dispatcher.BeginInvoke(() =>
-                    {
-                        game.TotalPlayTimeMinutes += playedMinutes;
-                        SaveGames();
-                        CleanupAfterGameExit();
+                var playedMinutes = await GameProcessMonitor.WaitForGameExitAsync(
+                    game.ExecutablePath, proc);
 
-                        if (mainWin is not null)
-                        {
-                            mainWin.WindowState = WindowState.Normal;
-                            mainWin.Activate();
-                        }
-                        _xinput.Start();
-                        StatusMessage = $"{Games.Count} jogos na biblioteca";
-                    });
-                });
-            }
-            else
-            {
-                _ = Task.Run(async () =>
+                _dispatcher.BeginInvoke(() =>
                 {
-                    await Task.Delay(5000);
-                    await _dispatcher.BeginInvoke(() =>
+                    game.TotalPlayTimeMinutes += playedMinutes;
+                    SaveGames();
+                    CleanupAfterGameExit();
+
+                    if (mainWin is not null)
                     {
-                        CleanupAfterGameExit();
-                        _xinput.Start();
-                    });
+                        mainWin.WindowState = WindowState.Normal;
+                        mainWin.Activate();
+                    }
+                    _xinput.Start();
+                    StatusMessage = $"{Games.Count} jogos na biblioteca";
                 });
-            }
+            });
         }
         catch (Exception ex)
         {
@@ -1022,6 +1013,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             CleanupAfterGameExit();
             _xinput.Start();
             StatusMessage = $"Erro ao iniciar {game.DisplayName}: {ex.Message}";
+            Debug.WriteLine($"LaunchGame error: {ex}");
         }
     }
 

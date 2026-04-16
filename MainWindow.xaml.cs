@@ -314,11 +314,22 @@ public partial class MainWindow : Window
     {
         if (!_isDragging)
         {
-            // No drag happened — apply the deferred selection now
+            // Verificar se o clique foi sobre o botão JOGAR
+            var source = e.OriginalSource as DependencyObject;
+            var clickedButton = FindAncestor<Button>(source);
+            bool isPlayButton = clickedButton?.Name == "PlayBtn";
+
+            // Aplicar seleção diferida
             if (_pendingSelectGame is not null)
-            {
                 GameCarousel.SelectedItem = _pendingSelectGame;
+
+            // Se clicou no JOGAR, lançar o jogo
+            if (isPlayButton && _pendingSelectGame is not null && DataContext is MainViewModel vm)
+            {
+                e.Handled = true;
+                vm.LaunchGameCommand.Execute(_pendingSelectGame);
             }
+
             _pendingSelectGame = null;
             EndDrag();
             return;
@@ -327,8 +338,8 @@ public partial class MainWindow : Window
         _pendingSelectGame = null;
         var pos = e.GetPosition(this);
         var target = GetCardAtPoint(pos);
-        if (target is not null && target != _draggedGame && DataContext is MainViewModel vm)
-            vm.ReorderGame(_draggedGame!, target);
+        if (target is not null && target != _draggedGame && DataContext is MainViewModel vm2)
+            vm2.ReorderGame(_draggedGame!, target);
 
         EndDrag();
     }
