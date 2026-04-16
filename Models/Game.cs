@@ -23,6 +23,9 @@ public partial class Game : ObservableObject
     private bool isFavorite;
 
     [ObservableProperty]
+    private int sortOrder;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EffectiveImagePath))]
     [NotifyPropertyChangedFor(nameof(HasImage))]
     [NotifyPropertyChangedFor(nameof(HasNoImage))]

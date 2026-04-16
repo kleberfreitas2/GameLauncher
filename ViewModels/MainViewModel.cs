@@ -210,7 +210,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
              g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
-        _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
+        _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.SortOrder), ListSortDirection.Ascending));
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
         _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
@@ -237,6 +237,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (games is not null)
         {
+            // Assign SortOrder to legacy games that don't have one
+            bool needsReorder = games.All(g => g.SortOrder == 0);
+            if (needsReorder)
+            {
+                for (int i = 0; i < games.Count; i++)
+                    games[i].SortOrder = i;
+            }
+
             foreach (var g in games)
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
@@ -461,6 +469,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch { }
     }
 
+    public void ReorderGame(Game dragged, Game target)
+    {
+        if (dragged == target) return;
+
+        // Get the visible (sorted) list
+        var visible = _gamesView.Cast<Game>().ToList();
+        var oldIndex = visible.IndexOf(dragged);
+        var newIndex = visible.IndexOf(target);
+        if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex) return;
+
+        visible.RemoveAt(oldIndex);
+        visible.Insert(newIndex, dragged);
+
+        // Reassign SortOrder preserving favorites-first grouping
+        for (int i = 0; i < visible.Count; i++)
+            visible[i].SortOrder = i;
+
+        _gamesView.Refresh();
+        SaveGames();
+    }
+
+    private int NextSortOrder() => Games.Count > 0 ? Games.Max(g => g.SortOrder) + 1 : 0;
+
     [RelayCommand]
     private async Task AddGame()
     {
@@ -495,7 +526,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 Name = gameName,
                 ExecutablePath = file,
                 InstallDirectory = Path.GetDirectoryName(file) ?? string.Empty,
-                IconPath = IconExtractor.ExtractIcon(file)
+                IconPath = IconExtractor.ExtractIcon(file),
+                SortOrder = NextSortOrder()
             };
 
             Games.Add(game);
@@ -1218,6 +1250,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (Games.Any(g => g.ExecutablePath.Equals(xg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
+            xg.SortOrder = NextSortOrder();
             Games.Add(xg);
             newGames.Add(xg);
             added++;
@@ -1400,6 +1433,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (Games.Any(g => g.ExecutablePath.Equals(sg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
+            sg.SortOrder = NextSortOrder();
             Games.Add(sg);
             newGames.Add(sg);
             added++;
@@ -1564,6 +1598,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             if (Games.Any(g => g.ExecutablePath.Equals(eg.ExecutablePath, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
+            eg.SortOrder = NextSortOrder();
             Games.Add(eg);
             newGames.Add(eg);
             added++;

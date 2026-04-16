@@ -5,7 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using GameLauncher.Controls;
+using GameLauncher.Models;
 using GameLauncher.Services;
 using GameLauncher.ViewModels;
 
@@ -97,6 +99,12 @@ public partial class MainWindow : Window
         Loaded += (_, _) =>
         {
             CompositionTarget.Rendering += OnFpsRendering;
+
+            // Custom drag-and-drop for card reordering
+            GameCarousel.PreviewMouseLeftButtonDown += GameCarousel_PreviewMouseLeftButtonDown;
+            GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove;
+            GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove_Drag;
+            GameCarousel.PreviewMouseLeftButtonUp += GameCarousel_PreviewMouseLeftButtonUp;
         };
         Closed += (_, _) =>
         {
@@ -211,6 +219,191 @@ public partial class MainWindow : Window
             handled = true;
         }
         return IntPtr.Zero;
+    }
+
+    #endregion
+
+    #region Drag-and-Drop Reorder
+
+    private Game? _draggedGame;
+    private ListBoxItem? _draggedItem;
+    private bool _isDragging;
+    private Point _dragStartPoint;
+    private const double DragThreshold = 8;
+
+    private Game? _pendingSelectGame;
+
+    private void GameCarousel_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragStartPoint = e.GetPosition(this);
+        _isDragging = false;
+        _draggedGame = null;
+        _draggedItem = null;
+
+        // Identify clicked card but defer selection to MouseUp
+        var source = e.OriginalSource as DependencyObject;
+        var item = FindAncestor<ListBoxItem>(source);
+        _pendingSelectGame = item?.DataContext as Game;
+
+        // Suppress default ListBox selection on mouse down to prevent layout shift
+        if (_pendingSelectGame is not null)
+            e.Handled = true;
+    }
+
+    private void GameCarousel_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _isDragging) return;
+
+        var pos = e.GetPosition(this);
+        var diff = pos - _dragStartPoint;
+        if (Math.Abs(diff.X) < DragThreshold && Math.Abs(diff.Y) < DragThreshold) return;
+
+        // Resolve the dragged item from click origin
+        var source = e.OriginalSource as DependencyObject;
+        var item = FindAncestor<ListBoxItem>(source);
+        if (item?.DataContext is not Game game) return;
+
+        _draggedGame = game;
+        _draggedItem = item;
+        _isDragging = true;
+
+        // Disable hover effects on individual cards during drag
+        SetCarouselItemsHitTestVisible(false);
+
+        // Setup ghost image from the card's cover
+        DragGhost.Visibility = Visibility.Visible;
+        DropIndicator.Visibility = Visibility.Visible;
+
+        if (!string.IsNullOrEmpty(game.EffectiveImagePath))
+        {
+            try { DragGhostImage.Source = new BitmapImage(new Uri(game.EffectiveImagePath)); }
+            catch { DragGhostImage.Source = null; }
+        }
+        else
+        {
+            DragGhostImage.Source = null;
+        }
+
+        // Capture mouse to track movement outside the list
+        GameCarousel.CaptureMouse();
+        UpdateDragVisuals(pos);
+    }
+
+    private void GameCarousel_PreviewMouseMove_Drag(object sender, MouseEventArgs e)
+    {
+        if (!_isDragging) return;
+        var pos = e.GetPosition(this);
+        UpdateDragVisuals(pos);
+    }
+
+    private void GameCarousel_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isDragging)
+        {
+            // No drag happened — apply the deferred selection now
+            if (_pendingSelectGame is not null)
+            {
+                GameCarousel.SelectedItem = _pendingSelectGame;
+            }
+            _pendingSelectGame = null;
+            EndDrag();
+            return;
+        }
+
+        _pendingSelectGame = null;
+        var pos = e.GetPosition(this);
+        var target = GetCardAtPoint(pos);
+        if (target is not null && target != _draggedGame && DataContext is MainViewModel vm)
+            vm.ReorderGame(_draggedGame!, target);
+
+        EndDrag();
+    }
+
+    private void UpdateDragVisuals(Point mousePos)
+    {
+        // Position ghost centered on cursor, offset slightly up-left
+        var ghostX = mousePos.X - 77;
+        var ghostY = mousePos.Y - 105;
+        DragGhost.Margin = new Thickness(ghostX, ghostY, 0, 0);
+
+        // Find target card and show drop indicator beside it
+        var target = GetCardAtPoint(mousePos);
+        if (target is not null && target != _draggedGame)
+        {
+            var targetItem = GetListBoxItemForGame(target);
+            if (targetItem is not null)
+            {
+                var itemPos = targetItem.TransformToAncestor(this).Transform(new Point(0, 0));
+                var itemH = targetItem.ActualHeight;
+                var indicatorX = mousePos.X < itemPos.X + targetItem.ActualWidth / 2
+                    ? itemPos.X - 2
+                    : itemPos.X + targetItem.ActualWidth - 2;
+
+                DropIndicator.Margin = new Thickness(indicatorX, itemPos.Y, 0, 0);
+                DropIndicator.Height = itemH > 0 ? itemH : 210;
+                DropIndicator.Visibility = Visibility.Visible;
+            }
+        }
+        else
+        {
+            DropIndicator.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private Game? GetCardAtPoint(Point windowPos)
+    {
+        // Temporarily re-enable hit testing on items for drop detection
+        SetCarouselItemsHitTestVisible(true);
+        try
+        {
+            var listPos = GameCarousel.PointFromScreen(this.PointToScreen(windowPos));
+            var hit = VisualTreeHelper.HitTest(GameCarousel, listPos);
+            if (hit is null) return null;
+            var item = FindAncestor<ListBoxItem>(hit.VisualHit);
+            return item?.DataContext as Game;
+        }
+        finally
+        {
+            if (_isDragging) SetCarouselItemsHitTestVisible(false);
+        }
+    }
+
+    private void SetCarouselItemsHitTestVisible(bool visible)
+    {
+        for (int i = 0; i < GameCarousel.Items.Count; i++)
+        {
+            if (GameCarousel.ItemContainerGenerator.ContainerFromIndex(i) is ListBoxItem item)
+                item.IsHitTestVisible = visible;
+        }
+    }
+
+    private ListBoxItem? GetListBoxItemForGame(Game game)
+    {
+        return GameCarousel.ItemContainerGenerator.ContainerFromItem(game) as ListBoxItem;
+    }
+
+    private void EndDrag()
+    {
+        _isDragging = false;
+        _draggedGame = null;
+        _draggedItem = null;
+        DragGhost.Visibility = Visibility.Collapsed;
+        DropIndicator.Visibility = Visibility.Collapsed;
+        if (GameCarousel.IsMouseCaptured)
+            GameCarousel.ReleaseMouseCapture();
+
+        // Re-enable hover effects after drag ends
+        SetCarouselItemsHitTestVisible(true);
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match) return match;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
     }
 
     #endregion

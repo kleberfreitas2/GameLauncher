@@ -1546,6 +1546,34 @@
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- Drag ghost card (floating preview while dragging) -->
+        <Border x:Name="DragGhost" Grid.RowSpan="4"
+                Width="155" Height="210" CornerRadius="10"
+                Opacity="0.75" IsHitTestVisible="False"
+                Visibility="Collapsed" Panel.ZIndex="9999"
+                HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border.Effect>
+                <DropShadowEffect Color="#7C4DFF" BlurRadius="28" ShadowDepth="0" Opacity="0.9"/>
+            </Border.Effect>
+            <Image x:Name="DragGhostImage" Stretch="UniformToFill"
+                   RenderOptions.BitmapScalingMode="HighQuality">
+                <Image.Clip>
+                    <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,155,210"/>
+                </Image.Clip>
+            </Image>
+        </Border>
+
+        <!-- Drop position indicator line -->
+        <Border x:Name="DropIndicator" Grid.RowSpan="4"
+                Width="3" IsHitTestVisible="False"
+                Visibility="Collapsed" Panel.ZIndex="9998"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Background="#7C4DFF">
+            <Border.Effect>
+                <DropShadowEffect Color="#7C4DFF" BlurRadius="8" ShadowDepth="0" Opacity="1"/>
+            </Border.Effect>
+        </Border>
         </Grid>
-    </Window>
+</Window>
 
