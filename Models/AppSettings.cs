@@ -1,33 +1,37 @@
+using GameLauncher.Services;
+
 namespace GameLauncher.Models;
 
 public class AppSettings
 {
-    internal const string DefaultSteamGridDbApiKey  = "ff16d3eb3d9146c2d4046915a9fd2b55";
-    internal const string DefaultIgdbClientId       = "2uvzi4sq1glaz1uz09w1qo48fg68kf";
-    internal const string DefaultIgdbClientSecret   = "lpv5tjr4pdk15xpmxl097pgtqg3x5n";
-    internal const string DefaultXboxClientId       = "2faf5e10-92f6-4ea6-838a-f84fb41facc3";
-    internal const string DefaultSteamApiKey        = "STUEF87H4RCNKN78";
-    internal const string DefaultDiscordClientId      = "1492859640827088896";
-    internal const string DefaultDiscordClientSecret  = "A6lzAthuKWdSrGrcDK0RYjbdh2uQkgpL";
-    internal const string DefaultOpenAiApiKey         = "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";
-    internal const string DefaultGroqApiKey           = "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";
+    // Chaves padrão decodificadas em tempo de execução pelo SecretsService (XOR).
+    // Nenhuma chave fica em texto plano no código-fonte ou no binário.
+    internal static string DefaultSteamGridDbApiKey  => SecretsService.SteamGridDbApiKey;
+    internal static string DefaultIgdbClientId       => SecretsService.IgdbClientId;
+    internal static string DefaultIgdbClientSecret   => SecretsService.IgdbClientSecret;
+    internal static string DefaultXboxClientId       => SecretsService.XboxClientId;
+    internal static string DefaultSteamApiKey        => SecretsService.SteamApiKey;
+    internal static string DefaultDiscordClientId    => SecretsService.DiscordClientId;
+    internal static string DefaultDiscordClientSecret => SecretsService.DiscordClientSecret;
+    internal static string DefaultOpenAiApiKey       => SecretsService.OpenAiApiKey;
+    internal static string DefaultGroqApiKey         => SecretsService.GroqApiKey;
 
-    public string SteamGridDbApiKey    { get; set; } = DefaultSteamGridDbApiKey;
-    public string IgdbClientId         { get; set; } = DefaultIgdbClientId;
-    public string IgdbClientSecret     { get; set; } = DefaultIgdbClientSecret;
+    public string SteamGridDbApiKey    { get; set; } = SecretsService.SteamGridDbApiKey;
+    public string IgdbClientId         { get; set; } = SecretsService.IgdbClientId;
+    public string IgdbClientSecret     { get; set; } = SecretsService.IgdbClientSecret;
     public string BackgroundImagePath  { get; set; } = string.Empty;
     public string AvatarImagePath      { get; set; } = string.Empty;
-    public string PlayerName            { get; set; } = "Jogador";
-    public string XboxClientId          { get; set; } = DefaultXboxClientId;
-    public string SteamApiKey           { get; set; } = DefaultSteamApiKey;
-    public string SteamId               { get; set; } = string.Empty;
-    public string DiscordClientId       { get; set; } = DefaultDiscordClientId;
-    public string DiscordClientSecret   { get; set; } = DefaultDiscordClientSecret;
+    public string PlayerName           { get; set; } = "Jogador";
+    public string XboxClientId         { get; set; } = SecretsService.XboxClientId;
+    public string SteamApiKey          { get; set; } = SecretsService.SteamApiKey;
+    public string SteamId              { get; set; } = string.Empty;
+    public string DiscordClientId      { get; set; } = SecretsService.DiscordClientId;
+    public string DiscordClientSecret  { get; set; } = SecretsService.DiscordClientSecret;
 
-    public bool SoundEnabled            { get; set; } = true;
-    public bool FpsOverlayEnabled       { get; set; } = false;
-    public string OpenAiApiKey          { get; set; } = DefaultOpenAiApiKey;
-    public string GroqApiKey            { get; set; } = DefaultGroqApiKey;
+    public bool SoundEnabled           { get; set; } = true;
+    public bool FpsOverlayEnabled      { get; set; } = false;
+    public string OpenAiApiKey         { get; set; } = SecretsService.OpenAiApiKey;
+    public string GroqApiKey           { get; set; } = SecretsService.GroqApiKey;
 
     public string DiscordWebhookUrl      { get; set; } = string.Empty;
     public List<string> DiscordQuickMessages { get; set; } =
