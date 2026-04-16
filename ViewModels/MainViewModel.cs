@@ -26,6 +26,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private XInputService _xinput = null!;
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
+    private string? _runningGameName;
+    public  string? RunningGameName => _runningGameName;
 
     public enum NavZone { Header, Actions, Carousel }
 
@@ -110,8 +112,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         BigPictureTransitionRequested?.Invoke(entering);
     }
-
-    private string? _runningGameName;
 
     private GpuCapabilities? _gpuCaps;
     [ObservableProperty] private ObservableCollection<TechCompatItem> techCompatItems = [];
@@ -985,6 +985,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _fpsOverlay.Show();
             }
 
+            // Mostra dica da IA com a hotkey após o jogo iniciar
+            var aiHint = new AiHintOverlay();
+            aiHint.Show();
+
             var launchTime = DateTime.UtcNow;
             _ = Task.Run(async () =>
             {
@@ -1024,6 +1028,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _runningGameName = null;
         _fpsOverlay?.Close();
         _fpsOverlay = null;
+
+        // Fecha o chat da IA que foi aberto como overlay durante o jogo
+        foreach (var w in Application.Current.Windows.OfType<AiAssistantDialog>().ToList())
+            w.Close();
     }
 
     [RelayCommand]
@@ -1144,6 +1152,46 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsHelpDialogOpen = false;
         HelpDialogNavigate = null;
         HelpDialogScroll = null;
+    }
+
+    [RelayCommand]
+    private void OpenAiAssistant()
+    {
+        var gameName = _runningGameName ?? SelectedGame?.DisplayName;
+
+        // Prioridade: Groq (grátis) → OpenAI (pago)
+        var groqKey   = SettingsService.Current.GroqApiKey;
+        var openAiKey = SettingsService.Current.OpenAiApiKey;
+
+        AiProvider provider;
+        string apiKey;
+
+        if (!string.IsNullOrWhiteSpace(groqKey))
+        {
+            provider = AiProvider.Groq;
+            apiKey   = groqKey;
+        }
+        else if (!string.IsNullOrWhiteSpace(openAiKey))
+        {
+            provider = AiProvider.OpenAI;
+            apiKey   = openAiKey;
+        }
+        else
+        {
+            // Nenhuma chave configurada — pede a do Groq (grátis)
+            var dlg = new GroqKeyDialog { Owner = Application.Current.MainWindow };
+            if (dlg.ShowDialog() != true) return;
+            SettingsService.Current.GroqApiKey = dlg.ApiKey;
+            SettingsService.Save();
+            provider = AiProvider.Groq;
+            apiKey   = dlg.ApiKey;
+        }
+
+        var chatDialog = new AiAssistantDialog(provider, apiKey, gameName)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        chatDialog.Show();
     }
 
     [RelayCommand]

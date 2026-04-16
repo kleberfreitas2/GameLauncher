@@ -9,6 +9,8 @@ public class AppSettings
     internal const string DefaultSteamApiKey        = "STUEF87H4RCNKN78";
     internal const string DefaultDiscordClientId      = "1492859640827088896";
     internal const string DefaultDiscordClientSecret  = "A6lzAthuKWdSrGrcDK0RYjbdh2uQkgpL";
+    internal const string DefaultOpenAiApiKey         = "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";
+    internal const string DefaultGroqApiKey           = "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";
 
     public string SteamGridDbApiKey    { get; set; } = DefaultSteamGridDbApiKey;
     public string IgdbClientId         { get; set; } = DefaultIgdbClientId;
@@ -24,6 +26,8 @@ public class AppSettings
 
     public bool SoundEnabled            { get; set; } = true;
     public bool FpsOverlayEnabled       { get; set; } = false;
+    public string OpenAiApiKey          { get; set; } = DefaultOpenAiApiKey;
+    public string GroqApiKey            { get; set; } = DefaultGroqApiKey;
 
     public string DiscordWebhookUrl      { get; set; } = string.Empty;
     public List<string> DiscordQuickMessages { get; set; } =

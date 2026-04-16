@@ -44,6 +44,7 @@ public partial class MainWindow : Window
 
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private BigPictureTransitionService? _bpTransition;
+    private GlobalHotkeyService? _hotkeys;
 
     public MainWindow(ViewModels.MainViewModel viewModelParam)
     {
@@ -118,11 +119,24 @@ public partial class MainWindow : Window
             // Sincronizar DropShadowEffects nomeados com o tema atual
             SettingsService.ThemeApplied += UpdateNamedGlowEffects;
             UpdateNamedGlowEffects();
+
+            // Hotkey global para abrir GLauncher AI por cima do jogo.
+            // Tenta Ctrl+Shift+A → Ctrl+Shift+G → Ctrl+F12 → Alt+F12 em ordem.
+            _hotkeys = new GlobalHotkeyService(this);
+            _hotkeys.RegisterWithFallback(
+            [
+                (GlobalHotkeyService.MOD_CTRL | GlobalHotkeyService.MOD_SHIFT, 0x41, "Ctrl+Shift+A"),  // A
+                (GlobalHotkeyService.MOD_CTRL | GlobalHotkeyService.MOD_SHIFT, 0x47, "Ctrl+Shift+G"),  // G
+                (GlobalHotkeyService.MOD_CTRL,                                  0x7B, "Ctrl+F12"),      // F12
+                (GlobalHotkeyService.MOD_ALT,                                   0x7B, "Alt+F12"),       // F12
+            ],
+            OpenAiOverlay);
         };
         Closed += (_, _) =>
         {
             CompositionTarget.Rendering -= OnFpsRendering;
             SettingsService.ThemeApplied -= UpdateNamedGlowEffects;
+            _hotkeys?.Dispose();
             _trayIcon?.Dispose();
             _trayIcon = null;
             (DataContext as MainViewModel)?.Dispose();
@@ -162,6 +176,91 @@ public partial class MainWindow : Window
         if (_trayIcon is not null)
             _trayIcon.Visible = false;
     }
+
+    /// <summary>
+    /// Abre o GLauncher AI como overlay flutuante por cima do jogo (Ctrl+Shift+G).
+    /// </summary>
+    private void OpenAiOverlay()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (DataContext is not MainViewModel vm) return;
+
+            var groqKey   = GameLauncher.Services.SettingsService.Current.GroqApiKey;
+            var openAiKey = GameLauncher.Services.SettingsService.Current.OpenAiApiKey;
+
+            AiProvider provider;
+            string apiKey;
+
+            if (!string.IsNullOrWhiteSpace(groqKey))
+            {
+                provider = AiProvider.Groq;
+                apiKey   = groqKey;
+            }
+            else if (!string.IsNullOrWhiteSpace(openAiKey))
+            {
+                provider = AiProvider.OpenAI;
+                apiKey   = openAiKey;
+            }
+            else return;
+
+            // Verifica se já há um overlay aberto — traz para frente e dá foco
+            foreach (Window w in Application.Current.Windows)
+            {
+                if (w is Views.AiAssistantDialog existing)
+                {
+                    ForceForeground(existing);
+                    return;
+                }
+            }
+
+            var gameName = vm.SelectedGame?.DisplayName ?? vm.RunningGameName;
+            var overlay  = new Views.AiAssistantDialog(provider, apiKey, gameName)
+            {
+                Topmost       = true,
+                Owner         = null,
+                ShowInTaskbar = true
+            };
+            overlay.Show();
+            ForceForeground(overlay);
+        });
+    }
+
+    /// <summary>
+    /// Força a janela para o primeiro plano e transfere o foco do teclado,
+    /// mesmo quando um jogo está com o input capturado.
+    /// </summary>
+    private static void ForceForeground(Window window)
+    {
+        var helper = new WindowInteropHelper(window);
+        var targetHwnd = helper.Handle;
+
+        // Obtém a thread do processo atual e do processo em foreground
+        var foregroundHwnd   = GetForegroundWindow();
+        var foregroundThread = GetWindowThreadProcessId(foregroundHwnd, out _);
+        var currentThread    = GetCurrentThreadId();
+
+        // Anexa temporariamente as threads para poder roubar o foco
+        var attached = foregroundThread != currentThread &&
+                       AttachThreadInput(currentThread, foregroundThread, true);
+
+        ShowWindow(targetHwnd, 9 /* SW_RESTORE */);
+        SetForegroundWindow(targetHwnd);
+
+        if (attached)
+            AttachThreadInput(currentThread, foregroundThread, false);
+
+        window.Topmost = true;
+        window.Activate();
+        window.Focus();
+    }
+
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    [DllImport("user32.dll")] private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+    [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
 
     private static System.Drawing.Icon LoadAppIcon()
     {

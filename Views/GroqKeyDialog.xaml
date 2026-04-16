@@ -1,0 +1,59 @@
+<Window x:Class="GameLauncher.Views.GroqKeyDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="GLauncher AI — Chave API Groq (Grátis)"
+        Width="500" Height="260"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="White">
+                🚀 Configure o Groq — IA Gratuita e Ultrarrápida
+            </TextBlock>
+            <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                1. Acesse (grátis, sem cartão):
+                <Hyperlink NavigateUri="https://console.groq.com/keys"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="#7C9DFF" TextDecorations="Underline">
+                    console.groq.com/keys
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                2. Clique em "Create API Key", dê um nome e copie a chave
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                3. Cole abaixo e clique SALVAR — usa Llama 3.3 70B gratuitamente!
+            </TextBlock>
+        </StackPanel>
+
+        <TextBox x:Name="KeyTextBox"
+                 Grid.Row="1"
+                 md:HintAssist.Hint="gsk_..."
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Foreground="White" CaretBrush="White"
+                 FontSize="13" Height="52"
+                 VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="SALVAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#00E676" FontWeight="Bold"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

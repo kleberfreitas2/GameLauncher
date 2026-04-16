@@ -1,0 +1,58 @@
+<Window x:Class="GameLauncher.Views.OpenAiKeyDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="GLauncher AI — Chave API OpenAI"
+        Width="480" Height="240"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#16213E"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="🤖 Configure sua chave API da OpenAI"
+                       FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+            <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                1. Acesse
+                <Hyperlink NavigateUri="https://platform.openai.com/api-keys"
+                           RequestNavigate="Hyperlink_RequestNavigate"
+                           Foreground="#7C9DFF" TextDecorations="Underline">
+                    platform.openai.com/api-keys
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                2. Clique em "Create new secret key" e copie a chave gerada
+            </TextBlock>
+            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#9999BB" TextWrapping="Wrap">
+                3. Cole abaixo e clique SALVAR (requer plano pago na OpenAI)
+            </TextBlock>
+        </StackPanel>
+
+        <TextBox x:Name="KeyTextBox"
+                 Grid.Row="1"
+                 md:HintAssist.Hint="sk-..."
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Foreground="White" CaretBrush="White"
+                 FontSize="13" Height="52"
+                 VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="CANCELAR" IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#888888" Margin="0,0,8,0"
+                    Click="Cancel_Click"/>
+            <Button Content="SALVAR"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Foreground="#7C4DFF" FontWeight="Bold"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
