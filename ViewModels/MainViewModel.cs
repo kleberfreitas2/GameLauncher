@@ -999,6 +999,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                     if (mainWin is not null)
                     {
+                        mainWin.Show();
                         mainWin.WindowState = WindowState.Normal;
                         mainWin.Activate();
                     }
