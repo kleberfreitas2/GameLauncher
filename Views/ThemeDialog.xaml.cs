@@ -22,6 +22,12 @@ public partial class ThemeDialog : Window
         new("Vermelho",      "#D50000", "#FF6D00", "#1A0808", "#2A1010", "#3A1818", "#2E1212"),
         new("Rosa Cyber",    "#AD1457", "#FF4081", "#160A1C", "#221030", "#341848", "#261030"),
         new("Ártico",        "#0097A7", "#80DEEA", "#080E1E", "#102030", "#183248", "#122438"),
+        new("Laranja Lava",  "#E65100", "#FFB74D", "#1A0E04", "#2A1808", "#3D2410", "#301C0C"),
+        new("Ouro Imperial", "#FFB300", "#FFE082", "#12100A", "#1E1A0E", "#2E2816", "#241E10"),
+        new("Cyberpunk",     "#F50057", "#EEFF41", "#0D0D14", "#1A1028", "#2A1838", "#22142E"),
+        new("Steam",         "#1A9FFF", "#66BB6A", "#1B2838", "#171A21", "#2A475E", "#1B2838"),
+        new("Xbox",          "#107C10", "#00C853", "#0E0E0E", "#1A1A1A", "#2D2D2D", "#1E1E1E"),
+        new("PlayStation",   "#003087", "#00439C", "#0A0A18", "#0E1428", "#162040", "#101832"),
     ];
 
     private Border? _activeBorder;

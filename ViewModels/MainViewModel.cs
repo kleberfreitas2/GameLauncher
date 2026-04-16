@@ -44,11 +44,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string searchText = string.Empty;
 
-    [ObservableProperty]
-    private string selectedTagFilter = "Todos";
-
-    public ObservableCollection<string> AvailableTags { get; } = ["Todos"];
-
     [ObservableProperty] private double cpuUsage;
     [ObservableProperty] private double cpuTemp;
     [ObservableProperty] private double gpuUsage;
@@ -73,6 +68,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool isDiscordLoading;
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BigPictureIcon))]
+    private bool isBigPictureMode;
+
+    public string BigPictureIcon => IsBigPictureMode ? "Monitor" : "TelevisionClassic";
+
+    [RelayCommand]
+    private void ToggleBigPictureMode()
+    {
+        IsBigPictureMode = !IsBigPictureMode;
+        SoundService.PlayNavigate();
+        StatusMessage = IsBigPictureMode ? "Modo Big Picture ativado" : "Modo Big Picture desativado";
+    }
 
     private string? _runningGameName;
 
@@ -212,9 +221,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             obj is Game g &&
             (string.IsNullOrWhiteSpace(SearchText) ||
              g.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-             g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
-            (SelectedTagFilter == "Todos" ||
-             g.Tags.Contains(SelectedTagFilter, StringComparer.OrdinalIgnoreCase));
+             g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.SortOrder), ListSortDirection.Ascending));
@@ -430,46 +437,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
 
-    partial void OnSelectedTagFilterChanged(string value) => _gamesView.Refresh();
-
-    public void RefreshAvailableTags()
-    {
-        var allTags = Games.SelectMany(g => g.Tags).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
-        AvailableTags.Clear();
-        AvailableTags.Add("Todos");
-        foreach (var tag in allTags)
-            AvailableTags.Add(tag);
-    }
-
-    [RelayCommand]
-    private void AddTagToGame(string? tag)
-    {
-        if (SelectedGame is null || string.IsNullOrWhiteSpace(tag)) return;
-        var trimmed = tag.Trim();
-        if (!SelectedGame.Tags.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
-        {
-            SelectedGame.Tags.Add(trimmed);
-            SelectedGame.NotifyTagsChanged();
-            RefreshAvailableTags();
-            SaveGames();
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveTagFromGame(string? tag)
-    {
-        if (SelectedGame is null || string.IsNullOrWhiteSpace(tag)) return;
-        var idx = SelectedGame.Tags.FindIndex(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
-        if (idx >= 0)
-        {
-            SelectedGame.Tags.RemoveAt(idx);
-            SelectedGame.NotifyTagsChanged();
-            RefreshAvailableTags();
-            _gamesView.Refresh();
-            SaveGames();
-        }
-    }
-
     partial void OnSelectedGameChanged(Game? value)
     {
         DetailGame = value;
@@ -496,7 +463,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             foreach (var g in saved)
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
-            RefreshAvailableTags();
             _gamesView.Refresh();
 
             if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
@@ -2057,6 +2023,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
                 case GamepadButton.Back:
                     OpenHelp();
+                    return;
+
+                case GamepadButton.RightThumb:
+                    ToggleBigPictureMode();
                     return;
             }
         });
