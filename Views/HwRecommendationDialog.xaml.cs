@@ -103,4 +103,7 @@ public partial class HwRecommendationDialog : Window
     };
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => DragMove();
 }

@@ -5,12 +5,16 @@
         Title="🖥️ Análise de Hardware — Recomendação Gráfica"
         Width="860" Height="560"
         ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
         WindowStartupLocation="CenterOwner"
-        Background="#0D0D1A"
+        Background="Transparent"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
-    <Grid Margin="24">
+    <Border Background="#0D0D1A" CornerRadius="10" Padding="24">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -197,4 +201,5 @@
                     Foreground="White"/>
         </Grid>
     </Grid>
+    </Border>
 </Window>
