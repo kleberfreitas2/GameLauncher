@@ -75,12 +75,40 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public string BigPictureIcon => IsBigPictureMode ? "Monitor" : "TelevisionClassic";
 
+    /// <summary>
+    /// Callback injetado pela View para executar a animação de transição.
+    /// Parâmetro: true = entrando, false = saindo do Big Picture.
+    /// </summary>
+    public Action<bool>? BigPictureTransitionRequested { get; set; }
+
     [RelayCommand]
     private void ToggleBigPictureMode()
     {
-        IsBigPictureMode = !IsBigPictureMode;
-        SoundService.PlayNavigate();
-        StatusMessage = IsBigPictureMode ? "Modo Big Picture ativado" : "Modo Big Picture desativado";
+        bool entering = !IsBigPictureMode;
+        IsBigPictureMode = entering;
+        // O som de entrada é tocado pelo BigPictureTransitionService; apenas navegar na saída
+        if (!entering) SoundService.PlayNavigate();
+        StatusMessage = entering ? "Modo Big Picture ativado" : "Modo Big Picture desativado";
+
+        if (entering)
+        {
+            // Ao entrar no Big Picture, garantir que o foco está no carrossel com um jogo selecionado
+            ActiveZone = NavZone.Carousel;
+            var visible = GetVisibleGames();
+            if (visible.Count > 0 && SelectedGame is null)
+            {
+                _selectedIndex = 0;
+                SelectedGame = visible[0];
+            }
+            else if (SelectedGame is not null)
+            {
+                _selectedIndex = visible.IndexOf(SelectedGame);
+                if (_selectedIndex < 0) _selectedIndex = 0;
+            }
+            UpdateGamepadStatusForZone();
+        }
+
+        BigPictureTransitionRequested?.Invoke(entering);
     }
 
     private string? _runningGameName;
@@ -90,12 +118,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGamepadBattery))]
-    [NotifyPropertyChangedFor(nameof(GamepadBatteryText))]
     [NotifyPropertyChangedFor(nameof(GamepadBatteryIcon))]
     private int gamepadBatteryLevel = -1;
 
     public bool HasGamepadBattery => GamepadBatteryLevel >= 0 && GamepadConnected;
-    public string GamepadBatteryText => GamepadBatteryLevel >= 0 ? $"{GamepadBatteryLevel}%" : "";
+
+    // ── Recomendação gráfica ──────────────────────────────────────────────
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasHwRecommendation))]
+    private Models.GraphicsRecommendation? hwRecommendation;
+
+    public bool HasHwRecommendation => HwRecommendation is not null;
+
+    [RelayCommand]
+    private void OpenHwRecommendation()
+    {
+        if (DetailGame is null) return;
+        var dlg = new Views.HwRecommendationDialog(
+            DetailGame.DisplayName,
+            GpuName, CpuName, RamTotal)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        dlg.ShowDialog();
+    }
+
     public string GamepadBatteryIcon => GamepadBatteryLevel switch
     {
         >= 80 => "Battery",
@@ -2003,7 +2050,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
 
                 case GamepadButton.A:
-                    ActivateCurrentItem();
+                    // No Big Picture, A sempre lança o jogo selecionado no carrossel
+                    if (IsBigPictureMode && ActiveZone == NavZone.Carousel && SelectedGame is not null)
+                    {
+                        SoundService.PlaySelect();
+                        LaunchGame(SelectedGame);
+                    }
+                    else
+                    {
+                        ActivateCurrentItem();
+                    }
                     return;
 
                 case GamepadButton.Y:

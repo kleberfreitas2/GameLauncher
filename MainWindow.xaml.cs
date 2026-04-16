@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using GameLauncher.Controls;
 using GameLauncher.Models;
@@ -42,6 +43,7 @@ public partial class MainWindow : Window
     private Rect _previousBounds;
 
     private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private BigPictureTransitionService? _bpTransition;
 
     public MainWindow(ViewModels.MainViewModel viewModelParam)
     {
@@ -100,15 +102,27 @@ public partial class MainWindow : Window
         {
             CompositionTarget.Rendering += OnFpsRendering;
 
+            // Serviço de transição Big Picture
+            _bpTransition = new BigPictureTransitionService(this);
+
+            // Interceptar o botão Big Picture para substituir pelo toggle animado
+            if (DataContext is MainViewModel bpVm)
+                bpVm.BigPictureTransitionRequested = PlayBigPictureTransition;
+
             // Custom drag-and-drop for card reordering
             GameCarousel.PreviewMouseLeftButtonDown += GameCarousel_PreviewMouseLeftButtonDown;
             GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove;
             GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove_Drag;
             GameCarousel.PreviewMouseLeftButtonUp += GameCarousel_PreviewMouseLeftButtonUp;
+
+            // Sincronizar DropShadowEffects nomeados com o tema atual
+            SettingsService.ThemeApplied += UpdateNamedGlowEffects;
+            UpdateNamedGlowEffects();
         };
         Closed += (_, _) =>
         {
             CompositionTarget.Rendering -= OnFpsRendering;
+            SettingsService.ThemeApplied -= UpdateNamedGlowEffects;
             _trayIcon?.Dispose();
             _trayIcon = null;
             (DataContext as MainViewModel)?.Dispose();
@@ -461,6 +475,88 @@ public partial class MainWindow : Window
     private static void HighlightMenuItem(MenuItem target)
     {
         target.Focus();
+    }
+
+    private void UpdateNamedGlowEffects()
+    {
+        if (ColorConverter.ConvertFromString(SettingsService.Current.AccentColor) is not Color accent)
+            return;
+
+        if (WelcomeIconGlow    is DropShadowEffect wg) wg.Color = accent;
+        if (DragGhostGlow      is DropShadowEffect dg) dg.Color = accent;
+        if (DropIndicatorGlow  is DropShadowEffect di) di.Color = accent;
+        if (AccentGradientStop is GradientStop      gs) gs.Color = accent;
+    }
+
+    /// <summary>
+    /// Chamado pelo ViewModel quando o usuário aciona o Modo Big Picture.
+    /// Executa a animação de transição e aplica a mudança de estado ao término.
+    /// </summary>
+    private bool _wasBigPictureFullscreen;
+    private WindowStyle _bpPreviousWindowStyle;
+    private WindowState _bpPreviousWindowState;
+    private ResizeMode _bpPreviousResizeMode;
+    private Rect _bpPreviousBounds;
+
+    private void EnterBigPictureFullscreen()
+    {
+        _bpPreviousWindowStyle = WindowStyle;
+        _bpPreviousWindowState = WindowState;
+        _bpPreviousResizeMode = ResizeMode;
+        _bpPreviousBounds = WindowState == WindowState.Maximized
+            ? RestoreBounds
+            : new Rect(Left, Top, Width, Height);
+
+        if (WindowState != WindowState.Normal)
+            WindowState = WindowState.Normal;
+
+        WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.NoResize;
+        Left   = 0;
+        Top    = 0;
+        Width  = SystemParameters.PrimaryScreenWidth;
+        Height = SystemParameters.PrimaryScreenHeight;
+        _wasBigPictureFullscreen = true;
+    }
+
+    private void ExitBigPictureFullscreen()
+    {
+        if (!_wasBigPictureFullscreen) return;
+        _wasBigPictureFullscreen = false;
+
+        WindowStyle = _bpPreviousWindowStyle;
+        ResizeMode  = _bpPreviousResizeMode;
+
+        if (_bpPreviousWindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Maximized;
+        }
+        else
+        {
+            Left   = _bpPreviousBounds.Left;
+            Top    = _bpPreviousBounds.Top;
+            Width  = _bpPreviousBounds.Width;
+            Height = _bpPreviousBounds.Height;
+            WindowState = _bpPreviousWindowState;
+        }
+    }
+
+    private void PlayBigPictureTransition(bool entering)
+    {
+        if (_bpTransition is null) return;
+
+        if (entering)
+        {
+            EnterBigPictureFullscreen();
+            _bpTransition.PlayEnter(onComplete: () => { });
+        }
+        else
+        {
+            _bpTransition.PlayExit(onComplete: () =>
+            {
+                ExitBigPictureFullscreen();
+            });
+        }
     }
 
     private void OnFpsRendering(object? sender, EventArgs e)

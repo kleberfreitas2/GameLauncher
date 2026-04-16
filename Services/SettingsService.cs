@@ -54,6 +54,8 @@ public static class SettingsService
         catch { }
     }
 
+    public static event Action? ThemeApplied;
+
     public static void ApplyTheme()
     {
         SetBrush("AppBackgroundBrush",    Current.BackgroundColor);
@@ -74,6 +76,8 @@ public static class SettingsService
             palette.SetTheme(theme);
         }
         catch { }
+
+        ThemeApplied?.Invoke();
     }
 
     private static void SetBrush(string key, string hex)
