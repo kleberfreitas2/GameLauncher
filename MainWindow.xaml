@@ -1005,6 +1005,18 @@
                         </LinearGradientBrush>
                     </Border.Background>
                     <StackPanel>
+                        <!-- Tag Filter Bar -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <md:PackIcon Kind="TagMultiple" Foreground="#778899" VerticalAlignment="Center" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding AvailableTags}"
+                                      SelectedItem="{Binding SelectedTagFilter}"
+                                      MinWidth="140" FontSize="13"
+                                      md:HintAssist.Hint="Filtrar por Tag"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Foreground="White" Background="#22FFFFFF"
+                                      md:HintAssist.Foreground="#778899"
+                                      md:TextFieldAssist.UnderlineBrush="#7C4DFF"/>
+                        </StackPanel>
                         <ListBox ItemsSource="{Binding GamesView}"
                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0"
@@ -1324,7 +1336,10 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Local de instalação" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="Tempo de Jogo" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding DetailGame.PlayTimeDisplay}" FontSize="13" Foreground="#5599CC"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,5">
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallDirectory}" FontSize="13"
                                Foreground="#5599CC" TextTrimming="CharacterEllipsis"
                                ToolTip="{Binding DetailGame.InstallDirectory}"/>
@@ -1368,6 +1383,52 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Lançamento" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.YearDisplay}" FontSize="13" Foreground="#5599CC"/>
+                                    </Grid>
+                                    <!-- Tags -->
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="155"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Tags" FontSize="13" Foreground="#778899" VerticalAlignment="Top"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding DetailGame.TagsDisplay}" FontSize="13" Foreground="#5599CC" TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                <TextBox x:Name="NewTagInput" MinWidth="100" FontSize="12"
+                                                         md:HintAssist.Hint="Nova tag..."
+                                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                         Foreground="White" Background="#22FFFFFF"
+                                                         md:HintAssist.Foreground="#556677"
+                                                         VerticalAlignment="Center" Padding="4,3"/>
+                                                <Button Content="+" ToolTip="Adicionar Tag"
+                                                        Command="{Binding AddTagToGameCommand}"
+                                                        CommandParameter="{Binding Text, ElementName=NewTagInput}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Foreground="#7C4DFF" FontSize="16" FontWeight="Bold"
+                                                        Margin="4,0,0,0" Padding="4,0" MinWidth="30"/>
+                                            </StackPanel>
+                                            <ItemsControl ItemsSource="{Binding DetailGame.Tags}" Margin="0,4,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#33FFFFFF" CornerRadius="10" Padding="8,3" Margin="0,0,4,4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding}" FontSize="11" Foreground="#AABBCC" VerticalAlignment="Center"/>
+                                                                <Button Content="✕" FontSize="9" Foreground="#FF5555"
+                                                                        Command="{Binding DataContext.RemoveTagFromGameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}"
+                                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                                        Padding="2,0" MinWidth="18" MinHeight="18" Margin="4,0,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </Grid>
                                 </StackPanel>
                             </Border>

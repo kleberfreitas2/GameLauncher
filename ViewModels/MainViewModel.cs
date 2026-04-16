@@ -44,6 +44,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string searchText = string.Empty;
 
+    [ObservableProperty]
+    private string selectedTagFilter = "Todos";
+
+    public ObservableCollection<string> AvailableTags { get; } = ["Todos"];
+
     [ObservableProperty] private double cpuUsage;
     [ObservableProperty] private double cpuTemp;
     [ObservableProperty] private double gpuUsage;
@@ -207,7 +212,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             obj is Game g &&
             (string.IsNullOrWhiteSpace(SearchText) ||
              g.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-             g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+             g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
+            (SelectedTagFilter == "Todos" ||
+             g.Tags.Contains(SelectedTagFilter, StringComparer.OrdinalIgnoreCase));
 
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.SortOrder), ListSortDirection.Ascending));
@@ -423,6 +430,46 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
 
+    partial void OnSelectedTagFilterChanged(string value) => _gamesView.Refresh();
+
+    public void RefreshAvailableTags()
+    {
+        var allTags = Games.SelectMany(g => g.Tags).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
+        AvailableTags.Clear();
+        AvailableTags.Add("Todos");
+        foreach (var tag in allTags)
+            AvailableTags.Add(tag);
+    }
+
+    [RelayCommand]
+    private void AddTagToGame(string? tag)
+    {
+        if (SelectedGame is null || string.IsNullOrWhiteSpace(tag)) return;
+        var trimmed = tag.Trim();
+        if (!SelectedGame.Tags.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+        {
+            SelectedGame.Tags.Add(trimmed);
+            SelectedGame.NotifyTagsChanged();
+            RefreshAvailableTags();
+            SaveGames();
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveTagFromGame(string? tag)
+    {
+        if (SelectedGame is null || string.IsNullOrWhiteSpace(tag)) return;
+        var idx = SelectedGame.Tags.FindIndex(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase));
+        if (idx >= 0)
+        {
+            SelectedGame.Tags.RemoveAt(idx);
+            SelectedGame.NotifyTagsChanged();
+            RefreshAvailableTags();
+            _gamesView.Refresh();
+            SaveGames();
+        }
+    }
+
     partial void OnSelectedGameChanged(Game? value)
     {
         DetailGame = value;
@@ -449,6 +496,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             foreach (var g in saved)
                 Games.Add(g);
             StatusMessage = $"{Games.Count} jogos na biblioteca";
+            RefreshAvailableTags();
             _gamesView.Refresh();
 
             if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
@@ -921,11 +969,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             if (proc is not null)
             {
+                var launchTime = DateTime.UtcNow;
                 _ = Task.Run(() =>
                 {
                     try { proc.WaitForExit(); } catch { }
+                    var playedMinutes = (DateTime.UtcNow - launchTime).TotalMinutes;
                     _dispatcher.BeginInvoke(() =>
                     {
+                        game.TotalPlayTimeMinutes += playedMinutes;
+                        SaveGames();
                         CleanupAfterGameExit();
 
                         if (mainWin is not null)

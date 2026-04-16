@@ -6,6 +6,23 @@ namespace GameLauncher.Models;
 
 public partial class Game : ObservableObject
 {
+    private List<string> _tags = [];
+    public List<string> Tags
+    {
+        get => _tags;
+        set
+        {
+            if (SetProperty(ref _tags, value))
+                OnPropertyChanged(nameof(TagsDisplay));
+        }
+    }
+
+    public void NotifyTagsChanged()
+    {
+        OnPropertyChanged(nameof(Tags));
+        OnPropertyChanged(nameof(TagsDisplay));
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string name = string.Empty;
@@ -24,6 +41,10 @@ public partial class Game : ObservableObject
 
     [ObservableProperty]
     private int sortOrder;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlayTimeDisplay))]
+    private double totalPlayTimeMinutes;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EffectiveImagePath))]
@@ -174,6 +195,21 @@ public partial class Game : ObservableObject
 
     public string FavoriteIcon  => IsFavorite ? "Star" : "StarOutline";
     public string FavoriteColor => IsFavorite ? "#FFD700" : "#666688";
+
+    public string PlayTimeDisplay
+    {
+        get
+        {
+            if (TotalPlayTimeMinutes < 1) return "Nunca jogado";
+            if (TotalPlayTimeMinutes < 60) return $"{(int)TotalPlayTimeMinutes} min";
+            var hours = TotalPlayTimeMinutes / 60.0;
+            return hours < 100
+                ? $"{hours:F1} horas"
+                : $"{hours:F0} horas";
+        }
+    }
+
+    public string TagsDisplay => Tags.Count > 0 ? string.Join(", ", Tags) : "—";
 
     public string LastPlayedText
     {
