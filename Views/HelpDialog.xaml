@@ -63,7 +63,6 @@
                     <ListBoxItem Content="&#x1f3ae;  Xbox Live"/>
                     <ListBoxItem Content="&#x1f4ac;  Discord"/>
                     <ListBoxItem Content="&#x1f3ae;  Epic Games"/>
-                    <ListBoxItem Content="&#x1f534;  Grava&#xe7;&#xe3;o de Gameplay" Selected="ListBoxItem_Selected"/>
                     <ListBoxItem Content="&#x1f3ae;  Biblioteca e Carrossel"/>
                     <ListBoxItem Content="&#x2699;&#xfe0f;  Menu de Op&#xe7;&#xf5;es"/>
                     <ListBoxItem Content="&#x1f5bc;&#xfe0f;  Capas e Fundos"/>
@@ -464,109 +463,6 @@
                         </StackPanel>
 
 <StackPanel x:Name="Page6" Visibility="Collapsed">
-                            <TextBlock Text="&#x1f534; Grava&#xe7;&#xe3;o de Gameplay" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Como funciona" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
-                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        O GLauncher permite gravar suas partidas usando o FFmpeg com um &#xfa;nico bot&#xe3;o.
-                                        A grava&#xe7;&#xe3;o funciona com hotkey global — funciona mesmo com o jogo em tela cheia.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Modos de Grava&#xe7;&#xe3;o" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
-                                    <StackPanel Margin="8,0,0,0">
-                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
-                                            <Run FontWeight="SemiBold" Foreground="#88AACC">&#x1f5a5;&#xfe0f; Captura de tela:</Run> grava apenas a tela (sem &#xe1;udio de microfone ou webcam).
-                                        </TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
-                                            <Run FontWeight="SemiBold" Foreground="#4FC3F7">&#x1f3a4; Somente Microfone:</Run> grava a tela + &#xe1;udio do microfone selecionado.
-                                        </TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap">
-                                            <Run FontWeight="SemiBold" Foreground="#FF5252">&#x1f4f7; Facecam + Microfone:</Run> grava tela + webcam + &#xe1;udio. A facecam aparece como overlay no canto escolhido.
-                                        </TextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Facecam" FontSize="15" FontWeight="SemiBold" Foreground="#FF5252" Margin="0,0,0,10"/>
-                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        No modo Facecam + Microfone, a webcam &#xe9; exibida como janela flutuante (via ffplay) em um dos 4 cantos da tela:
-                                        Superior Esquerda, Superior Direita, Inferior Esquerda ou Inferior Direita.
-                                    </TextBlock>
-                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,6,0,0">
-                                        O overlay de FPS e o indicador REC se reposicionam automaticamente para n&#xe3;o conflitar com a facecam.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Controles" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
-                                    <Grid Margin="0,4,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="160"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="F9" FontSize="13" Foreground="#FF5252" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Inicia ou para a grava&#xe7;&#xe3;o (toggle)" FontSize="12" Foreground="#8899AA"/>
-                                    </Grid>
-                                    <Grid Margin="0,6,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="160"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="&#x2699;&#xfe0f; &#x2192; Grava&#xe7;&#xe3;o" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Abre as configura&#xe7;&#xf5;es de grava&#xe7;&#xe3;o" FontSize="12" Foreground="#8899AA"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Configura&#xe7;&#xf5;es" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
-                                    <StackPanel Margin="8,0,0,0">
-                                        <TextBlock Text="&#x2022; Modo: Captura de tela, Microfone ou Facecam + Microfone" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Posi&#xe7;&#xe3;o da facecam: 4 cantos da tela" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Dispositivos: webcam e microfone selecion&#xe1;veis" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Resolu&#xe7;&#xe3;o: 720p, 1080p ou 4K a 60 FPS" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; Encoder: detectado automaticamente (NVENC, AMF, QSV ou libx264)" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                        <TextBlock Text="&#x2022; FFmpeg + FFplay: baixados automaticamente na primeira utiliza&#xe7;&#xe3;o" FontSize="13" Foreground="#AABBCC" Margin="0,3" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Arquivo de sa&#xed;da" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
-                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
-                                        Os v&#xed;deos s&#xe3;o salvos em <Run FontWeight="SemiBold" Foreground="#88AACC">C:\Users\Seu_Usuario\Videos\GLauncher Videos\</Run>
-                                    </TextBlock>
-                                    <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22" Margin="0,6,0,0">
-                                        Formato do nome: <Run FontWeight="SemiBold" Foreground="#88AACC">NomeDoJogo_1080p_2025-06-13_14-30-00.mp4</Run>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#1A1230" CornerRadius="10" Padding="20,14"
-                                    BorderBrush="#2A2050" BorderThickness="1">
-                                <DockPanel>
-                                    <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        O overlay "&#x1f534; REC" e o FPS s&#xe3;o invis&#xed;veis no v&#xed;deo gravado. A facecam (se ativa) aparece no v&#xed;deo pois &#xe9; capturada junto com a tela.
-                                        O nome do jogo &#xe9; detectado automaticamente para nomear o arquivo.
-                                    </TextBlock>
-                                </DockPanel>
-                            </Border>
-                        </StackPanel>
-
-<StackPanel x:Name="Page7" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3ae; Biblioteca e Carrossel" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -607,7 +503,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page8" Visibility="Collapsed">
+<StackPanel x:Name="Page7" Visibility="Collapsed">
                             <TextBlock Text="&#x2699;&#xfe0f; Menu de Op&#xe7;&#xf5;es" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -683,7 +579,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page9" Visibility="Collapsed">
+<StackPanel x:Name="Page8" Visibility="Collapsed">
                             <TextBlock Text="&#x1f5bc;&#xfe0f; Capas e Fundos" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -733,7 +629,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page10" Visibility="Collapsed">
+<StackPanel x:Name="Page9" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4ca; Informa&#xe7;&#xf5;es IGDB" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -764,7 +660,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page11" Visibility="Collapsed">
+<StackPanel x:Name="Page10" Visibility="Collapsed">
                             <TextBlock Text="&#x1f3a8; Temas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -788,7 +684,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page12" Visibility="Collapsed">
+<StackPanel x:Name="Page11" Visibility="Collapsed">
                             <TextBlock Text="&#x1f579;&#xfe0f; Controle" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -980,7 +876,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page13" Visibility="Collapsed">
+<StackPanel x:Name="Page12" Visibility="Collapsed">
                             <TextBlock Text="&#x1f4c8; Monitor de Hardware" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -1052,7 +948,7 @@
                             </Border>
                         </StackPanel>
 
-<StackPanel x:Name="Page14" Visibility="Collapsed">
+<StackPanel x:Name="Page13" Visibility="Collapsed">
                             <TextBlock Text="&#x2328;&#xfe0f; Atalhos e Dicas" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,16"/>
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
@@ -1151,14 +1047,6 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="Scroll horizontal" FontSize="13" Foreground="#5599CC" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="1" Text="Navega pelo carrossel de jogos" FontSize="12" Foreground="#8899AA"/>
-                                    </Grid>
-                                    <Grid Margin="0,6,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="200"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="F9" FontSize="13" Foreground="#FF5252" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="Iniciar / parar grava&#xe7;&#xe3;o de gameplay" FontSize="12" Foreground="#8899AA"/>
                                     </Grid>
                                     <Grid Margin="0,6,0,4">
                                         <Grid.ColumnDefinitions>

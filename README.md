@@ -12,8 +12,7 @@
   ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square)
   ![Discord](https://img.shields.io/badge/Discord-Integration-5865F2?style=flat-square&logo=discord&logoColor=white)
   ![Epic Games](https://img.shields.io/badge/Epic_Games-Integration-2F2D2E?style=flat-square&logo=epicgames&logoColor=white)
-  ![FFmpeg](https://img.shields.io/badge/FFmpeg-Recording-007808?style=flat-square&logo=ffmpeg&logoColor=white)
-  ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+  ![License]
 
 </div>
 
@@ -118,36 +117,6 @@ Importação automática de jogos instalados via **Epic Games Store**:
 - Detecção de plataforma: jogos Epic exibem **"Epic Games - PC (Windows)"** nos detalhes
 
 > 💡 Basta ter a Epic Games Store instalada — o GLauncher detecta os jogos automaticamente.
-
-### 🔴 Gravação de Gameplay
-Grave suas partidas com **FFmpeg** — agora com **3 modos de gravação**, **facecam** e **microfone**:
-
-- **Hotkey global F9** — inicia/para gravação a qualquer momento (mesmo com o jogo em foco)
-- **3 modos de gravação:**
-  - 🖥️ **Captura de tela** — grava apenas a tela (sem áudio de microfone ou webcam)
-  - 🎤 **Somente Microfone** — grava a tela + áudio do microfone selecionado
-  - 📷 **Facecam + Microfone** — grava tela + webcam + áudio do microfone
-- **Facecam overlay** — a webcam aparece como janela flutuante (via ffplay) posicionada em **4 cantos** da tela
-- **Seleção de dispositivos** — escolha a webcam e o microfone nas configurações
-- Detecção automática de encoder de hardware: **NVENC** (NVIDIA), **AMF** (AMD), **QSV** (Intel), ou **libx264** (CPU)
-- Resoluções: **720p**, **1080p** ou **4K** a **60 FPS**
-- Overlay "REC" e FPS counter são invisíveis nas gravações (via `WDA_EXCLUDEFROMCAPTURE`)
-- Overlays se reposicionam automaticamente para não conflitar com a facecam
-- Arquivo nomeado automaticamente: `NomeDoJogo_1080p_2025-06-13_14-30-00.mp4`
-- FFmpeg + FFplay baixados automaticamente na primeira utilização
-- Configurações acessíveis pelo menu ⚙️ → "Configurações de Gravação"
-
-| Configuração | Opções |
-|---|---|
-| Modo | Captura de tela / Microfone / Facecam + Microfone |
-| Posição facecam | Superior Esq. / Superior Dir. / Inferior Esq. / Inferior Dir. |
-| Dispositivos | Webcam e microfone selecionáveis |
-| Resolução | 720p / 1080p / 4K (60 FPS) |
-| Encoder | Auto-detectado (GPU > CPU) |
-| Hotkey | F9 (global, funciona em qualquer app) |
-| Saída | `%LOCALAPPDATA%\GameLauncher\recordings\` |
-
-> 💡 Pressione **F9** para iniciar a gravação e **F9** novamente para parar. O overlay "🔴 REC" aparece na tela mas **não aparece no vídeo gravado**. A facecam (se ativa) aparece no vídeo pois é capturada junto com a tela.
 
 ### 🖥️ Monitor de Hardware
 Gauges circulares em tempo real no rodapé + descrições do hardware:
@@ -269,9 +238,7 @@ GameLauncher/
 │   ├── DiscordRichPresenceService.cs # Rich Presence via IPC Named Pipes
 │   ├── DiscordService.cs         # Discord OAuth2 (login, perfil, token cache)
 │   ├── EpicGamesService.cs       # Integração Epic Games (detecção, importação)
-│   ├── GameRecorderService.cs    # Gravação de gameplay (FFmpeg + ffplay, facecam, mic, encoders HW)
 │   ├── GameScanner.cs            # Scanner de pasta por executáveis
-│   ├── GlobalHotkeyService.cs    # Hotkey global F9 (WH_KEYBOARD_LL)
 │   ├── HardwareMonitorService.cs # CPU/GPU/RAM + WMI para storage
 │   ├── IconExtractor.cs          # Extração de ícone de .exe
 │   ├── IgdbService.cs            # Integração IGDB (sinopse, gênero, nota)
@@ -296,8 +263,6 @@ GameLauncher/
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
 │   ├── FpsOverlayWindow.xaml      # Overlay FPS em tempo real
-│   ├── RecordingOverlayWindow.xaml # Overlay REC com timer
-│   ├── RecordingSettingsDialog.xaml # Configurações de gravação (modo, facecam, dispositivos)
 │   ├── RenameDialog.xaml          # Renomear jogo
 │   ├── SteamProfileDialog.xaml    # Perfil Steam (avatar, jogos, importar)
 │   ├── SteamSetupDialog.xaml      # Configuração Steam ID
@@ -359,8 +324,6 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 9. Conecte um **controle Xbox ou PlayStation** para navegar com gamepad
 10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
 11. Clique em **`EPIC`** no cabeçalho para importar jogos da **Epic Games Store**
-12. Clique em **`DISCORD`** no cabeçalho para login — o **Rich Presence** mostra o jogo no Discord automaticamente
-13. Pressione **F9** durante o jogo para **gravar gameplay** (configure em ⚙️ → Gravação)
 
 ---
 
@@ -413,7 +376,6 @@ Todos os dados são salvos em `%AppData%\GameLauncher\`:
 ├── icons/           # Cache de ícones extraídos (.png)
 ├── covers/          # Capas e logos baixados do SteamGridDB
 ├── backgrounds/     # Fundos animados (WEBP/GIF)
-└── recordings/      # Gravações de gameplay (.mp4)
 ```
 
 ---
