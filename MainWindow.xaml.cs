@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using GameLauncher.Controls;
 using GameLauncher.Services;
@@ -37,10 +39,17 @@ public partial class MainWindow : Window
     private ResizeMode _previousResizeMode;
     private Rect _previousBounds;
 
-    public MainWindow()
+    private System.Windows.Forms.NotifyIcon? _trayIcon;
+
+    public MainWindow(ViewModels.MainViewModel viewModelParam)
     {
         InitializeComponent();
-        DataContext = new MainViewModel();
+        DataContext = viewModelParam;
+        SourceInitialized += (_, _) =>
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(handle)?.AddHook(WndProc);
+        };
 
         var dpd = DependencyPropertyDescriptor.FromProperty(
             AnimatedImage.IsLoadingProperty, typeof(AnimatedImage));
@@ -75,18 +84,143 @@ public partial class MainWindow : Window
 
         KeyDown += MainWindow_KeyDown;
 
+        StateChanged += (_, _) =>
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                Hide();
+                EnsureTrayIcon();
+                _trayIcon!.Visible = true;
+            }
+        };
+
         Loaded += (_, _) =>
         {
             CompositionTarget.Rendering += OnFpsRendering;
-
-            };
-            Closed += (_, _) =>
-            {
-                CompositionTarget.Rendering -= OnFpsRendering;
-                (DataContext as MainViewModel)?.Dispose();
+        };
+        Closed += (_, _) =>
+        {
+            CompositionTarget.Rendering -= OnFpsRendering;
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            (DataContext as MainViewModel)?.Dispose();
         };
     }
 
+
+    #region System Tray
+
+    private void EnsureTrayIcon()
+    {
+        if (_trayIcon is not null) return;
+
+        _trayIcon = new System.Windows.Forms.NotifyIcon
+        {
+            Text = "GLauncher",
+            Icon = LoadAppIcon()
+        };
+        _trayIcon.DoubleClick += (_, _) => RestoreFromTray();
+
+        var menu = new System.Windows.Forms.ContextMenuStrip();
+        menu.Items.Add("Abrir GLauncher", null, (_, _) => RestoreFromTray());
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+        menu.Items.Add("Sair", null, (_, _) =>
+        {
+            _trayIcon.Visible = false;
+            System.Windows.Application.Current.Shutdown();
+        });
+        _trayIcon.ContextMenuStrip = menu;
+    }
+
+    private void RestoreFromTray()
+    {
+        Show();
+        WindowState = WindowState.Maximized;
+        Activate();
+        if (_trayIcon is not null)
+            _trayIcon.Visible = false;
+    }
+
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        try
+        {
+            var exePath = Environment.ProcessPath;
+            if (exePath is not null)
+            {
+                var icon = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
+                if (icon is not null) return icon;
+            }
+        }
+        catch { }
+        return System.Drawing.SystemIcons.Application;
+    }
+
+    #endregion
+
+    #region Win32 — constrain maximized window to work area (respect taskbar)
+
+    private const int WM_GETMINMAXINFO = 0x0024;
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT { public int x, y; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_GETMINMAXINFO)
+        {
+            var mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            GetMonitorInfo(monitor, ref mi);
+            var work = mi.rcWork;
+            var mon = mi.rcMonitor;
+            mmi.ptMaxPosition = new POINT { x = work.Left - mon.Left, y = work.Top - mon.Top };
+            mmi.ptMaxSize = new POINT { x = work.Right - work.Left, y = work.Bottom - work.Top };
+            Marshal.StructureToPtr(mmi, lParam, true);
+            handled = true;
+        }
+        return IntPtr.Zero;
+    }
+
+    #endregion
+
+    private void BtnWinMinimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void BtnWinMaxRestore_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void BtnWinClose_Click(object sender, RoutedEventArgs e) => Close();
 
     private static List<MenuItem> CollectMenuItems(ContextMenu ctx)
     {
