@@ -22,8 +22,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "GameLauncher", "games.json");
 
     private readonly ICollectionView _gamesView;
-    private readonly HardwareMonitorService _hwMonitor;
-    private readonly XInputService _xinput;
+    private HardwareMonitorService _hwMonitor = null!;
+    private XInputService _xinput = null!;
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
 
@@ -212,12 +212,44 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.Name), ListSortDirection.Ascending));
 
-        LoadGames();
-        _ = RefreshAllAssetsOnStartupAsync();
-        _ = TryRestoreXboxSessionAsync();
-        _ = TryRestoreSteamSessionAsync();
-        _ = TryRestoreEpicSessionAsync();
-        _ = TryRestoreDiscordSessionAsync();
+        _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+        _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
+        _clockTimer.Start();
+    }
+
+    /// <summary>
+    /// Heavy initialization that runs without blocking the UI thread.
+    /// Call after construction, before showing the main window.
+    /// </summary>
+    public async Task InitializeAsync(Action<string>? statusCallback = null)
+    {
+        statusCallback?.Invoke("Carregando biblioteca de jogos...");
+        var games = await Task.Run(() =>
+        {
+            try
+            {
+                if (!File.Exists(SaveFilePath)) return null;
+                var json = File.ReadAllText(SaveFilePath);
+                return JsonSerializer.Deserialize<List<Game>>(json);
+            }
+            catch { return null; }
+        });
+
+        if (games is not null)
+        {
+            foreach (var g in games)
+                Games.Add(g);
+            StatusMessage = $"{Games.Count} jogos na biblioteca";
+            _gamesView.Refresh();
+            if (_gamesView.Cast<Game>().FirstOrDefault() is { } first)
+                SelectedGame = first;
+        }
+
+        statusCallback?.Invoke("Iniciando serviços...");
+        await Task.Run(() =>
+        {
+            SoundService.Initialize();
+        });
 
         _hwMonitor = new HardwareMonitorService();
         _hwMonitor.MetricsUpdated += OnMetricsUpdated;
@@ -230,11 +262,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.BatteryChanged += OnBatteryChanged;
         _xinput.Start();
 
-        SoundService.Initialize();
-
-        _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
-        _clockTimer.Tick += (_, _) => CurrentTime = DateTime.Now.ToString("H:mm");
-        _clockTimer.Start();
+        statusCallback?.Invoke("Conectando contas...");
+        _ = RefreshAllAssetsOnStartupAsync();
+        _ = TryRestoreXboxSessionAsync();
+        _ = TryRestoreSteamSessionAsync();
+        _ = TryRestoreEpicSessionAsync();
+        _ = TryRestoreDiscordSessionAsync();
     }
 
     private void OnMetricsUpdated(HardwareMetrics m)

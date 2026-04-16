@@ -71,16 +71,6 @@
 
                         <!-- Feature 3 -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <md:PackIcon Kind="RecordCircleOutline" Width="18" Height="18" Foreground="#FF5252"
-                                         VerticalAlignment="Top" Margin="0,2,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Gravação de gameplay com hotkey" FontSize="12" FontWeight="SemiBold" Foreground="#DDDDEE"/>
-                                <TextBlock Text="Grave suas partidas com um botão (FFmpeg)" FontSize="10.5" Foreground="#667788"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <!-- Feature 4 -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <md:PackIcon Kind="ImageSearch" Width="18" Height="18" Foreground="#FFB300"
                                          VerticalAlignment="Top" Margin="0,2,10,0"/>
                             <StackPanel>
@@ -89,7 +79,7 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- Feature 5 -->
+                        <!-- Feature 4 -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
                             <md:PackIcon Kind="Chip" Width="18" Height="18" Foreground="#B388FF"
                                          VerticalAlignment="Top" Margin="0,2,10,0"/>

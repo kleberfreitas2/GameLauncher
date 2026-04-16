@@ -28,13 +28,11 @@ public partial class App : System.Windows.Application
         splash.Show();
         splash.SetStatus("Iniciando o GLauncher...");
 
-        // Let the splash render before heavy work
+        // Let the splash render and animate before starting heavy work
         await System.Threading.Tasks.Task.Delay(400);
 
-        splash.SetStatus("Carregando biblioteca de jogos...");
-        await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
-
         var vm = new MainViewModel();
+        await vm.InitializeAsync(status => splash.SetStatus(status));
 
         splash.SetStatus("Preparando interface...");
         await System.Threading.Tasks.Task.Delay(300);
