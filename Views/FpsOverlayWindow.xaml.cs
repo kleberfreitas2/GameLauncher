@@ -44,20 +44,8 @@ public partial class FpsOverlayWindow : Window
         SourceInitialized += (_, _) => MakeClickThrough();
 
         var screen = SystemParameters.WorkArea;
-        var facecamPos = SettingsService.Current.FacecamPosition;
-        var mode = SettingsService.Current.RecordingMode;
-        bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
-
-        if (facecamTopRight)
-        {
-            Left = screen.Left + 16;
-            Top = screen.Top + 16;
-        }
-        else
-        {
-            Left = screen.Right - Width - 16;
-            Top = screen.Top + 16;
-        }
+        Left = screen.Right - Width - 16;
+        Top = screen.Top + 16;
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += OnTimerTick;

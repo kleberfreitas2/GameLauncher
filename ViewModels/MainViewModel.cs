@@ -69,24 +69,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
-    private bool _isRecordingEnabled = SettingsService.Current.RecordingEnabled;
-    public bool IsRecordingEnabled
-    {
-        get => _isRecordingEnabled;
-        set => SetProperty(ref _isRecordingEnabled, value);
-    }
-
-    private bool _isRecording;
-    public bool IsRecording
-    {
-        get => _isRecording;
-        set => SetProperty(ref _isRecording, value);
-    }
-
-    private GameRecorderService? _recorder;
-    private RecordingOverlayWindow? _recordingOverlay;
-    private RecordingStartPopup? _recordingStartPopup;
-    private RecordingHintOverlay? _recordingHintOverlay;
     private string? _runningGameName;
 
     private GpuCapabilities? _gpuCaps;
@@ -301,11 +283,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
-        _recorder?.Dispose();
-        _recordingOverlay?.Close();
-        _recordingOverlay = null;
-        _recordingStartPopup?.Close();
-        _recordingStartPopup = null;
     }
 
     private void ScanGameTech(Game game)
@@ -619,7 +596,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             progressDialog.UpdateProgress(100, "Tudo pronto!");
             StatusMessage = $"'{game.DisplayName}' adicionado com sucesso!";
 
-            await Task.Delay(600); // pequena pausa para o usuário ver 100%
+            await Task.Delay(600);
             progressDialog.Finish();
 
             _gamesView.Refresh();
@@ -877,48 +854,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _fpsOverlay.Show();
             }
 
-            if (SettingsService.Current.RecordingEnabled)
-            {
-                // Só mostra o hint overlay se não estiver gravando (F9 já foi pressionado antes)
-                if (!IsRecording)
-                {
-                    _recordingHintOverlay?.Dismiss();
-                    _recordingHintOverlay = new RecordingHintOverlay();
-                    _recordingHintOverlay.Show();
-                }
-
-                // Pre-create recorder and warm up encoder cache in background
-                // so F9 press is instant (encoder detection can take seconds)
-                if (_recorder is null)
-                {
-                    _recorder = new GameRecorderService();
-                    _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
-                    _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
-                    {
-                        IsRecording = recording;
-                        if (recording)
-                        {
-                            _recordingStartPopup?.Dismiss();
-                            _recordingStartPopup = null;
-                            _recordingOverlay?.Close();
-                            var facecamPos = SettingsService.Current.FacecamPosition;
-                            var mode = SettingsService.Current.RecordingMode;
-                            bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
-                            _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
-                            _recordingOverlay.Show();
-                        }
-                        else
-                        {
-                            _recordingStartPopup?.Close();
-                            _recordingStartPopup = null;
-                            _recordingOverlay?.Close();
-                            _recordingOverlay = null;
-                        }
-                    });
-                }
-                _ = Task.Run(() => _recorder.WarmupEncoder());
-            }
-
             if (proc is not null)
             {
                 _ = Task.Run(() =>
@@ -926,24 +861,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     try { proc.WaitForExit(); } catch { }
                     _dispatcher.BeginInvoke(() =>
                     {
-                        ClearDiscordRichPresence();
-
-                        var wasRecording = _recorder is not null && _recorder.IsRecording;
-                        if (wasRecording)
-                            _recorder!.StopRecording();
-
-                        if (_recorder is not null && _runningGameName is not null)
-                            _recorder.RenameRecording(_runningGameName);
-
-                        _runningGameName = null;
-                        _recordingOverlay?.Close();
-                        _recordingOverlay = null;
-                        IsRecording = false;
-
-                        _fpsOverlay?.Close();
-                        _fpsOverlay = null;
-                        _recordingHintOverlay?.Dismiss();
-                        _recordingHintOverlay = null;
+                        CleanupAfterGameExit();
 
                         if (mainWin is not null)
                         {
@@ -962,24 +880,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     await Task.Delay(5000);
                     await _dispatcher.BeginInvoke(() =>
                     {
-                        ClearDiscordRichPresence();
-
-                        var wasRecording = _recorder is not null && _recorder.IsRecording;
-                        if (wasRecording)
-                            _recorder!.StopRecording();
-
-                        if (_recorder is not null && _runningGameName is not null)
-                            _recorder.RenameRecording(_runningGameName);
-
-                        _runningGameName = null;
-                        _recordingOverlay?.Close();
-                        _recordingOverlay = null;
-                        IsRecording = false;
-
-                        _fpsOverlay?.Close();
-                        _fpsOverlay = null;
-                        _recordingHintOverlay?.Dismiss();
-                        _recordingHintOverlay = null;
+                        CleanupAfterGameExit();
                         _xinput.Start();
                     });
                 });
@@ -988,19 +889,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             SoundService.PlayError();
-            ClearDiscordRichPresence();
-            if (_recorder is not null && _recorder.IsRecording)
-                _recorder.StopRecording();
-            _recordingOverlay?.Close();
-            _recordingOverlay = null;
-            IsRecording = false;
-            _fpsOverlay?.Close();
-            _fpsOverlay = null;
-            _recordingHintOverlay?.Dismiss();
-            _recordingHintOverlay = null;
+            CleanupAfterGameExit();
             _xinput.Start();
             StatusMessage = $"Erro ao iniciar {game.DisplayName}: {ex.Message}";
         }
+    }
+
+    private void CleanupAfterGameExit()
+    {
+        ClearDiscordRichPresence();
+        _runningGameName = null;
+        _fpsOverlay?.Close();
+        _fpsOverlay = null;
     }
 
     [RelayCommand]
@@ -1012,114 +912,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = SettingsService.Current.FpsOverlayEnabled
             ? "FPS Overlay ativado — será exibido durante os jogos"
             : "FPS Overlay desativado";
-    }
-
-    [RelayCommand]
-    private void ToggleRecordingEnabled()
-    {
-        SettingsService.Current.RecordingEnabled = !SettingsService.Current.RecordingEnabled;
-        SettingsService.Save();
-        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
-        StatusMessage = SettingsService.Current.RecordingEnabled
-            ? $"Gravação ativada — pressione {SettingsService.Current.RecordingHotkey} durante o jogo"
-            : "Gravação desativada";
-    }
-
-    [RelayCommand]
-    private void OpenRecordingSettings()
-    {
-        var dialog = new RecordingSettingsDialog { Owner = Application.Current.MainWindow };
-        dialog.ShowDialog();
-        IsRecordingEnabled = SettingsService.Current.RecordingEnabled;
-    }
-
-    public async void HandleRecordingHotkey()
-    {
-        if (!SettingsService.Current.RecordingEnabled) return;
-
-        try
-        {
-            if (_recorder is null)
-            {
-                _recorder = new GameRecorderService();
-                _recorder.StatusMessage += msg => _dispatcher.BeginInvoke(() => StatusMessage = msg);
-                _recorder.RecordingStateChanged += recording => _dispatcher.BeginInvoke(() =>
-                {
-                    IsRecording = recording;
-                    if (recording)
-                    {
-                        // Dismiss the "Iniciando gravação" popup
-                        _recordingStartPopup?.Dismiss();
-                        _recordingStartPopup = null;
-
-                        _recordingOverlay?.Close();
-                        var facecamPos = SettingsService.Current.FacecamPosition;
-                        var mode = SettingsService.Current.RecordingMode;
-                        bool facecamTopRight = mode == "facecam_mic" && facecamPos == "top_right";
-                        _recordingOverlay = new RecordingOverlayWindow(facecamTopRight);
-                        _recordingOverlay.Show();
-                    }
-                    else
-                    {
-                        _recordingStartPopup?.Close();
-                        _recordingStartPopup = null;
-                        _recordingOverlay?.Close();
-                        _recordingOverlay = null;
-                    }
-                });
-            }
-
-            var res = SettingsService.Current.RecordingResolution switch
-            {
-                "720p" => RecordingResolution.HD_720p,
-                "4K" => RecordingResolution.UHD_4K,
-                _ => RecordingResolution.FHD_1080p
-            };
-
-            var mode2 = SettingsService.Current.RecordingMode switch
-            {
-                "microphone" => RecordingMode.Microphone,
-                "facecam_mic" => RecordingMode.FacecamMic,
-                _ => RecordingMode.ScreenOnly
-            };
-
-            var facecamPos2 = SettingsService.Current.FacecamPosition switch
-            {
-                "top_left" => FacecamPosition.TopLeft,
-                "bottom_right" => FacecamPosition.BottomRight,
-                "bottom_left" => FacecamPosition.BottomLeft,
-                _ => FacecamPosition.TopRight
-            };
-
-            // Feedback visual imediato ao pressionar F9
-            if (_recorder.IsRecording)
-            {
-                StatusMessage = "⏹️ Parando gravação...";
-            }
-            else
-            {
-                StatusMessage = "⏳ Iniciando gravação...";
-                _recordingHintOverlay?.Dismiss();
-                _recordingHintOverlay = null;
-                _recordingStartPopup?.Close();
-                _recordingStartPopup = new RecordingStartPopup();
-                _recordingStartPopup.Show();
-            }
-
-            var gameName = _runningGameName ?? DetailGame?.DisplayName ?? SelectedGame?.DisplayName;
-            var facecamDevice = SettingsService.Current.FacecamDevice;
-            var micDevice = SettingsService.Current.MicrophoneDevice;
-
-            // Run heavy recording work (device resolution, encoder detection, ffmpeg start)
-            // on a background thread to keep the UI responsive
-            await Task.Run(() => _recorder.ToggleRecording(res, mode2, facecamPos2,
-                facecamDevice, micDevice, gameName));
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[Recording] Error in HandleRecordingHotkey: {ex}");
-            StatusMessage = $"Erro na gravação: {ex.Message}";
-        }
     }
 
     [RelayCommand]
@@ -2337,16 +2129,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         GamepadStatus = $"{prefix}{battery}  |  {hint}";
     }
 
-    private List<Game> GetVisibleGames()
-    {
-        var list = new List<Game>();
-        foreach (var item in _gamesView)
-        {
-            if (item is Game g)
-                list.Add(g);
-        }
-        return list;
-    }
+    private List<Game> GetVisibleGames() =>
+        _gamesView.Cast<Game>().ToList();
 
     private static bool IsUnauthorizedError(string? error)
     {
