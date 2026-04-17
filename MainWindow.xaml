@@ -1843,10 +1843,10 @@
                                         Padding="0" ToolTip="Análise de Hardware — Recomendação Gráfica"
                                         VerticalAlignment="Center" Margin="0,0,6,0">
                                     <StackPanel Orientation="Horizontal">
-                                        <md:PackIcon Kind="Chip" Width="15" Height="15" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Recomendar" FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource AccentBrush}"
-                                                   VerticalAlignment="Center" Margin="3,0,0,0"/>
+                                        <md:PackIcon Kind="Chip" Width="18" Height="18" Foreground="#00E676" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Meu computador roda este game?" FontSize="16" FontWeight="Bold"
+                                                   Foreground="#FFFFFF"
+                                                   VerticalAlignment="Center" Margin="5,0,0,0"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Grid.Column="2" Command="{Binding RescanGameTechCommand}"
@@ -2000,10 +2000,10 @@
                     <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="2,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
-<ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU Â°C" IsTemperature="True" Margin="4,0">
+<ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
-                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU Â°C" IsTemperature="True" Margin="4,0">
+                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
                 </StackPanel>

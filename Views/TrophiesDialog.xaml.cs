@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -237,7 +237,7 @@ public partial class TrophiesDialog : Window
 
         card.Child = inner;
 
-        // Tooltip com descrição
+        // Tooltip com Descrição
         var ttContent = new StackPanel { MaxWidth = 240 };
         ttContent.Children.Add(new TextBlock
         {
@@ -275,4 +275,11 @@ public partial class TrophiesDialog : Window
     }
 
     private void CloseBtn_Click(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>Rola o painel de troféus via analógico direito do controle.</summary>
+    public void ScrollBy(double value)
+    {
+        TrophyScroll.ScrollToVerticalOffset(
+            TrophyScroll.VerticalOffset - value * 60);
+    }
 }

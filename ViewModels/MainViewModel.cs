@@ -188,6 +188,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public Action<GamepadButton>? ProfileDialogNavigate { get; set; }
 
+    private bool _isTrophyDialogOpen;
+    public bool IsTrophyDialogOpen
+    {
+        get => _isTrophyDialogOpen;
+        set => SetProperty(ref _isTrophyDialogOpen, value);
+    }
+
+    public Action<double>? TrophyDialogScroll { get; set; }
+
     private FpsOverlayWindow? _fpsOverlay;
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
@@ -422,6 +431,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         RefreshTrophyHeader();
+        _xinput.Vibrate(0.3, 0.8, 600);
         _toastQueue.Enqueue(trophy);
         ShowNextToast();
     }
@@ -1018,6 +1028,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             SoundService.PlayLaunch();
+            _xinput.Vibrate(0.6, 0.4, 400);
             _runningGameName = game.DisplayName;
 
             var workDir = string.IsNullOrEmpty(game.InstallDirectory)
@@ -1288,8 +1299,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             Owner = Application.Current.MainWindow
         };
-        _trophyService.OnSettingsOpened(); // Abre configurações = curiosidade
+        _trophyService.OnSettingsOpened();
+        IsTrophyDialogOpen = true;
+        TrophyDialogScroll = dialog.ScrollBy;
         dialog.ShowDialog();
+        IsTrophyDialogOpen = false;
+        TrophyDialogScroll = null;
     }
 
     /// <summary>Chamado pelo code-behind quando o Easter Egg é ativado.</summary>
@@ -2149,6 +2164,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
+            if (IsTrophyDialogOpen)
+            {
+                if (button == GamepadButton.B)
+                    Application.Current.Windows.OfType<Views.TrophiesDialog>().FirstOrDefault()?.Close();
+                return;
+            }
+
             if (IsProfileDialogOpen)
             {
                 ProfileDialogNavigate?.Invoke(button);
@@ -2237,6 +2259,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             if (IsHelpDialogOpen)
                 HelpDialogScroll?.Invoke(value);
+            else if (IsTrophyDialogOpen)
+                TrophyDialogScroll?.Invoke(value);
         });
     }
 

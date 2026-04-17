@@ -110,7 +110,7 @@
                 <Button x:Name="FilterPlatinum" Content="Platina"   Tag="Platinum" Click="Filter_Click" Style="{StaticResource FilterBtnStyle}" Margin="0,0,6,0"/>
                 <Button x:Name="FilterUnlocked" Content="Obtidos"   Tag="Unlocked" Click="Filter_Click" Style="{StaticResource FilterBtnStyle}"/>
             </StackPanel>
-            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="14,0,14,14">
+            <ScrollViewer x:Name="TrophyScroll" Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="14,0,14,14">
                 <ItemsControl x:Name="TrophyList">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

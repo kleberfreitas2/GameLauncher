@@ -67,6 +67,16 @@ public sealed class XInputService : IDisposable
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetBatteryInformation")]
     private static extern uint XInputGetBatteryInformation(uint dwUserIndex, byte devType, ref XINPUT_BATTERY_INFORMATION pBatteryInfo);
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct XINPUT_VIBRATION
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+    }
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    private static extern uint XInputSetState(uint dwUserIndex, ref XINPUT_VIBRATION pVibration);
+
     private const byte BATTERY_DEVTYPE_GAMEPAD = 0x00;
     private const byte BATTERY_TYPE_DISCONNECTED = 0x00;
     private const byte BATTERY_TYPE_WIRED = 0x01;
@@ -820,6 +830,30 @@ public sealed class XInputService : IDisposable
     {
         if ((pressed & mask) != 0)
             ButtonPressed?.Invoke(button);
+    }
+
+    /// <summary>
+    /// Vibra o controle XInput ativo.
+    /// </summary>
+    /// <param name="leftMotor">Intensidade motor esquerdo (0.0–1.0)</param>
+    /// <param name="rightMotor">Intensidade motor direito (0.0–1.0)</param>
+    /// <param name="durationMs">Duração em milissegundos</param>
+    public void Vibrate(double leftMotor, double rightMotor, int durationMs = 200)
+    {
+        if (_activeXInputIndex >= 4) return;
+
+        var vib = new XINPUT_VIBRATION
+        {
+            wLeftMotorSpeed  = (ushort)(Math.Clamp(leftMotor,  0, 1) * 65535),
+            wRightMotorSpeed = (ushort)(Math.Clamp(rightMotor, 0, 1) * 65535)
+        };
+        XInputSetState(_activeXInputIndex, ref vib);
+
+        Task.Delay(durationMs).ContinueWith(_ =>
+        {
+            var stop = new XINPUT_VIBRATION { wLeftMotorSpeed = 0, wRightMotorSpeed = 0 };
+            XInputSetState(_activeXInputIndex, ref stop);
+        });
     }
 
     public void Dispose()
