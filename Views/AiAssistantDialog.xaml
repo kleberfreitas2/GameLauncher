@@ -47,6 +47,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -118,17 +119,26 @@
             </Border>
 
             <!-- Input -->
-            <Border Grid.Row="3" Background="#16163A" CornerRadius="0,0,16,16"
+            <Border Grid.Row="3" Background="#16163A" CornerRadius="0"
                     Padding="10,10">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                     <Grid.ColumnDefinitions>
+                         <ColumnDefinition Width="Auto"/>
+                         <ColumnDefinition Width="Auto"/>
+                         <ColumnDefinition Width="*"/>
+                         <ColumnDefinition Width="Auto"/>
+                     </Grid.ColumnDefinitions>
+                    <!-- Botão toggle teclado virtual -->
+                    <Button x:Name="BtnKeyboard" Grid.Column="0"
+                            Click="ToggleKeyboard_Click" ToolTip="Teclado Virtual (X)"
+                            Background="Transparent" BorderThickness="0"
+                            Cursor="Hand" Padding="6" Margin="0,0,4,0">
+                        <md:PackIcon x:Name="IconKeyboard" Kind="Keyboard" Width="22" Height="22"
+                                     Foreground="#8899BB"/>
+                    </Button>
 
                     <!-- Botão screenshot -->
-                    <Button x:Name="BtnScreenshot" Grid.Column="0"
+                    <Button x:Name="BtnScreenshot" Grid.Column="1"
                             Click="Screenshot_Click" ToolTip="Analisar Screenshot"
                             Background="Transparent" BorderThickness="0"
                             Cursor="Hand" Padding="6" Margin="0,0,6,0">
@@ -137,7 +147,7 @@
                     </Button>
 
                     <!-- TextBox -->
-                    <Border Grid.Column="1" Background="#0D0D1A" CornerRadius="12"
+                    <Border Grid.Column="2" Background="#0D0D1A" CornerRadius="12"
                             Padding="12,8">
                         <TextBox x:Name="InputBox"
                                  Background="Transparent" BorderThickness="0"
@@ -171,7 +181,7 @@
                     </Border>
 
                     <!-- Botão enviar -->
-                    <Button x:Name="BtnSend" Grid.Column="2"
+                    <Button x:Name="BtnSend" Grid.Column="3"
                             Click="Send_Click" Cursor="Hand"
                             Margin="6,0,0,0" Padding="10"
                             BorderThickness="0">
@@ -204,6 +214,55 @@
                     </Button>
                 </Grid>
             </Border>
+
+            <!-- Painel de hints dinâmicos (Row 4) -->
+            <Border Grid.Row="4" Background="#0D0D16" CornerRadius="0,0,16,16" Padding="10,6">
+                <Grid>
+                    <!-- Hints gamepad -->
+                    <StackPanel x:Name="HintsGamepad" Orientation="Horizontal"
+                                HorizontalAlignment="Center" Visibility="Collapsed">
+                        <md:PackIcon Kind="Gamepad" Width="14" Height="14" Foreground="#8899BB"
+                                     VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeA" Text="A" FontSize="10" FontWeight="Bold"
+                                       Foreground="#00E676" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Enviar  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeX" Text="X" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Teclado  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeY" Text="Y" FontSize="10" FontWeight="Bold"
+                                       Foreground="#FFD740" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Screenshot  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeB" Text="B" FontSize="10" FontWeight="Bold"
+                                       Foreground="#FF5252" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Fechar" FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- Hints teclado -->
+                    <StackPanel x:Name="HintsKeyboard" Orientation="Horizontal"
+                                HorizontalAlignment="Center" Visibility="Visible">
+                        <md:PackIcon Kind="Keyboard" Width="14" Height="14" Foreground="#8899BB"
+                                     VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock Text="Enter" FontSize="10" FontWeight="Bold"
+                                       Foreground="#00E676" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Enviar  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock Text="Esc" FontSize="10" FontWeight="Bold"
+                                       Foreground="#FF5252" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Fechar" FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>
+

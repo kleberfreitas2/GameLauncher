@@ -265,10 +265,18 @@ public sealed class XInputService : IDisposable
 
     public event Action<GamepadButton>? ButtonPressed;
     public event Action<bool>? ConnectionChanged;
-
     public event Action<double>? RightStickY;
-
     public event Action<int>? BatteryChanged;
+
+    /// <summary>
+    /// Disparado quando Start+Y são pressionados juntos por ~0.5 s (abre GLauncher AI).
+    /// </summary>
+    public event Action? AiComboTriggered;
+
+    // Controle interno do combo Start+Y
+    private int _aiComboTicks;
+    private bool _aiComboFired;
+    private const int AI_COMBO_TICKS_REQUIRED = 8; // 8 × 60ms ≈ 0.5 s
 
     public bool IsConnected => _isConnected;
     public string ControllerName { get; private set; } = "";
@@ -371,6 +379,24 @@ public sealed class XInputService : IDisposable
         if (stickRight && !_prevStickRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
         if (stickUp && !_prevStickUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
         if (stickDown && !_prevStickDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
+
+        // Combo Start+Y sustentado por ~0.5 s → abre GLauncher AI
+        bool aiComboHeld = (buttons & XINPUT_GAMEPAD_START) != 0 &&
+                           (buttons & XINPUT_GAMEPAD_Y) != 0;
+        if (aiComboHeld)
+        {
+            _aiComboTicks++;
+            if (_aiComboTicks >= AI_COMBO_TICKS_REQUIRED && !_aiComboFired)
+            {
+                _aiComboFired = true;
+                AiComboTriggered?.Invoke();
+            }
+        }
+        else
+        {
+            _aiComboTicks = 0;
+            _aiComboFired = false;
+        }
 
         _prevButtons = buttons;
         _prevStickLeft = stickLeft;

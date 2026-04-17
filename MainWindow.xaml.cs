@@ -215,7 +215,7 @@ public partial class MainWindow : Window
             }
 
             var gameName = vm.SelectedGame?.DisplayName ?? vm.RunningGameName;
-            var overlay  = new Views.AiAssistantDialog(provider, apiKey, gameName)
+            var overlay  = new Views.AiAssistantDialog(provider, apiKey, gameName, viaGamepad: false)
             {
                 Topmost       = true,
                 Owner         = null,

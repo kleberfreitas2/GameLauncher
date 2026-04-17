@@ -588,7 +588,7 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <Button x:Name="BtnGear"
+                    <Button x:Name="BtnGear" Click="BtnGear_Click"
                   VerticalAlignment="Center"
                   Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                   ToolTip="Configurações">

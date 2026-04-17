@@ -24,6 +24,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ICollectionView _gamesView;
     private HardwareMonitorService _hwMonitor = null!;
     private XInputService _xinput = null!;
+    public  XInputService XInput => _xinput;
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
     private string? _runningGameName;
@@ -75,7 +76,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(BigPictureIcon))]
     private bool isBigPictureMode;
 
-    public string BigPictureIcon => IsBigPictureMode ? "Monitor" : "TelevisionClassic";
+    public string BigPictureIcon => IsBigPictureMode ? "Television" : "TelevisionClassic";
 
     /// <summary>
     /// Callback injetado pela View para executar a animação de transição.
@@ -329,6 +330,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.ConnectionChanged += OnGamepadConnectionChanged;
         _xinput.RightStickY += OnRightStickY;
         _xinput.BatteryChanged += OnBatteryChanged;
+        _xinput.AiComboTriggered += OnAiComboTriggered;
         _xinput.Start();
 
         statusCallback?.Invoke("Conectando contas...");
@@ -986,7 +988,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             // Mostra dica da IA com a hotkey após o jogo iniciar
-            var aiHint = new AiHintOverlay();
+            var aiHint = new AiHintOverlay(_xinput);
             aiHint.Show();
 
             var launchTime = DateTime.UtcNow;
@@ -995,7 +997,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 var playedMinutes = await GameProcessMonitor.WaitForGameExitAsync(
                     game.ExecutablePath, proc);
 
-                _dispatcher.BeginInvoke(() =>
+                await _dispatcher.BeginInvoke(() =>
                 {
                     game.TotalPlayTimeMinutes += playedMinutes;
                     SaveGames();
@@ -1157,8 +1159,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenAiAssistant()
     {
-        var gameName = _runningGameName ?? SelectedGame?.DisplayName;
+        OpenAiAssistantCore(viaGamepad: false);
+    }
 
+    private void OnAiComboTriggered()
+    {
+        _dispatcher.BeginInvoke(() => OpenAiAssistantCore(viaGamepad: true));
+    }
+
+    private void OpenAiAssistantCore(bool viaGamepad)
+    {
         // Prioridade: Groq (grátis) → OpenAI (pago)
         var groqKey   = SettingsService.Current.GroqApiKey;
         var openAiKey = SettingsService.Current.OpenAiApiKey;
@@ -1178,7 +1188,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         else
         {
-            // Nenhuma chave configurada — pede a do Groq (grátis)
             var dlg = new GroqKeyDialog { Owner = Application.Current.MainWindow };
             if (dlg.ShowDialog() != true) return;
             SettingsService.Current.GroqApiKey = dlg.ApiKey;
@@ -1187,7 +1196,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             apiKey   = dlg.ApiKey;
         }
 
-        var chatDialog = new AiAssistantDialog(provider, apiKey, gameName)
+        var gameName   = _runningGameName ?? SelectedGame?.DisplayName;
+        var chatDialog = new AiAssistantDialog(provider, apiKey, gameName, viaGamepad, _xinput)
         {
             Owner = Application.Current.MainWindow
         };

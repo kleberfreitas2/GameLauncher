@@ -14,11 +14,18 @@ public partial class AiAssistantDialog : Window
     private bool _isBusy;
     private string? _pendingImageBase64;
     private CancellationTokenSource _cts = new();
+    private readonly bool _viaGamepad;
+    private readonly XInputService? _xinput;
+    private bool _keyboardVisible;
 
-    public AiAssistantDialog(AiProvider provider, string apiKey, string? gameName = null)
+    public AiAssistantDialog(AiProvider provider, string apiKey,
+                             string? gameName = null, bool viaGamepad = false,
+                             XInputService? xinput = null)
     {
         InitializeComponent();
-        _gameName = gameName;
+        _gameName   = gameName;
+        _viaGamepad = viaGamepad;
+        _xinput     = xinput;
         _ai = new AiAssistantService(provider, apiKey, gameName);
 
         TxtGameContext.Text = gameName is not null
@@ -26,12 +33,130 @@ public partial class AiAssistantDialog : Window
             : "Assistente Gamer";
 
         AddAssistantMessage(gameName is not null
-            ? $"Olá! Estou pronto para ajudar com **{gameName}**. Qual é a sua dúvida? 🎮"
-            : "Olá! Sou o GLauncher AI. Pergunte qualquer coisa sobre jogos! 🎮");
+            ? $"Ola! Estou pronto para ajudar com **{gameName}**. Qual e a sua duvida?"
+            : "Ola! Sou o GLauncher AI. Pergunte qualquer coisa sobre jogos!");
 
-        Loaded += (_, _) => InputBox.Focus();
-        Closed += (_, _) => _cts.Cancel();
+        Loaded += (_, _) =>
+        {
+            InputBox.Focus();
+            if (_viaGamepad || xinput?.IsConnected == true)
+            {
+                ShowGamepadHints(xinput?.ControllerName ?? "");
+                if (_viaGamepad)
+                {
+                    VirtualKeyboardService.Show();
+                    _keyboardVisible = true;
+                    IconKeyboard.Foreground = (System.Windows.Media.Brush)FindResource("AccentBrush");
+                }
+            }
+            else
+            {
+                ShowKeyboardHints();
+            }
+        };
+
+        Closed += (_, _) =>
+        {
+            _cts.Cancel();
+            if (_xinput is not null)
+                _xinput.ButtonPressed    -= OnGamepadButton;
+            if (_xinput is not null)
+                _xinput.ConnectionChanged -= OnConnectionChanged;
+            if (_keyboardVisible)
+                VirtualKeyboardService.Hide();
+        };
+
+        if (xinput is not null)
+        {
+            xinput.ButtonPressed     += OnGamepadButton;
+            xinput.ConnectionChanged += OnConnectionChanged;
+        }
     }
+
+    // -- Hints din�micos ----------------------------------------------------
+
+    private void OnConnectionChanged(bool connected)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (connected) ShowGamepadHints(_xinput?.ControllerName ?? "");
+            else           ShowKeyboardHints();
+        });
+    }
+
+    private void ShowGamepadHints(string controllerName)
+    {
+        HintsGamepad.Visibility  = Visibility.Visible;
+        HintsKeyboard.Visibility = Visibility.Collapsed;
+
+        bool isPS = controllerName.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
+                 || controllerName.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+        HintBadgeA.Text = isPS ? "Cruz"    : "A";
+        HintBadgeB.Text = isPS ? "Circulo" : "B";
+        HintBadgeX.Text = isPS ? "Quad"    : "X";
+        HintBadgeY.Text = isPS ? "Tri"     : "Y";
+    }
+
+    private void ShowKeyboardHints()
+    {
+        HintsGamepad.Visibility  = Visibility.Collapsed;
+        HintsKeyboard.Visibility = Visibility.Visible;
+    }
+
+    // -- Navega��o por controle ---------------------------------------------
+
+    private void OnGamepadButton(GamepadButton btn)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            switch (btn)
+            {
+                case GamepadButton.A:            // Enviar
+                    _ = SendMessageAsync();
+                    break;
+                case GamepadButton.B:            // Fechar
+                    Close();
+                    break;
+                case GamepadButton.X:            // Toggle teclado virtual
+                    ToggleVirtualKeyboard();
+                    break;
+                case GamepadButton.Y:            // Screenshot
+                    Screenshot_Click(this, new RoutedEventArgs());
+                    break;
+                case GamepadButton.DPadUp:       // Scroll para cima
+                    MessagesScroll.ScrollToVerticalOffset(
+                        MessagesScroll.VerticalOffset - 80);
+                    break;
+                case GamepadButton.DPadDown:     // Scroll para baixo
+                    MessagesScroll.ScrollToVerticalOffset(
+                        MessagesScroll.VerticalOffset + 80);
+                    break;
+            }
+        });
+    }
+
+    // -- Toggle teclado virtual ---------------------------------------------
+
+    private void ToggleVirtualKeyboard()
+    {
+        _keyboardVisible = !_keyboardVisible;
+        if (_keyboardVisible)
+        {
+            VirtualKeyboardService.Show();
+            IconKeyboard.Foreground = (System.Windows.Media.Brush)FindResource("AccentBrush");
+        }
+        else
+        {
+            VirtualKeyboardService.Hide();
+            IconKeyboard.Foreground = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x88, 0x99, 0xBB));
+        }
+    }
+
+    private void ToggleKeyboard_Click(object sender, RoutedEventArgs e)
+        => ToggleVirtualKeyboard();
+
+    // -- UI handlers --------------------------------------------------------
 
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         => DragMove();
@@ -45,6 +170,11 @@ public partial class AiAssistantDialog : Window
             e.Handled = true;
             _ = SendMessageAsync();
         }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            Close();
+        }
     }
 
     private void Send_Click(object sender, RoutedEventArgs e)
@@ -54,20 +184,17 @@ public partial class AiAssistantDialog : Window
     {
         var dlg = new OpenFileDialog
         {
-            Title = "Selecionar Screenshot",
-            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp",
+            Title     = "Selecionar Screenshot",
+            Filter    = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp",
             Multiselect = false
         };
-
         if (dlg.ShowDialog(this) != true) return;
-
         try
         {
-            var bytes = File.ReadAllBytes(dlg.FileName);
-            _pendingImageBase64 = Convert.ToBase64String(bytes);
-            BtnScreenshot.Opacity = 1.0;
-            BtnScreenshot.ToolTip = $"Screenshot: {Path.GetFileName(dlg.FileName)} ✓";
-            InputBox.Text = "Analise essa screenshot e me dê dicas.";
+            _pendingImageBase64 = Convert.ToBase64String(File.ReadAllBytes(dlg.FileName));
+            BtnScreenshot.Opacity   = 1.0;
+            BtnScreenshot.ToolTip   = $"Screenshot: {System.IO.Path.GetFileName(dlg.FileName)} v";
+            InputBox.Text = "Analise essa screenshot e me de dicas.";
             InputBox.Focus();
         }
         catch
@@ -76,6 +203,8 @@ public partial class AiAssistantDialog : Window
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
+
+    // -- Envio de mensagem --------------------------------------------------
 
     private async Task SendMessageAsync()
     {
@@ -89,10 +218,9 @@ public partial class AiAssistantDialog : Window
         var imageBase64 = _pendingImageBase64;
         _pendingImageBase64 = null;
         BtnScreenshot.Opacity = 0.6;
-        BtnScreenshot.ToolTip = "Analisar Screenshot";
+        BtnScreenshot.ToolTip = "Screenshot (Y)";
 
         AddUserMessage(text);
-
         TypingIndicator.Visibility = Visibility.Visible;
         ScrollToBottom();
 
@@ -111,7 +239,7 @@ public partial class AiAssistantDialog : Window
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            assistantMsg.Text = $"❌ Erro: {ex.Message}";
+            assistantMsg.Text = $"Erro: {ex.Message}";
         }
         finally
         {
@@ -132,14 +260,11 @@ public partial class AiAssistantDialog : Window
     private void AddAssistantMessage(string text)
     {
         MessagesList.Items.Add(new AiChatMessage { Role = ChatRole.Assistant, Text = text });
-        ScrollToBottom();
     }
 
     private void ScrollToBottom()
     {
-        Dispatcher.BeginInvoke(() =>
-        {
-            MessagesScroll.ScrollToEnd();
-        }, System.Windows.Threading.DispatcherPriority.Background);
+        Dispatcher.BeginInvoke(() => MessagesScroll.ScrollToEnd(),
+            System.Windows.Threading.DispatcherPriority.Background);
     }
 }
