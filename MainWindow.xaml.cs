@@ -46,6 +46,18 @@ public partial class MainWindow : Window
     private BigPictureTransitionService? _bpTransition;
     private GlobalHotkeyService? _hotkeys;
 
+    // Easter Egg
+    private int _logoClickCount;
+    private System.Windows.Threading.DispatcherTimer? _logoClickTimer;
+    private static readonly string[] EggMessages =
+    [
+        "🎮 Você encontrou o Easter Egg!",
+        "🕵️ Curioso(a), hein? Te peguei!",
+        "🐣 Boa caçada, gamer!",
+        "🔥 Só os lendários chegam aqui!",
+        "👾 Nível oculto desbloqueado!",
+    ];
+
     public MainWindow(ViewModels.MainViewModel viewModelParam)
     {
         InitializeComponent();
@@ -68,6 +80,7 @@ public partial class MainWindow : Window
         {
             viewModel.ContextMenuNavigate = NavigateContextMenu;
 
+            // Atualiza o gamerscore de troféus no header
             if (BtnGear.ContextMenu is { } ctx)
             {
                 ctx.Opened += (_, _) =>
@@ -1116,4 +1129,115 @@ public partial class MainWindow : Window
     }
 
     private void BtnAi_Click(object sender, RoutedEventArgs e) => DismissAiCallout();
+
+    // ── Easter Egg: 3 cliques no logo ────────────────────────────────────────
+    private void LogoIcon_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _logoClickCount++;
+
+        // Animação de "bounce" no logo a cada clique
+        AnimateLogoBounce();
+
+        if (_logoClickCount >= 3)
+        {
+            _logoClickCount = 0;
+            _logoClickTimer?.Stop();
+            ShowEasterEgg();
+            return;
+        }
+
+        // Reset automático se o usuário demorar mais de 1,5s entre cliques
+        _logoClickTimer?.Stop();
+        _logoClickTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(1500)
+        };
+        _logoClickTimer.Tick += (_, _) =>
+        {
+            _logoClickCount = 0;
+            _logoClickTimer?.Stop();
+        };
+        _logoClickTimer.Start();
+    }
+
+    private void AnimateLogoBounce()
+    {
+        var dur = new System.Windows.Duration(TimeSpan.FromMilliseconds(140));
+        var scaleDown = new System.Windows.Media.Animation.DoubleAnimation(0.75, dur);
+        var scaleUp   = new System.Windows.Media.Animation.DoubleAnimation(1.0,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(160)));
+        scaleUp.BeginTime = TimeSpan.FromMilliseconds(140);
+
+        var group = new System.Windows.Media.Animation.Storyboard();
+        System.Windows.Media.Animation.Storyboard.SetTarget(scaleDown, LogoScale);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(scaleDown,
+            new PropertyPath("ScaleX"));
+        System.Windows.Media.Animation.Storyboard.SetTarget(scaleUp, LogoScale);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(scaleUp,
+            new PropertyPath("ScaleX"));
+
+        // ScaleY junto
+        var scaleDownY = new System.Windows.Media.Animation.DoubleAnimation(0.75, dur);
+        var scaleUpY   = new System.Windows.Media.Animation.DoubleAnimation(1.0,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(160)));
+        scaleUpY.BeginTime = TimeSpan.FromMilliseconds(140);
+        System.Windows.Media.Animation.Storyboard.SetTarget(scaleDownY, LogoScale);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(scaleDownY,
+            new PropertyPath("ScaleY"));
+        System.Windows.Media.Animation.Storyboard.SetTarget(scaleUpY, LogoScale);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(scaleUpY,
+            new PropertyPath("ScaleY"));
+
+        group.Children.Add(scaleDown);
+        group.Children.Add(scaleUp);
+        group.Children.Add(scaleDownY);
+        group.Children.Add(scaleUpY);
+        group.Begin();
+    }
+
+    private void ShowEasterEgg()
+    {
+        // Notifica o sistema de troféus
+        if (DataContext is ViewModels.MainViewModel vm)
+            vm.NotifyEasterEggFound();
+
+        // Sorteia mensagem divertida
+        var rng = new Random();
+        EggFunText.Text = EggMessages[rng.Next(EggMessages.Length)];
+
+        // Abre o popup
+        EasterEggPopup.IsOpen = true;
+
+        // Animação de entrada: slide + fade
+        EasterEggBorder.Opacity = 0;
+        EasterEggBorder.RenderTransform = new TranslateTransform(0, -20);
+
+        var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(300)));
+        var slideIn = new System.Windows.Media.Animation.DoubleAnimation(-20, 0,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(300)));
+        slideIn.EasingFunction = new System.Windows.Media.Animation.QuadraticEase
+            { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+
+        EasterEggBorder.BeginAnimation(OpacityProperty, fadeIn);
+        ((TranslateTransform)EasterEggBorder.RenderTransform).BeginAnimation(
+            TranslateTransform.YProperty, slideIn);
+
+        // Gira o logo dentro do popup (360° em 0,8s)
+        var spin = new System.Windows.Media.Animation.DoubleAnimation(0, 360,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(800)));
+        spin.EasingFunction = new System.Windows.Media.Animation.BackEase
+            { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut, Amplitude = 0.4 };
+        EggLogoRotate.BeginAnimation(
+            System.Windows.Media.RotateTransform.AngleProperty, spin);
+    }
+
+    private void EggCloseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        // Animação de saída
+        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0,
+            new System.Windows.Duration(TimeSpan.FromMilliseconds(200)));
+        fadeOut.Completed += (_, _) => EasterEggPopup.IsOpen = false;
+        EasterEggBorder.BeginAnimation(OpacityProperty, fadeOut);
+    }
 }

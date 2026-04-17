@@ -27,7 +27,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+            
             <Grid Grid.Row="0" Margin="0,0,0,8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <md:PackIcon Kind="MessageText" Width="24" Height="24" Foreground="#5865F2"
@@ -62,7 +62,7 @@
                 </Button>
             </Grid>
 
-            <!-- Tab bar -->
+            
             <Border Grid.Row="1" Background="#11FFFFFF" CornerRadius="8" Padding="4"
                     HorizontalAlignment="Center" Margin="0,0,0,12">
                 <StackPanel x:Name="TabBar" Orientation="Horizontal">
@@ -96,10 +96,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- Content area -->
+            
             <Grid Grid.Row="2" Margin="24,0,24,0">
 
-                <!-- Voice Tab -->
+                
                 <Grid x:Name="VoicePanel" Visibility="Visible">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -107,7 +107,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Channel list -->
+                    
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="🔊 Canais de Voz" FontSize="14" FontWeight="SemiBold"
                                    Foreground="#CCDDEE" Margin="0,0,0,8"/>
@@ -155,7 +155,7 @@
                             </ListBox>
                         </Border>
 
-                        <!-- Guild selector -->
+                        
                         <Border Background="#151B2E" CornerRadius="8" Padding="8,6" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="Servidor:" FontSize="10" Foreground="#556677" Margin="0,0,0,4"/>
@@ -167,7 +167,7 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Voice status + controls -->
+                    
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -180,7 +180,7 @@
                         <TextBlock Grid.Row="0" Text="🎙️ Controles de Voz" FontSize="14" FontWeight="SemiBold"
                                    Foreground="#CCDDEE" Margin="0,0,0,8"/>
 
-                        <!-- Current channel -->
+                        
                         <Border Grid.Row="1" Background="#151B2E" CornerRadius="10" Padding="14,10" Margin="0,0,0,8">
                             <StackPanel>
                                 <TextBlock Text="Canal Atual" FontSize="10" Foreground="#556677" Margin="0,0,0,2"/>
@@ -189,7 +189,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Mute / Deafen buttons -->
+                        
                         <Grid Grid.Row="2" Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -248,7 +248,7 @@
                             </Button>
                         </Grid>
 
-                        <!-- Users in channel -->
+                        
                         <Border Grid.Row="3" Background="#151B2E" CornerRadius="10" Padding="10,8" Margin="0,0,0,8">
                             <StackPanel>
                                 <TextBlock Text="No Canal:" FontSize="10" Foreground="#556677" Margin="0,0,0,6"/>
@@ -269,7 +269,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Join/Leave -->
+                        
                         <Grid Grid.Row="4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -308,7 +308,7 @@
                     </Grid>
                 </Grid>
 
-                <!-- Messages Tab -->
+                
                 <Grid x:Name="MessagesPanel" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -316,7 +316,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- DM Channels Section -->
+                    
                     <TextBlock Grid.Row="0" Text="&#x1f4ac; Mensagens Diretas" FontSize="14" FontWeight="SemiBold"
                                Foreground="#CCDDEE" Margin="0,0,0,8"/>
 
@@ -427,7 +427,7 @@
                                    TextAlignment="Center" TextWrapping="Wrap" Visibility="Collapsed"/>
                     </Grid>
 
-                    <!-- Quick Send Section -->
+                    
                     <Border Grid.Row="2" Background="#11FFFFFF" CornerRadius="8" Padding="10,8" Margin="0,10,0,0">
                         <StackPanel>
                             <TextBlock Text="&#x26a1; Envio R&#xe1;pido (Webhook)" FontSize="11" FontWeight="SemiBold"
@@ -501,7 +501,7 @@
                     </Border>
                 </Grid>
 
-                <!-- Notifications Tab -->
+                
                 <Grid x:Name="NotificationsPanel" Visibility="Collapsed">
                     <StackPanel MaxWidth="480" HorizontalAlignment="Center">
                         <TextBlock Text="🔔 Notificações" FontSize="14" FontWeight="SemiBold"
@@ -537,7 +537,7 @@
                 </Grid>
             </Grid>
 
-            <!-- Footer hints -->
+            
             <Border Grid.Row="3" Padding="16,8" Background="#08FFFFFF">
                 <TextBlock x:Name="HintText"
                            FontSize="10" Foreground="#556677" HorizontalAlignment="Center"><Run Text="[LB/RB] Trocar aba  |  [A] Selecionar  |  [B] Fechar  |  [Y] Mut"/><Run Language="pt-br" Text="ar"/><Run Text="  |  [X] Silenciar  |  ⬆⬇ Navegar"/></TextBlock>

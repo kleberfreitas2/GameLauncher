@@ -10,7 +10,7 @@
             <Setter Property="Padding" Value="2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        <!-- Estilo reutilizável para botões de ícone no cabeçalho -->
+        
         <Style x:Key="HeaderIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="36"/>
@@ -89,15 +89,170 @@
                 </Grid.ColumnDefinitions>
 
 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Image Source="Assets/icon.png" Width="36" Height="36" Margin="0,0,14,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <Image x:Name="LogoIcon" Source="Assets/icon.png" Width="36" Height="36" Margin="0,0,14,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand"
+                           MouseDown="LogoIcon_MouseDown"
+                           RenderTransformOrigin="0.5,0.5">
+                        <Image.RenderTransform>
+                            <ScaleTransform x:Name="LogoScale" ScaleX="1" ScaleY="1"/>
+                        </Image.RenderTransform>
+                        <Image.ToolTip>
+                            <ToolTip Content="GLauncher" FontFamily="Segoe UI"/>
+                        </Image.ToolTip>
+                    </Image>
                     <TextBlock FontSize="17" FontWeight="Bold" VerticalAlignment="Center">
             <Run Text="G" Foreground="{DynamicResource AccentGreenBrush}"/><Run Text="Launcher" Foreground="White"/>
                     </TextBlock>
                 </StackPanel>
 
+                <!-- Easter Egg Overlay -->
+                <Popup x:Name="EasterEggPopup" Placement="Bottom" PlacementTarget="{Binding ElementName=LogoIcon}"
+                       AllowsTransparency="True" StaysOpen="True" PopupAnimation="None">
+                    <Border x:Name="EasterEggBorder" CornerRadius="20" Padding="0"
+                            Background="Transparent" Width="380">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#00E676" BlurRadius="40" ShadowDepth="0" Opacity="0.6"/>
+                        </Border.Effect>
+                        <Border Background="#0D1117" CornerRadius="20" ClipToBounds="True">
+                            <!-- Faixa verde topo -->
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="0" CornerRadius="20,20,0,0">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00E676" Offset="0"/>
+                                            <GradientStop Color="#00B0FF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <StackPanel Grid.Row="1" Margin="28,20,28,24">
+                                    <!-- Header com logo e título -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,14">
+                                        <Image x:Name="EggLogoSpin" Source="Assets/icon.png" Width="52" Height="52"
+                                               RenderTransformOrigin="0.5,0.5" Margin="0,0,14,0">
+                                            <Image.RenderTransform>
+                                                <RotateTransform x:Name="EggLogoRotate" Angle="0"/>
+                                            </Image.RenderTransform>
+                                        </Image>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="26" FontWeight="Black" FontFamily="Segoe UI Black">
+                                                <Run Text="G" Foreground="#00E676"/><Run Text="Launcher" Foreground="White"/>
+                                            </TextBlock>
+                                            <Border Background="#1A2A1A" CornerRadius="8" Padding="8,3" HorizontalAlignment="Left" Margin="0,2,0,0">
+                                                <TextBlock Text="v 2.5.0" FontSize="11" FontWeight="Bold"
+                                                           Foreground="#00E676" FontFamily="Consolas"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Separador gradiente -->
+                                    <Border Height="1" Margin="0,0,0,14">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="Transparent" Offset="0"/>
+                                                <GradientStop Color="#00E676" Offset="0.5"/>
+                                                <GradientStop Color="Transparent" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+
+                                    <!-- Mensagem divertida -->
+                                    <TextBlock x:Name="EggFunText"
+                                               Text="🎮 Você encontrou o Easter Egg!" 
+                                               FontSize="14" FontWeight="Bold" Foreground="#00E676"
+                                               HorizontalAlignment="Center" FontFamily="Segoe UI"
+                                               Margin="0,0,0,8"/>
+
+                                    <!-- Sobre -->
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#AABBCC"
+                                               FontFamily="Segoe UI" HorizontalAlignment="Center"
+                                               TextAlignment="Center" Margin="0,0,0,14">
+                                        <Run Text="Criado com "/> 
+                                        <Run Text="❤️"/> 
+                                        <Run Text=" para gamers de verdade."/>
+                                        <LineBreak/>
+                                        <Run Text="Um launcher feito para centralizar suas plataformas,"/>
+                                        <LineBreak/>
+                                        <Run Text="jogos e diversão — tudo em um só lugar."/>
+                                    </TextBlock>
+
+                                    <!-- Stats divertidos -->
+                                    <Border Background="#0A1628" CornerRadius="12" Padding="14,10" Margin="0,0,0,14">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                                <TextBlock Text="🕹️" FontSize="20" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Xbox" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                                <TextBlock Text="Steam" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                                <TextBlock Text="Epic" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                                <TextBlock Text="🤖" FontSize="20" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="IA Gamer" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                                <TextBlock Text="integrada" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                                <TextBlock Text="📺" FontSize="20" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Big Picture" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                                <TextBlock Text="para TVs" FontSize="10" Foreground="#667788" HorizontalAlignment="Center" FontFamily="Segoe UI"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Créditos -->
+                                    <TextBlock FontSize="11" Foreground="#445566" FontFamily="Segoe UI"
+                                               HorizontalAlignment="Center" TextAlignment="Center">
+                                        <Run Text="© 2025 GLauncher • Feito no Brasil 🇧🇷"/>
+                                    </TextBlock>
+
+                                    <!-- Botão fechar -->
+                                    <Button x:Name="EggCloseBtn" Click="EggCloseBtn_Click"
+                                            Margin="0,14,0,0" HorizontalAlignment="Center"
+                                            Cursor="Hand" Background="#00E676" Foreground="#0D1117"
+                                            BorderThickness="0" Padding="24,8" FontWeight="Bold"
+                                            FontSize="12" FontFamily="Segoe UI">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="CloseBd" Background="{TemplateBinding Background}"
+                                                        CornerRadius="20" Padding="{TemplateBinding Padding}"
+                                                        RenderTransformOrigin="0.5,0.5">
+                                                    <Border.RenderTransform>
+                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                                    </Border.RenderTransform>
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="CloseBd" Property="Background" Value="#00FF88"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="CloseBd" Property="RenderTransform">
+                                                            <Setter.Value>
+                                                                <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                        Valeu por explorar! 🚀
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Border>
+                </Popup>
+
 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <StackPanel.Resources>
-                        <!-- Padroniza PackIcon no cabeçalho para alinhamento uniforme -->
+                        
                         <Style TargetType="md:PackIcon">
                             <Setter Property="Width" Value="20"/>
                             <Setter Property="Height" Value="20"/>
@@ -418,7 +573,7 @@
                     </Button>
                     </Border>
 
-                    <!-- Donate PIX Button -->
+                    
                     <Button Command="{Binding OpenDonationCommand}" VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                             ToolTip="Apoie o projeto via PIX" Margin="0,0,14,0">
@@ -479,7 +634,7 @@
                     <Button Command="{Binding OpenHelpCommand}"
                             VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
-                            ToolTip="Manual de utilizaÃ§Ã£o">
+                            ToolTip="Manual de utilização">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Border x:Name="HelpBd" Background="Transparent" CornerRadius="14" Padding="4">
@@ -592,10 +747,10 @@
                             </Style>
                         </Border.Style>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- BotÃ£o IA -->
-                            <!-- BotÃ£o IA -->
-                            <!-- BotÃ£o IA -->
-                            <Button ToolTip="GLauncher AI â€Assistente Gamer"
+                    
+                            
+                            
+                            <Button ToolTip="GLauncher AI — Assistente Gamer"
                             Command="{Binding OpenAiAssistantCommand}"
                             x:Name="BtnAi" Click="BtnAi_Click"
                             Style="{StaticResource HeaderIconButtonStyle}">
@@ -607,6 +762,27 @@
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="AiBd" Property="Background" Value="#22FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Botão de Troféus -->
+                            <Button ToolTip="Meus Troféus"
+                                    Command="{Binding OpenTrophiesCommand}"
+                                    Style="{StaticResource HeaderIconButtonStyle}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="TrophyBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                            <md:PackIcon Kind="Trophy" Width="20" Height="20"
+                                                         Foreground="#FFD700"
+                                                         VerticalAlignment="Center"
+                                                         HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="TrophyBd" Property="Background" Value="#22FFD700"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -675,7 +851,7 @@
                                                 <md:PackIcon Kind="Gpu" Width="16" Height="16"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem Header="RecomendaÃ§Ã£o GrÃ¡fica (Hardware)"
+                                        <MenuItem Header="Recomendação Gráfica (Hardware)"
                           Command="{Binding OpenHwRecommendationCommand}">
                                             <MenuItem.Icon>
                                                 <md:PackIcon Kind="Chip" Width="16" Height="16"/>
@@ -694,9 +870,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Big Picture Toggle -->
+                    
                     <Button x:Name="BtnBigPicture" Command="{Binding ToggleBigPictureModeCommand}"
-                            ToolTip="Modo Big Picture â€” BETA (em teste para TVs)" Margin="0,0,12,0"
+                            ToolTip="Modo Big Picture — BETA (em teste para TVs)" Margin="0,0,12,0"
                             Style="{StaticResource HeaderIconButtonStyle}">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
@@ -704,7 +880,7 @@
                                     <Border x:Name="BpBd" Background="Transparent" CornerRadius="14" Padding="4">
                                         <md:PackIcon x:Name="BpIcon" Kind="{Binding BigPictureIcon}" Width="20" Height="20" Foreground="#8899AA"/>
                                     </Border>
-                                    <!-- Badge BETA -->
+                                    
                                     <Border Background="#E65100" CornerRadius="4"
                                             HorizontalAlignment="Right" VerticalAlignment="Top"
                                             Padding="2,0" Margin="0,-2,-2,0">
@@ -731,21 +907,36 @@
                         </TextBlock.Effect>
                     </TextBlock>
 
-<Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True"
-                  Background="#22334455" Cursor="Hand" BorderThickness="2" BorderBrush="#33FFFFFF"
-                  ToolTip="Clique para alterar avatar"
-                  MouseLeftButtonUp="Avatar_Click">
-                        <Grid>
-                            <md:PackIcon Kind="AccountCircle" Width="28" Height="28" Foreground="#556677"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Visibility="{Binding HasNoAvatar, Converter={StaticResource BoolToVisibility}}"/>
-                            <Image Source="{Binding AvatarPath, Converter={StaticResource PathToImageConverter}, ConverterParameter=38}"
-                     Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
-                     Visibility="{Binding HasAvatar, Converter={StaticResource BoolToVisibility}}"/>
-                        </Grid>
-                    </Border>
+<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0"
+                              Cursor="Hand" ToolTip="Clique para alterar avatar"
+                              MouseLeftButtonUp="Avatar_Click">
 
-                    <!-- Window control buttons -->
+                        <!-- Avatar -->
+                        <Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True"
+                                Background="#22334455" BorderThickness="2" BorderBrush="#33FFFFFF">
+                            <Grid>
+                                <md:PackIcon Kind="AccountCircle" Width="28" Height="28" Foreground="#556677"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Visibility="{Binding HasNoAvatar, Converter={StaticResource BoolToVisibility}}"/>
+                                <Image Source="{Binding AvatarPath, Converter={StaticResource PathToImageConverter}, ConverterParameter=38}"
+                                       Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
+                                       Visibility="{Binding HasAvatar, Converter={StaticResource BoolToVisibility}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Gamerscore dos Troféus (estilo Xbox) -->
+                        <StackPanel VerticalAlignment="Center" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding TrophyGamerscoreDisplay}"
+                                       FontSize="12" FontWeight="Bold" Foreground="#FFD700"
+                                       FontFamily="Segoe UI" LineHeight="14"/>
+                            <TextBlock Text="{Binding TrophyCountDisplay}"
+                                       FontSize="9" Foreground="#8899AA"
+                                       FontFamily="Segoe UI" LineHeight="12"/>
+                        </StackPanel>
+
+                    </StackPanel>
+
+                    
                     <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center"
                                 WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button x:Name="BtnWinMinimize" Click="BtnWinMinimize_Click" Width="36" Height="28"
@@ -918,7 +1109,7 @@
                         </TextBlock.Effect>
                     </TextBlock>
 
-                    <TextBlock Text="Sua biblioteca de jogos pessoal â€” rÃ¡pida, elegante e pronta para jogar."
+                    <TextBlock Text="Sua biblioteca de jogos pessoal rápida, elegante e pronta para jogar."
                                FontSize="14" Foreground="#7788AA" HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,28"/>
 
@@ -928,7 +1119,7 @@
                             <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="4" Opacity="0.4"/>
                         </Border.Effect>
                         <StackPanel>
-                            <TextBlock Text="ðŸš€  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
+                            <TextBlock Text="🚀  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
                                        Foreground="#CCCCDD" HorizontalAlignment="Center" Margin="0,0,0,18"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
@@ -937,7 +1128,7 @@
                                     <TextBlock Text="1"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Clique no botÃ£o abaixo ou em âš™ â†’ Adicionar Jogo"
+                                <TextBlock Text="Clique no botão abaixo ou em ➤ → Adicionar Jogo"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -947,7 +1138,7 @@
                                     <TextBlock Text="2"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Selecione o executÃ¡vel (.exe) do seu jogo"
+                                <TextBlock Text="Selecione o executável (.exe) do seu jogo"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -957,7 +1148,7 @@
                                     <TextBlock Text="3"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Pronto! Aproveite a experiÃªncia com capa, fundo e info automÃ¡ticas"
+                                <TextBlock Text="Pronto! Aproveite a experiência com capa, fundo e info automáticas"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
@@ -1036,7 +1227,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Badge BETA — canto superior esquerdo, visível só no Big Picture -->
+                
                 <Border Grid.Row="0"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Margin="18,14,0,0"
@@ -1098,7 +1289,7 @@
 </StackPanel>
                 </Grid>
 
-                <!-- Big Picture: Detalhes (esquerda) + Gauges (direita) na mesma faixa inferior -->
+                
                 <Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,16">
                     <Grid.Style>
                         <Style TargetType="Grid">
@@ -1115,7 +1306,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Detalhes do jogo (esquerda) -->
+                    
                     <Border Grid.Column="0" HorizontalAlignment="Left" MaxWidth="720" Padding="28,18" CornerRadius="14">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -1134,7 +1325,7 @@
                             <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.5"/>
                         </Border.Effect>
                         <StackPanel>
-                            <!-- Logo do jogo ou nome em texto como fallback -->
+                            
                             <Grid Margin="0,0,0,10">
                                 <Image Source="{Binding DetailGame.LogoPath}" MaxHeight="100" MaxWidth="440"
                                        HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -1193,7 +1384,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Gauges de monitoramento (direita) -->
+                    
                     <Border Grid.Column="1" VerticalAlignment="Stretch" Padding="22,16" CornerRadius="14" Margin="16,0,0,0">
                         <Border.Background>
                             <SolidColorBrush Color="#000000" Opacity="0.5"/>
@@ -1211,10 +1402,10 @@
                             <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="6,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.65" ScaleY="1.65"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU Â°C" IsTemperature="True" Margin="8,0">
+                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="8,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU Â°C" IsTemperature="True" Margin="8,0">
+                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="8,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
                         </StackPanel>
@@ -1424,9 +1615,9 @@
                                                 </TextBlock.Effect>
                                             </TextBlock>
                                         </Border>
-                                        <!-- Hover dark overlay -->
+                                        
                                         <Border x:Name="DarkOverlay" Background="#BB000000" Opacity="0" IsHitTestVisible="False"/>
-                                        <!-- Hover / Selected play button -->
+                                        
                                         <Button x:Name="PlayBtn"
                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
                                                 Cursor="Hand" BorderThickness="0">
@@ -1646,7 +1837,7 @@
                                         <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
                                     </TextBlock.Effect>
                                 </TextBlock>
-                                <!-- BotÃ£o RecomendaÃ§Ã£o GrÃ¡fica -->
+                                
                                 <Button Grid.Column="1" Command="{Binding OpenHwRecommendationCommand}"
                                         Cursor="Hand" BorderThickness="0" Background="Transparent"
                                         Padding="0" ToolTip="Análise de Hardware — Recomendação Gráfica"
@@ -1784,9 +1975,9 @@
                         </Grid.RowDefinitions>
 <TextBlock Grid.Row="0" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Processador"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de VÃ­deo"/><Run Language="pt-br" Text=":"/></TextBlock>
+<TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de Vídeo"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="MemÃ³ria"/><Run Language="pt-br" Text=":"/></TextBlock>
+<TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Memória"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamTotal}" FontSize="10" Foreground="#8899AA" VerticalAlignment="Center"/>
 <TextBlock Grid.Row="3" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Top"><Run Text="Armazenamento"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding StorageDrives}" VerticalAlignment="Center">
@@ -1819,7 +2010,7 @@
             </Grid>
         </Border>
 
-        <!-- Drag ghost card (floating preview while dragging) -->
+        
         <Border x:Name="DragGhost" Grid.RowSpan="4"
                 Width="155" Height="210" CornerRadius="10"
                 Opacity="0.75" IsHitTestVisible="False"
@@ -1836,7 +2027,7 @@
             </Image>
         </Border>
 
-        <!-- Drop position indicator line -->
+        
         <Border x:Name="DropIndicator" Grid.RowSpan="4"
                 Width="3" IsHitTestVisible="False"
                 Visibility="Collapsed" Panel.ZIndex="9998"
@@ -1847,24 +2038,19 @@
             </Border.Effect>
         </Border>
 
-        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-             BIG PICTURE TRANSITION OVERLAY
-             Camadas empilhadas que animam em sequÃªncia ao entrar/sair
-             do modo Big Picture.
-             Panel.ZIndex=9999 garante ficar sobre tudo.
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+        
         <Grid x:Name="BpTransitionOverlay"
               Grid.RowSpan="4"
               Panel.ZIndex="10000"
               IsHitTestVisible="False"
               Visibility="Collapsed">
 
-            <!-- Camada 1: Flash de luz branca (impacto inicial) -->
+            
             <Border x:Name="BpFlash"
                     Background="White"
                     Opacity="0"/>
 
-            <!-- Camada 2: Vinheta escura (contrai do centro) -->
+            
             <Border x:Name="BpVignette" Opacity="0">
                 <Border.Background>
                     <RadialGradientBrush Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
@@ -1876,7 +2062,7 @@
                 </Border.Background>
             </Border>
 
-            <!-- Camada 3: Linhas de scan horizontais (efeito TV/CRT) -->
+            
             <ItemsControl x:Name="BpScanLines" Opacity="0" IsHitTestVisible="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -1885,7 +2071,7 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
-            <!-- Camada 4: Logotipo central com zoom e fade -->
+            
             <Grid x:Name="BpLogoContainer"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
@@ -1902,7 +2088,7 @@
                                       Opacity="0"/>
                 </Grid.Effect>
 
-                <!-- CÃ­rculo de fundo com pulso -->
+                
                 <Ellipse x:Name="BpLogoBg"
                          Width="200" Height="200"
                          Fill="#CC000000"
@@ -1914,7 +2100,7 @@
                     </Ellipse.RenderTransform>
                 </Ellipse>
 
-                <!-- Ãcone de TV -->
+                
                 <md:PackIcon Kind="TelevisionPlay"
                              Width="80" Height="80"
                              Foreground="{DynamicResource AccentBrush}"
@@ -1922,7 +2108,7 @@
                              VerticalAlignment="Center"
                              Margin="0,0,0,10"/>
 
-                <!-- Texto "BIG PICTURE" -->
+                
                 <TextBlock Text="BIG  PICTURE"
                            FontSize="16"
                            FontWeight="Bold"
@@ -1933,7 +2119,7 @@
                            Margin="0,0,0,36"/>
             </Grid>
 
-            <!-- Camada 5: Barras laterais que deslizam para dentro -->
+            
             <Border x:Name="BpBarLeft"
                     HorizontalAlignment="Left"
                     Width="0"
@@ -1945,7 +2131,7 @@
                     Background="{DynamicResource AccentBrush}"
                     Opacity="0.85"/>
 
-            <!-- Camada 6: Overlay de fade final (preto â†ansparente) -->
+            
             <Border x:Name="BpFadeOut"
                     Background="Black"
                     Opacity="0"/>

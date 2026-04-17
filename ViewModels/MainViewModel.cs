@@ -30,6 +30,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _runningGameName;
     public  string? RunningGameName => _runningGameName;
 
+    // ── Sistema de troféus ────────────────────────────────────────────────────
+    private readonly TrophyService _trophyService = new();
+    private DispatcherTimer? _launcherTimeTimer;
+    public  TrophyService TrophyService => _trophyService;
+
     public enum NavZone { Header, Actions, Carousel }
 
     private static readonly string[] HeaderItems = ["Xbox", "Steam", "Epic", "Discord", "Help", "Settings", "AddGame", "Theme"];
@@ -92,6 +97,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // O som de entrada é tocado pelo BigPictureTransitionService; apenas navegar na saída
         if (!entering) SoundService.PlayNavigate();
         StatusMessage = entering ? "Modo Big Picture ativado" : "Modo Big Picture desativado";
+        if (entering) _trophyService.OnBigPictureUsed();
 
         if (entering)
         {
@@ -186,6 +192,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
+
+    // ── Troféus: exibição no header ───────────────────────────────────────
+    [ObservableProperty] private string trophyGamerscoreDisplay = "0G";
+    [ObservableProperty] private string trophyCountDisplay      = "0/27 troféus";
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAvatar))]
     [NotifyPropertyChangedFor(nameof(HasNoAvatar))]
@@ -333,6 +343,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xinput.AiComboTriggered += OnAiComboTriggered;
         _xinput.Start();
 
+        // ── Troféus: subscrever ANTES dos restores de plataformas ────────────
+        _trophyService.TrophyUnlocked += OnTrophyUnlocked;
+        _trophyService.OnAppStarted();
+        RefreshTrophyHeader();
+        _launcherTimeTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        _launcherTimeTimer.Tick += (_, _) => _trophyService.AddLauncherMinutes(1);
+        _launcherTimeTimer.Start();
+
         statusCallback?.Invoke("Conectando contas...");
         _ = RefreshAllAssetsOnStartupAsync();
         _ = TryRestoreXboxSessionAsync();
@@ -374,6 +392,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _launcherTimeTimer?.Stop();
         _clockTimer.Stop();
         _xinput.Stop();
         _xinput.Dispose();
@@ -387,6 +406,44 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
+    }
+
+    // ── Fila de toasts (UI thread) ────────────────────────────────────────────
+    private readonly Queue<Models.Trophy> _toastQueue = new();
+    private bool _toastBusy;
+
+    private void OnTrophyUnlocked(Models.Trophy trophy)
+    {
+        // Garante execução na UI thread — TrophyService pode vir de qualquer thread
+        if (!_dispatcher.CheckAccess())
+        {
+            _dispatcher.BeginInvoke(() => OnTrophyUnlocked(trophy));
+            return;
+        }
+
+        RefreshTrophyHeader();
+        _toastQueue.Enqueue(trophy);
+        ShowNextToast();
+    }
+
+    private void ShowNextToast()
+    {
+        if (_toastBusy || _toastQueue.Count == 0) return;
+        _toastBusy = true;
+        var next = _toastQueue.Dequeue();
+        var toast = new Views.TrophyToastWindow(next, () =>
+        {
+            _toastBusy = false;
+            ShowNextToast();
+        });
+        toast.Show();
+        SoundService.PlayTrophy();
+    }
+
+    private void RefreshTrophyHeader()
+    {
+        TrophyGamerscoreDisplay = $"{_trophyService.EarnedGamerscore}G";
+        TrophyCountDisplay      = $"{_trophyService.TrophyCount}/{_trophyService.TotalTrophies} troféus";
     }
 
     private void ScanGameTech(Game game)
@@ -482,6 +539,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SettingsService.Current.AvatarImagePath = dialog.FileName;
         SettingsService.Save();
         StatusMessage = "Avatar atualizado!";
+        _trophyService.OnAvatarChanged();
     }
 
     partial void OnSearchTextChanged(string value) => _gamesView.Refresh();
@@ -494,6 +552,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             SoundService.PlayNavigate();
             ScanGameTech(value);
+            _trophyService.OnGameDetailOpened();
         }
         else
         {
@@ -599,6 +658,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         SaveGames();
         StatusMessage = $"{Games.Count} jogos na biblioteca";
+        _trophyService.OnGameAdded(Games.Count);
 
         foreach (var game in newGames)
         {
@@ -1000,6 +1060,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 await _dispatcher.BeginInvoke(() =>
                 {
                     game.TotalPlayTimeMinutes += playedMinutes;
+                    _trophyService.AddPlayedMinutes(playedMinutes);
                     SaveGames();
                     CleanupAfterGameExit();
 
@@ -1054,6 +1115,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SoundService.PlayFavorite();
         _gamesView.Refresh();
         SaveGames();
+        if (game.IsFavorite) _trophyService.OnFavoriteAdded();
         StatusMessage = game.IsFavorite
             ? $"'{game.DisplayName}' adicionado aos favoritos ⭐"
             : $"'{game.DisplayName}' removido dos favoritos";
@@ -1068,6 +1130,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             game.Name = dialog.NewName;
             _gamesView.Refresh();
             SaveGames();
+            _trophyService.OnGameRenamed();
             StatusMessage = $"Jogo renomeado para '{game.DisplayName}'";
         }
     }
@@ -1127,6 +1190,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenTheme()
     {
         var dialog = new ThemeDialog { Owner = Application.Current.MainWindow };
+        _trophyService.OnSettingsOpened();
         dialog.ShowDialog();
     }
 
@@ -1207,6 +1271,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Owner = Application.Current.MainWindow
         };
         chatDialog.Show();
+        _trophyService.OnAiUsed();
     }
 
     [RelayCommand]
@@ -1215,6 +1280,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var dialog = new PixDonationDialog { Owner = Application.Current.MainWindow };
         dialog.ShowDialog();
     }
+
+    [RelayCommand]
+    private void OpenTrophies()
+    {
+        var dialog = new Views.TrophiesDialog(_trophyService)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        _trophyService.OnSettingsOpened(); // Abre configurações = curiosidade
+        dialog.ShowDialog();
+    }
+
+    /// <summary>Chamado pelo code-behind quando o Easter Egg é ativado.</summary>
+    public void NotifyEasterEggFound() => _trophyService.OnEasterEggFound();
 
 
     private async Task TryRestoreXboxSessionAsync()
@@ -1234,6 +1313,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             XboxProfile = profile;
             XboxConnected = true;
+            _trophyService.OnXboxConnected();
             StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
         }
     }
@@ -1283,6 +1363,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             XboxProfile = profile;
             XboxConnected = true;
+            _trophyService.OnXboxConnected();
             StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
         }
         else
@@ -1418,6 +1499,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
             SteamProfile = profile;
             SteamConnected = true;
+            _trophyService.OnSteamConnected();
             StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
         }
     }
@@ -1467,6 +1549,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             profile.OwnedGamesCount = _steamService.GetInstalledGamesCount();
             SteamProfile = profile;
             SteamConnected = true;
+            _trophyService.OnSteamConnected();
             StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
         }
         else
@@ -1586,6 +1669,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             EpicProfile = profile;
             EpicConnected = true;
+            _trophyService.OnEpicConnected();
             StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
         }
 
@@ -1631,6 +1715,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             EpicProfile = profile;
             EpicConnected = true;
+            _trophyService.OnEpicConnected();
             StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
         }
         else
@@ -1768,6 +1853,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 DiscordProfile = profile;
                 DiscordConnected = true;
+                _trophyService.OnDiscordConnected();
                 StatusMessage = $"Discord: {profile.DisplayName}";
 
                 var rid = SettingsService.Current.DiscordClientId;
@@ -1833,6 +1919,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 DiscordProfile = profile;
                 DiscordConnected = true;
+                _trophyService.OnDiscordConnected();
                 StatusMessage = $"Discord: {profile.DisplayName}";
             }
             else

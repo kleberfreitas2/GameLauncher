@@ -1,0 +1,27 @@
+BOM: UTF-8 BOM
+File size: 141205 bytes
+Lines with 0xC3 (possible UTF-8 multi-byte chars read as Latin1): 23
+ 482: ToolTip="Manual de utiliza????????o">
+ 598: <Button ToolTip="GLauncher AI ?????Assistente Gamer"
+ 618: ToolTip="Configura????es"
+ 678: <MenuItem Header="Recomenda????????o Gr????fica (Hardware)"
+ 699: ToolTip="Modo Big Picture ???????? BETA (em teste para TVs)" Margin="0,0,12,0"
+ 849: <TextBlock Text="Carregando anima????o..." FontSize="14" Foreground="#CCDDEE"
+ 921: <TextBlock Text="Sua biblioteca de jogos pessoal r??pida, elegante e pronta para jogar."
+ 931: <TextBlock Text="?????????  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
+ 940: <TextBlock Text="Clique no bot????o abaixo ou em ??????? ???????? Adicionar Jogo"
+ 950: <TextBlock Text="Selecione o execut????vel (.exe) do seu jogo"
+ 960: <TextBlock Text="Pronto! Aproveite a experi????ncia com capa, fundo e info autom????ticas"
+1189: <Run Text="??ltima vez:" /><Run Text=" "/><Run Text="{Binding DetailGame.LastPlayedText, Mode=OneWay}"/>
+1214: <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU ????C" IsTemperature="True" Margin="8,0">
+1217: <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU ????C" IsTemperature="True" Margin="8,0">
+1577: <TextBlock Text="Local de instala????o" FontSize="13" Foreground="#778899"/>
+1603: <TextBlock Text="G??nero" FontSize="13" Foreground="#778899"/>
+1619: <TextBlock Text="Lan??amento" FontSize="13" Foreground="#778899"/>
+1626: <TextBlock Text="Descri????o" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8">
+1652: Padding="0" ToolTip="An??lise de Hardware ??? Recomenda????o Gr??fica"
+1787: <TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" Verti
+1789: <TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" Verti
+1812: <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU ????C" IsTemperature="True" Margin="4,0">
+1815: <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU ????C" IsTemperature="True" Margin="4,0">
+Lines with known mojibake patterns (read as UTF-8): 0

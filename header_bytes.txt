@@ -1,0 +1,13 @@
+First 10 bytes (hex):
+  [0] 0xEF
+  [1] 0xBB
+  [2] 0xBF
+  [3] 0xEF
+  [4] 0xBB
+  [5] 0xBF
+  [6] 0x3C
+  [7] 0x57
+  [8] 0x69
+  [9] 0x6E
+First '<' found at index: 6
+Done. Content starts at byte 6, length 141162 bytes.

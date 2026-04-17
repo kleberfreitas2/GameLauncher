@@ -11,6 +11,7 @@ public static class SoundService
     private static SoundPlayer? _back;
     private static SoundPlayer? _error;
     private static SoundPlayer? _favorite;
+    private static SoundPlayer? _trophy;
     private static SoundPlayer? _zoneChange;
     private static SoundPlayer? _bigPicture;
 
@@ -29,6 +30,7 @@ public static class SoundService
         _back        = CreatePlayer(GenerateSweep(500, 300, 0.08, 0.20));
         _error       = CreatePlayer(GenerateTone(200, 0.12, 0.30));
         _favorite    = CreatePlayer(GenerateSweep(880, 1320, 0.10, 0.25));
+        _trophy      = CreatePlayer(GenerateTrophySound());
         _zoneChange  = CreatePlayer(GenerateTone(600, 0.03, 0.15));
         _bigPicture  = CreatePlayer(GenerateBigPictureEntry());
     }
@@ -39,6 +41,7 @@ public static class SoundService
     public static void PlayBack()          => Play(_back);
     public static void PlayError()         => Play(_error);
     public static void PlayFavorite()      => Play(_favorite);
+    public static void PlayTrophy()        => Play(_trophy);
     public static void PlayZoneChange()    => Play(_zoneChange);
     public static void PlayBigPicture()    => Play(_bigPicture);
 
@@ -75,6 +78,74 @@ public static class SoundService
             double sample = Math.Sin(2.0 * Math.PI * frequency * t) * maxAmplitude * envelope;
             samples[i] = (short)Math.Clamp(sample, short.MinValue, short.MaxValue);
         }
+
+        return BuildWav(samples);
+    }
+
+    /// <summary>
+    /// Som estilo troféu do Xbox: dois "dings" ascendentes com harmônicos
+    /// e decay suave — inconfundível ao desbloquear um achievement.
+    /// </summary>
+    private static byte[] GenerateTrophySound()
+    {
+        // Duração total: ~1.1s
+        // Nota 1 (Dó): 0.00 – 0.45s  (659 Hz ≈ Mi5)
+        // Nota 2 (Mi): 0.28 – 0.75s  (880 Hz = Lá5) — levemente sobreposta
+        // Brilho (Sol): 0.55 – 1.10s (1319 Hz ≈ Mi6) — harmônico final
+        double totalDuration = 1.15;
+        int totalSamples = (int)(SampleRate * totalDuration);
+        var mix = new double[totalSamples];
+
+        // Adiciona um "ding" com envelope típico de sino:
+        //  - ataque muito rápido (2 ms)
+        //  - sustain curto
+        //  - decay exponencial longo
+        void AddBell(double startSec, double durationSec, double freq, double vol, params double[] harmonics)
+        {
+            int s0 = (int)(startSec * SampleRate);
+            int len = (int)(durationSec * SampleRate);
+            int s1 = Math.Min(s0 + len, totalSamples);
+
+            double attackSamples = SampleRate * 0.003; // 3ms de ataque
+
+            for (int i = s0; i < s1; i++)
+            {
+                double progress = (double)(i - s0) / len;
+                // Envelope sino: ataque rápido + decay exponencial
+                double env = progress < (attackSamples / len)
+                    ? progress / (attackSamples / len)
+                    : Math.Exp(-5.0 * (progress - (attackSamples / len)));
+
+                double t = (double)(i - s0) / SampleRate;
+                double sample = Math.Sin(2.0 * Math.PI * freq * t) * vol * env;
+
+                // Harmônicos (dão o caráter metálico/cristalino do sino)
+                for (int h = 0; h < harmonics.Length; h++)
+                {
+                    double hVol = vol * (0.35 / (h + 2));
+                    sample += Math.Sin(2.0 * Math.PI * freq * harmonics[h] * t) * hVol * env;
+                }
+
+                mix[i] += sample;
+            }
+        }
+
+        // Nota 1 — Mi5 (659 Hz) com harmônicos 2ª, 3ª e 5ª
+        AddBell(0.00, 0.50, 659.25, 0.55, 2.0, 3.0, 5.0);
+
+        // Nota 2 — Si5 (987 Hz) — um intervalo de terça-maior acima
+        AddBell(0.30, 0.55, 987.77, 0.50, 2.0, 3.0, 5.0);
+
+        // Brilho final — Ré6 (1174 Hz) — completa o acorde de forma etérea
+        AddBell(0.55, 0.60, 1174.66, 0.30, 2.0, 4.0);
+
+        // Normalizar
+        double maxVal = mix.Max(Math.Abs);
+        if (maxVal < 1e-9) maxVal = 1;
+        double normalize = short.MaxValue * 0.80 / maxVal;
+        var samples = new short[totalSamples];
+        for (int i = 0; i < totalSamples; i++)
+            samples[i] = (short)Math.Clamp(mix[i] * normalize, short.MinValue, short.MaxValue);
 
         return BuildWav(samples);
     }

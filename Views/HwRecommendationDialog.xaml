@@ -1,4 +1,4 @@
-<Window x:Class="GameLauncher.Views.HwRecommendationDialog"
+﻿<Window x:Class="GameLauncher.Views.HwRecommendationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -21,7 +21,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Cabeçalho -->
+        
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock x:Name="TitleText"
                        Text="🖥️ Análise de Hardware"
@@ -31,7 +31,7 @@
                        FontSize="11" Foreground="#556677" Margin="0,3,0,0"/>
         </StackPanel>
 
-        <!-- Corpo -->
+        
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="290"/>
@@ -39,13 +39,13 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ─ Coluna esquerda: Specs do PC ─ -->
+            
             <Border Grid.Column="0" Background="#0A0A18" CornerRadius="10" Padding="18">
                 <StackPanel>
                     <TextBlock Text="🖥️ Seu Hardware" FontSize="14" FontWeight="Bold"
                                Foreground="White" Margin="0,0,0,14"/>
 
-                    <!-- GPU -->
+                    
                     <Border Background="#12122A" CornerRadius="8" Padding="12,10" Margin="0,0,0,8">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
@@ -59,7 +59,7 @@
                                        Foreground="White" TextWrapping="Wrap"/>
                             <TextBlock x:Name="GpuVramText" Text=""
                                        FontSize="10" Foreground="#778899" Margin="0,2,0,0"/>
-                            <!-- Score bar -->
+                            
                             <Grid Margin="0,6,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -76,7 +76,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- CPU -->
+                    
                     <Border Background="#12122A" CornerRadius="8" Padding="12,10" Margin="0,0,0,8">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
@@ -93,7 +93,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- RAM -->
+                    
                     <Border Background="#12122A" CornerRadius="8" Padding="12,10">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
@@ -115,10 +115,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- ─ Coluna direita: Resultado ─ -->
+            
             <Border Grid.Column="2" Background="#0A0A18" CornerRadius="10" Padding="22">
                 <Grid>
-                    <!-- Loading -->
+                    
                     <StackPanel x:Name="LoadingPanel"
                                 HorizontalAlignment="Center" VerticalAlignment="Center">
                         <ProgressBar IsIndeterminate="True"
@@ -130,10 +130,10 @@
                                    HorizontalAlignment="Center" Margin="0,12,0,0"/>
                     </StackPanel>
 
-                    <!-- Resultado -->
+                    
                     <StackPanel x:Name="ResultPanel" Visibility="Collapsed">
 
-                        <!-- Badge do preset -->
+                        
                         <Border x:Name="PresetBadge" CornerRadius="12" Padding="20,14"
                                 HorizontalAlignment="Center" Margin="0,0,0,16">
                             <StackPanel Orientation="Horizontal">
@@ -151,7 +151,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Mensagem principal -->
+                        
                         <Border Background="#12122A" CornerRadius="8" Padding="14,10" Margin="0,0,0,14">
                             <TextBlock x:Name="MainMessageText"
                                        FontSize="14" FontWeight="SemiBold"
@@ -159,7 +159,7 @@
                                        HorizontalAlignment="Center" TextAlignment="Center"/>
                         </Border>
 
-                        <!-- Detalhes -->
+                        
                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="210">
                             <ItemsControl x:Name="DetailsList">
                                 <ItemsControl.ItemTemplate>
@@ -172,7 +172,7 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <!-- Badge: jogo não encontrado -->
+                        
                         <Border x:Name="UnknownGameBadge"
                                 Background="#22FFD740" CornerRadius="6" Padding="10,6"
                                 Margin="0,10,0,0" Visibility="Collapsed">
@@ -184,7 +184,7 @@
             </Border>
         </Grid>
 
-        <!-- Rodapé -->
+        
         <Grid Grid.Row="2" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>

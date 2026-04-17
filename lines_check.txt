@@ -1,0 +1,47 @@
+﻿ 919:                     </TextBlock>
+ 920: 
+ 921:                     <TextBlock Text="Sua biblioteca de jogos pessoal rápida, elegante e pronta para jogar."
+ 922:                                FontSize="14" Foreground="#7788AA" HorizontalAlignment="Center"
+ 923:                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,28"/>
+ 924: 
+ 925:                     <Border Background="#18182A" CornerRadius="16" Padding="32,28" Margin="0,0,0,24"
+ 926:                             BorderThickness="1" BorderBrush="#222244">
+ 927:                         <Border.Effect>
+ 928:                             <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="4" Opacity="0.4"/>
+ 929:                         </Border.Effect>
+ 930:                         <StackPanel>
+ 931:                             <TextBlock Text="ðŸš€  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
+ 932:                                        Foreground="#CCCCDD" HorizontalAlignment="Center" Margin="0,0,0,18"/>
+ 933: 
+ 934:                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
+ 935:                                 <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}"
+ 936:                                         VerticalAlignment="Center" Margin="0,0,12,0">
+ 937:                                     <TextBlock Text="1"
+ 938:                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+ 939:                                 </Border>
+ 940:                                 <TextBlock Text="Clique no botÃ£o abaixo ou em âš™ â†’ Adicionar Jogo"
+ 941:                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+ 942:                             </StackPanel>
+ 943: 
+ 944:                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
+ 945:                                 <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}"
+ 946:                                         VerticalAlignment="Center" Margin="0,0,12,0">
+ 947:                                     <TextBlock Text="2"
+ 948:                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+ 949:                                 </Border>
+ 950:                                 <TextBlock Text="Selecione o executÃ¡vel (.exe) do seu jogo"
+ 951:                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+ 952:                             </StackPanel>
+ 953: 
+ 954:                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+ 955:                                 <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentBrush}"
+ 956:                                         VerticalAlignment="Center" Margin="0,0,12,0">
+ 957:                                     <TextBlock Text="3"
+ 958:                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+ 959:                                 </Border>
+ 960:                                 <TextBlock Text="Pronto! Aproveite a experiÃªncia com capa, fundo e info automÃ¡ticas"
+ 961:                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
+ 962:                             </StackPanel>
+ 963:                         </StackPanel>
+ 964:                     </Border>
+ 965: 
