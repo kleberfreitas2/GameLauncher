@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -131,6 +131,9 @@ public partial class MainWindow : Window
                 (GlobalHotkeyService.MOD_ALT,                                   0x7B, "Alt+F12"),       // F12
             ],
             OpenAiOverlay);
+
+            // Callout flutuante convidando o usuario a experimentar a IA
+            ScheduleAiCallout();
         };
         Closed += (_, _) =>
         {
@@ -765,4 +768,352 @@ public partial class MainWindow : Window
             _isFullscreen = false;
         }
     }
+
+
+    // =========================================================================
+    // Callout "Experimente a IA" — todo o visual e animacao em codigo
+    // =========================================================================
+
+    private const int    AiCalloutMaxShows    = 5;
+    private const double CalloutDisplaySec    = 15.0;
+
+    private System.Windows.Threading.DispatcherTimer? _calloutTimer;
+
+    // Refs ao visual do callout (criadas em BuildCalloutContent)
+    private Border?    _calloutRoot;
+    private System.Windows.Shapes.Path? _calloutArrow;
+    private Border?    _calloutTimerBar;
+    private TextBlock? _calloutHotkeyBadge;
+    private System.Windows.Media.TranslateTransform? _calloutTranslate;
+    private System.Windows.Media.ScaleTransform?     _calloutScale;
+    private System.Windows.Media.ScaleTransform?     _iconPulse;
+    private System.Windows.Controls.Primitives.Popup?  _aiPopup;
+
+    private void ScheduleAiCallout()
+    {
+        if (SettingsService.Current.AiNotificationCount >= AiCalloutMaxShows) return;
+
+        var delay = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromSeconds(3) };
+        delay.Tick += (_, _) => { delay.Stop(); BuildAndShowCallout(); };
+        delay.Start();
+    }
+
+    private void BuildAndShowCallout()
+    {
+        // Accent color
+        var accent = (System.Windows.Media.Brush?)TryFindResource("AccentBrush")
+                     ?? new System.Windows.Media.SolidColorBrush(
+                            System.Windows.Media.Color.FromRgb(0x7C, 0x4D, 0xFF));
+
+        var dark   = new System.Windows.Media.SolidColorBrush(
+                         System.Windows.Media.Color.FromArgb(0xFF, 0x1A, 0x15, 0x35));
+        var border = new System.Windows.Media.SolidColorBrush(
+                         System.Windows.Media.Color.FromArgb(0xFF, 0x3A, 0x2A, 0x6A));
+        var textDim = new System.Windows.Media.SolidColorBrush(
+                          System.Windows.Media.Color.FromArgb(0xFF, 0x88, 0x77, 0xBB));
+        var textMain = System.Windows.Media.Brushes.White;
+        var textSub  = new System.Windows.Media.SolidColorBrush(
+                           System.Windows.Media.Color.FromArgb(0xFF, 0xCC, 0xBB, 0xEE));
+
+        // --- Seta apontando para cima ---
+        _calloutArrow = new System.Windows.Shapes.Path
+        {
+            Data = System.Windows.Media.Geometry.Parse("M 108,0 L 118,10 L 98,10 Z"),
+            Fill = dark,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment   = VerticalAlignment.Top,
+            Opacity = 0
+        };
+
+        // --- Transforms do corpo ---
+        _calloutTranslate = new System.Windows.Media.TranslateTransform { Y = -14 };
+        _calloutScale     = new System.Windows.Media.ScaleTransform { ScaleX = 0.90, ScaleY = 0.90,
+                                CenterX = 115, CenterY = 0 };
+        var tg = new System.Windows.Media.TransformGroup();
+        tg.Children.Add(_calloutTranslate);
+        tg.Children.Add(_calloutScale);
+
+        // --- Ícone robô com pulso ---
+        _iconPulse = new System.Windows.Media.ScaleTransform { ScaleX = 1, ScaleY = 1,
+                         CenterX = 10, CenterY = 10 };
+        var robotIcon = new MaterialDesignThemes.Wpf.PackIcon
+        {
+            Kind   = MaterialDesignThemes.Wpf.PackIconKind.Robot,
+            Width  = 20, Height = 20,
+            Foreground = accent,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment   = VerticalAlignment.Center,
+            RenderTransform     = _iconPulse,
+            RenderTransformOrigin = new System.Windows.Point(0.5, 0.5)
+        };
+        var iconBorder = new Border
+        {
+            Background          = new System.Windows.Media.SolidColorBrush(
+                                      System.Windows.Media.Color.FromArgb(0xFF, 0x2A, 0x1A, 0x5A)),
+            CornerRadius        = new CornerRadius(10),
+            Width = 34, Height  = 34,
+            Margin              = new Thickness(0, 0, 10, 0),
+            Child               = robotIcon
+        };
+
+        // --- Textos ---
+        var titleTxt = new TextBlock
+        {
+            Text = "GLauncher AI", FontSize = 13,
+            FontWeight = FontWeights.Bold, Foreground = textMain,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI")
+        };
+        var subTxt = new TextBlock
+        {
+            Text = "Seu assistente gamer 🎮", FontSize = 10,
+            Foreground = textDim,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI")
+        };
+        var titleStack = new StackPanel();
+        titleStack.Children.Add(titleTxt);
+        titleStack.Children.Add(subTxt);
+
+        // --- Botão fechar ---
+        var closeIcon = new MaterialDesignThemes.Wpf.PackIcon
+        {
+            Kind = MaterialDesignThemes.Wpf.PackIconKind.Close,
+            Width = 13, Height = 13,
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                             System.Windows.Media.Color.FromArgb(0xFF, 0x66, 0x55, 0xAA))
+        };
+        var closeBtn = new Button
+        {
+            Content = closeIcon, Background = System.Windows.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand,
+            Padding = new Thickness(2),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(8, -2, -2, 0)
+        };
+        closeBtn.Click += (_, _) => DismissAiCallout();
+
+        // Grid para empurrar o botão ✕ para a direita corretamente
+        var headerRow = new Grid();
+        headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(iconBorder, 0);
+        Grid.SetColumn(titleStack, 1);
+        Grid.SetColumn(closeBtn,   2);
+        closeBtn.Margin = new Thickness(6, -2, 0, 0);
+        closeBtn.VerticalAlignment = VerticalAlignment.Center;
+        headerRow.Children.Add(iconBorder);
+        headerRow.Children.Add(titleStack);
+        headerRow.Children.Add(closeBtn);
+
+        // --- Descrição ---
+        var desc = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap, FontSize = 12,
+            Foreground = textSub,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+            LineHeight = 18
+        };
+        desc.Inlines.Add(new System.Windows.Documents.Run("Dicas, builds, segredos e analises com "));
+        var boldRun = new System.Windows.Documents.Run("inteligencia artificial")
+            { FontWeight = FontWeights.Bold, Foreground = accent };
+        desc.Inlines.Add(boldRun);
+        desc.Inlines.Add(new System.Windows.Documents.Run(" na palma da mao."));
+
+        // --- Badge hotkey ---
+        _calloutHotkeyBadge = new TextBlock
+        {
+            Text = GlobalHotkeyService.AiHotkeyLabel,
+            FontSize = 10, FontWeight = FontWeights.Bold,
+            Foreground = accent,
+            FontFamily = new System.Windows.Media.FontFamily("Consolas")
+        };
+        var badgeBorder = new Border
+        {
+            Background   = new System.Windows.Media.SolidColorBrush(
+                               System.Windows.Media.Color.FromArgb(0xFF, 0x2A, 0x1A, 0x5A)),
+            CornerRadius = new CornerRadius(6),
+            Padding      = new Thickness(7, 3, 7, 3),
+            Margin       = new Thickness(0, 0, 6, 0),
+            Child        = _calloutHotkeyBadge
+        };
+        var hintLabel = new TextBlock
+        {
+            Text = "ou clique no icone acima", FontSize = 11,
+            Foreground = textDim, VerticalAlignment = VerticalAlignment.Center,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI")
+        };
+        var hotKeyRow = new StackPanel { Orientation = Orientation.Horizontal,
+                                         Margin = new Thickness(0, 10, 0, 0) };
+        hotKeyRow.Children.Add(badgeBorder);
+        hotKeyRow.Children.Add(hintLabel);
+
+        // --- Conteudo principal ---
+        var content = new StackPanel { Margin = new Thickness(14, 14, 14, 10) };
+        content.Children.Add(headerRow);
+        content.Children.Add(new Border { Height = 8 });
+        content.Children.Add(desc);
+        content.Children.Add(hotKeyRow);
+
+        // --- Barra de timer ---
+        var timerTrack = new Border
+        {
+            Height = 4, CornerRadius = new CornerRadius(0, 0, 16, 16),
+            Background = new System.Windows.Media.SolidColorBrush(
+                             System.Windows.Media.Color.FromArgb(0xFF, 0x2A, 0x1A, 0x5A))
+        };
+        _calloutTimerBar = new Border
+        {
+            Height = 4, Width = 290,
+            CornerRadius = new CornerRadius(0, 0, 16, 16),
+            Background = accent,
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        timerTrack.Child = _calloutTimerBar;
+
+        // --- Grid raiz do corpo ---
+        var bodyGrid = new Grid();
+        bodyGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        bodyGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4) });
+        Grid.SetRow(content, 0);
+        Grid.SetRow(timerTrack, 1);
+        bodyGrid.Children.Add(content);
+        bodyGrid.Children.Add(timerTrack);
+
+        // --- Border raiz animada ---
+        _calloutRoot = new Border
+        {
+            Width        = 290,
+            CornerRadius = new CornerRadius(16),
+            Background   = dark,
+            BorderBrush  = border,
+            BorderThickness = new Thickness(1),
+            Margin       = new Thickness(0, 9, 0, 0),
+            RenderTransformOrigin = new System.Windows.Point(0.5, 0),
+            RenderTransform = tg,
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = System.Windows.Media.Color.FromRgb(0x7C, 0x4D, 0xFF),
+                BlurRadius = 28, ShadowDepth = 0, Opacity = 0.35
+            },
+            Opacity = 0,
+            Child   = bodyGrid
+        };
+
+        // --- Container com seta + corpo ---
+        var container = new Grid();
+        container.Children.Add(_calloutArrow);
+        container.Children.Add(_calloutRoot);
+
+        // Criar Popup em codigo (evita problemas de name scope do XAML)
+        _aiPopup = new System.Windows.Controls.Primitives.Popup
+        {
+            PlacementTarget = BtnAi,
+            Placement       = System.Windows.Controls.Primitives.PlacementMode.Bottom,
+            AllowsTransparency = true,
+            StaysOpen       = false,
+            HorizontalOffset = -130,
+            VerticalOffset   = 6,
+            Child            = container
+        };
+        _aiPopup.StaysOpen = false;
+
+        // Abrir e animar
+        _aiPopup!.IsOpen = true;
+        PlayCalloutEnterAnimation();
+
+        // Registra exibicao
+        SettingsService.Current.AiNotificationCount++;
+        SettingsService.Save();
+    }
+
+    private void PlayCalloutEnterAnimation()
+    {
+        var dur  = TimeSpan.FromMilliseconds(420);
+        var ease = new System.Windows.Media.Animation.CubicEase
+            { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+
+        // Fade + slide + scale do corpo
+        _calloutRoot!.BeginAnimation(OpacityProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0, 1, dur) { EasingFunction = ease });
+        _calloutTranslate!.BeginAnimation(
+            System.Windows.Media.TranslateTransform.YProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(-14, 0, dur) { EasingFunction = ease });
+        _calloutScale!.BeginAnimation(
+            System.Windows.Media.ScaleTransform.ScaleXProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0.90, 1.0, dur) { EasingFunction = ease });
+        _calloutScale!.BeginAnimation(
+            System.Windows.Media.ScaleTransform.ScaleYProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0.90, 1.0, dur) { EasingFunction = ease });
+
+        // Seta
+        _calloutArrow!.BeginAnimation(OpacityProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0, 1, dur));
+
+        // Pulso do icone robô
+        StartIconPulse();
+
+        // Barra de timer: de 230 -> 0
+        _calloutTimerBar!.BeginAnimation(WidthProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(290, 0,
+                TimeSpan.FromSeconds(CalloutDisplaySec)));
+
+        // Auto-fechar
+        _calloutTimer = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromSeconds(CalloutDisplaySec) };
+        _calloutTimer.Tick += (_, _) => { _calloutTimer!.Stop(); DismissAiCallout(); };
+        _calloutTimer.Start();
+    }
+
+    private void StartIconPulse()
+    {
+        if (_iconPulse is null) return;
+
+        var pulse = new System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames
+        {
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+            Duration = new Duration(TimeSpan.FromSeconds(2.4))
+        };
+        var easeBack = new System.Windows.Media.Animation.BackEase
+            { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut, Amplitude = 0.3 };
+        pulse.KeyFrames.Add(new System.Windows.Media.Animation.EasingDoubleKeyFrame(
+            1.0,  System.Windows.Media.Animation.KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        pulse.KeyFrames.Add(new System.Windows.Media.Animation.EasingDoubleKeyFrame(
+            1.25, System.Windows.Media.Animation.KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.3)),
+            easeBack));
+        pulse.KeyFrames.Add(new System.Windows.Media.Animation.EasingDoubleKeyFrame(
+            1.0,  System.Windows.Media.Animation.KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.7))));
+
+        _iconPulse.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, pulse);
+        _iconPulse.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, pulse.Clone());
+    }
+
+    private void DismissAiCallout()
+    {
+        _calloutTimer?.Stop();
+        if (_calloutRoot is null) return;
+
+        var dur  = TimeSpan.FromMilliseconds(280);
+        var ease = new System.Windows.Media.Animation.CubicEase
+            { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn };
+
+        var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, dur)
+            { EasingFunction = ease };
+        fadeOut.Completed += (_, _) =>
+        {
+            _aiPopup!.IsOpen = false;
+            _aiPopup!.Child = null;
+            _calloutRoot = null;
+        };
+
+        _calloutRoot.BeginAnimation(OpacityProperty, fadeOut);
+        _calloutTranslate?.BeginAnimation(
+            System.Windows.Media.TranslateTransform.YProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(0, -10, dur) { EasingFunction = ease });
+        _calloutArrow?.BeginAnimation(OpacityProperty,
+            new System.Windows.Media.Animation.DoubleAnimation(1, 0, dur));
+    }
+
+    private void BtnAi_Click(object sender, RoutedEventArgs e) => DismissAiCallout();
 }

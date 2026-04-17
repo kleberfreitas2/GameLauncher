@@ -50,4 +50,7 @@ public class AppSettings
     public string HeaderColor          { get; set; } = "#16213E";
     public string CardColor            { get; set; } = "#1A1A2E";
     public string CardImageColor       { get; set; } = "#0F0F23";
+
+    /// <summary>Quantas vezes o callout "experimente a IA" já foi exibido.</summary>
+    public int AiNotificationCount     { get; set; } = 0;
 }

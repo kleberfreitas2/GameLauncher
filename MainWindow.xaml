@@ -1,4 +1,4 @@
-<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" xmlns:converters="clr-namespace:GameLauncher.Converters" xmlns:vm="clr-namespace:GameLauncher.ViewModels" Title="GLauncher" Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowStyle="None" WindowState="Maximized" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
+﻿<Window x:Class="GameLauncher.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ctrl="clr-namespace:GameLauncher.Controls" xmlns:converters="clr-namespace:GameLauncher.Converters" xmlns:vm="clr-namespace:GameLauncher.ViewModels" Title="GLauncher" Icon="Assets/icon.ico" Height="700" Width="1200" MinHeight="500" MinWidth="800" WindowStyle="None" WindowState="Maximized" WindowStartupLocation="CenterScreen" TextElement.Foreground="{DynamicResource MaterialDesignBody}" TextElement.FontFamily="{DynamicResource MaterialDesignFont}" Background="{DynamicResource AppBackgroundBrush}">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="36" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
@@ -9,6 +9,19 @@
             <Setter Property="CornerRadius" Value="24"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- Estilo reutilizável para botões de ícone no cabeçalho -->
+        <Style x:Key="HeaderIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Focusable" Value="False"/>
         </Style>
 
         <Style x:Key="HeaderActionButton" TargetType="Button">
@@ -456,7 +469,7 @@
                     <Button Command="{Binding OpenHelpCommand}"
                             VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
-                            ToolTip="Manual de utilização">
+                            ToolTip="Manual de utilizaÃ§Ã£o">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Border x:Name="HelpBd" Background="Transparent" CornerRadius="14" Padding="4">
@@ -474,7 +487,7 @@
 <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
                         <StackPanel Orientation="Horizontal">
                             <Grid>
-                                <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#556677" VerticalAlignment="Center">
+                            <md:PackIcon Kind="MicrosoftXboxController" Width="20" Height="20" Foreground="#556677" VerticalAlignment="Center">
                                     <md:PackIcon.Style>
                                         <Style TargetType="md:PackIcon">
                                             <Setter Property="Visibility" Value="Visible"/>
@@ -486,7 +499,7 @@
                                         </Style>
                                     </md:PackIcon.Style>
                                 </md:PackIcon>
-                                <md:PackIcon Kind="MicrosoftXboxController" Width="22" Height="22" Foreground="#00E676"
+                                <md:PackIcon Kind="MicrosoftXboxController" Width="20" Height="20" Foreground="#00E676"
                                VerticalAlignment="Center">
                                     <md:PackIcon.Style>
                                         <Style TargetType="md:PackIcon">
@@ -569,16 +582,16 @@
                             </Style>
                         </Border.Style>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Botão IA -->
-                    <Button ToolTip="GLauncher AI — Assistente Gamer"
+                    <!-- BotÃ£o IA -->
+                    <Button ToolTip="GLauncher AI â€” Assistente Gamer"
                             Command="{Binding OpenAiAssistantCommand}"
-                            VerticalAlignment="Center"
-                            Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
-                            Margin="0,0,4,0">
+                            x:Name="BtnAi" Click="BtnAi_Click"
+                            Margin="0,0,4,0"
+                            Style="{StaticResource HeaderIconButtonStyle}">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Border x:Name="AiBd" Background="Transparent" CornerRadius="14" Padding="4">
-                                    <md:PackIcon Kind="Robot" Width="20" Height="20" Foreground="#8899AA"/>
+                                    <md:PackIcon Kind="Robot" Width="20" Height="20" Foreground="#FF3B3B"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
@@ -588,10 +601,11 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+
+
                     <Button x:Name="BtnGear" Click="BtnGear_Click"
-                  VerticalAlignment="Center"
-                  Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
-                  ToolTip="Configurações">
+                  ToolTip="Configurações"
+                  Style="{StaticResource HeaderIconButtonStyle}">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Border x:Name="GearBd" Background="Transparent" CornerRadius="14" Padding="4">
@@ -650,7 +664,7 @@
                                         <md:PackIcon Kind="Gpu" Width="16" Height="16"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="Recomendação Gráfica (Hardware)"
+                                <MenuItem Header="RecomendaÃ§Ã£o GrÃ¡fica (Hardware)"
                           Command="{Binding OpenHwRecommendationCommand}">
                                     <MenuItem.Icon>
                                         <md:PackIcon Kind="Chip" Width="16" Height="16"/>
@@ -670,10 +684,9 @@
                     </Border>
 
                     <!-- Big Picture Toggle -->
-                    <Button Command="{Binding ToggleBigPictureModeCommand}"
-                            VerticalAlignment="Center" Cursor="Hand"
-                            BorderThickness="0" Background="Transparent" Padding="0"
-                            ToolTip="Modo Big Picture — BETA (em teste para TVs)" Margin="0,0,12,0">
+                    <Button x:Name="BtnBigPicture" Command="{Binding ToggleBigPictureModeCommand}"
+                            ToolTip="Modo Big Picture â€” BETA (em teste para TVs)" Margin="0,0,12,0"
+                            Style="{StaticResource HeaderIconButtonStyle}">
                         <Button.Template>
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Grid>
@@ -726,7 +739,7 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <TextBlock Text="—" Foreground="#AAAAAA" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                        <TextBlock Text="&#x2014;" Foreground="#AAAAAA" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -759,7 +772,7 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <TextBlock Text="✕" Foreground="#AAAAAA" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#x2716;" Foreground="#AAAAAA" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -819,7 +832,7 @@
                   VerticalAlignment="Top" HorizontalAlignment="Center"
                   Margin="0,100,0,0" Padding="30,18">
                     <StackPanel HorizontalAlignment="Center" Width="280">
-                        <TextBlock Text="Carregando animação..." FontSize="14" Foreground="#CCDDEE"
+                        <TextBlock Text="Carregando animaÃ§Ã£o..." FontSize="14" Foreground="#CCDDEE"
                          HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <ProgressBar Value="{Binding LoadingProgress, ElementName=BackgroundAnim, Mode=OneWay}"
                            Minimum="0" Maximum="100" Height="8"
@@ -891,7 +904,7 @@
                         </TextBlock.Effect>
                     </TextBlock>
 
-                    <TextBlock Text="Sua biblioteca de jogos pessoal — rápida, elegante e pronta para jogar."
+                    <TextBlock Text="Sua biblioteca de jogos pessoal â€” rÃ¡pida, elegante e pronta para jogar."
                                FontSize="14" Foreground="#7788AA" HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,28"/>
 
@@ -901,7 +914,7 @@
                             <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="4" Opacity="0.4"/>
                         </Border.Effect>
                         <StackPanel>
-                            <TextBlock Text="🚀  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
+                            <TextBlock Text="ðŸš€  Comece em 3 passos:" FontSize="15" FontWeight="SemiBold"
                                        Foreground="#CCCCDD" HorizontalAlignment="Center" Margin="0,0,0,18"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Center">
@@ -910,7 +923,7 @@
                                     <TextBlock Text="1"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Clique no botão abaixo ou em ⚙ → Adicionar Jogo"
+                                <TextBlock Text="Clique no botÃ£o abaixo ou em âš™ â†’ Adicionar Jogo"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -920,7 +933,7 @@
                                     <TextBlock Text="2"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Selecione o executável (.exe) do seu jogo"
+                                <TextBlock Text="Selecione o executÃ¡vel (.exe) do seu jogo"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -930,7 +943,7 @@
                                     <TextBlock Text="3"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Pronto! Aproveite a experiência com capa, fundo e info automáticas"
+                                <TextBlock Text="Pronto! Aproveite a experiÃªncia com capa, fundo e info automÃ¡ticas"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
@@ -986,7 +999,7 @@
                         </Button.Template>
                     </Button>
 
-                    <TextBlock Text="💡 Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
+                    <TextBlock Text="ðŸ’¡ Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
                                FontSize="11" Foreground="#556677" HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"/>
                 </StackPanel>
@@ -1009,7 +1022,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Badge BETA — canto superior esquerdo, visível só no Big Picture -->
+                <!-- Badge BETA â€” canto superior esquerdo, visÃ­vel sÃ³ no Big Picture -->
                 <Border Grid.Row="0"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Margin="18,14,0,0"
@@ -1032,7 +1045,7 @@
                             <TextBlock Text="BETA" FontSize="9" FontWeight="Bold"
                                        Foreground="White" FontFamily="Segoe UI"/>
                         </Border>
-                        <TextBlock Text="Modo Big Picture — em teste para TVs"
+                        <TextBlock Text="Modo Big Picture â€” em teste para TVs"
                                    FontSize="10" Foreground="#AABBCC"
                                    FontFamily="Segoe UI" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -1146,20 +1159,20 @@
                             </Grid>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#AABBCC" Margin="0,0,20,0">
-                                    <Run Text="⏱" /><Run Text=" "/><Run Text="{Binding DetailGame.PlayTimeDisplay, Mode=OneWay}"/>
+                                    <Run Text="â±" /><Run Text=" "/><Run Text="{Binding DetailGame.PlayTimeDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#AABBCC" Margin="0,0,20,0">
-                                    <Run Text="🎮" /><Run Text=" "/><Run Text="{Binding DetailGame.GenresDisplay, Mode=OneWay}"/>
+                                    <Run Text="ðŸŽ®" /><Run Text=" "/><Run Text="{Binding DetailGame.GenresDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#FFD700">
-                                    <Run Text="⭐" /><Run Text=" "/><Run Text="{Binding DetailGame.RatingDisplay, Mode=OneWay}"/>
+                                    <Run Text="â­" /><Run Text=" "/><Run Text="{Binding DetailGame.RatingDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                             <TextBlock Text="{Binding DetailGame.SummaryDisplay}" FontSize="15" FontWeight="SemiBold" Foreground="#99AABB"
                                        TextWrapping="Wrap" MaxHeight="100" TextTrimming="CharacterEllipsis"/>
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                 <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#667788" Margin="0,0,24,0">
-                                    <Run Text="Última vez:" /><Run Text=" "/><Run Text="{Binding DetailGame.LastPlayedText, Mode=OneWay}"/>
+                                    <Run Text="Ãšltima vez:" /><Run Text=" "/><Run Text="{Binding DetailGame.LastPlayedText, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#667788" Text="{Binding DetailGame.PlatformSource}"/>
                             </StackPanel>
@@ -1184,10 +1197,10 @@
                             <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="6,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.65" ScaleY="1.65"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="8,0">
+                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU Â°C" IsTemperature="True" Margin="8,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="8,0">
+                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU Â°C" IsTemperature="True" Margin="8,0">
                                 <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
                             </ctrl:ArcGauge>
                         </StackPanel>
@@ -1547,7 +1560,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Local de instalação" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="Local de instalaÃ§Ã£o" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallDirectory}" FontSize="13"
                                Foreground="#5599CC" TextTrimming="CharacterEllipsis"
                                ToolTip="{Binding DetailGame.InstallDirectory}"/>
@@ -1573,7 +1586,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Gênero" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="GÃªnero" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.GenresDisplay}" FontSize="13" Foreground="#5599CC" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,0,0,5">
@@ -1589,7 +1602,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Lançamento" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="LanÃ§amento" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.YearDisplay}" FontSize="13" Foreground="#5599CC"/>
                                     </Grid>
                                 </StackPanel>
@@ -1619,10 +1632,10 @@
                                         <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
                                     </TextBlock.Effect>
                                 </TextBlock>
-                                <!-- Botão Recomendação Gráfica -->
+                                <!-- BotÃ£o RecomendaÃ§Ã£o GrÃ¡fica -->
                                 <Button Grid.Column="1" Command="{Binding OpenHwRecommendationCommand}"
                                         Cursor="Hand" BorderThickness="0" Background="Transparent"
-                                        Padding="0" ToolTip="Análise de Hardware — Recomendação Gráfica"
+                                        Padding="0" ToolTip="AnÃ¡lise de Hardware â€” RecomendaÃ§Ã£o GrÃ¡fica"
                                         VerticalAlignment="Center" Margin="0,0,6,0">
                                     <StackPanel Orientation="Horizontal">
                                         <md:PackIcon Kind="Chip" Width="15" Height="15" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
@@ -1757,9 +1770,9 @@
                         </Grid.RowDefinitions>
 <TextBlock Grid.Row="0" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Processador"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de Vídeo"/><Run Language="pt-br" Text=":"/></TextBlock>
+<TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de VÃ­deo"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Memória"/><Run Language="pt-br" Text=":"/></TextBlock>
+<TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="MemÃ³ria"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamTotal}" FontSize="10" Foreground="#8899AA" VerticalAlignment="Center"/>
 <TextBlock Grid.Row="3" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Top"><Run Text="Armazenamento"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding StorageDrives}" VerticalAlignment="Center">
@@ -1782,10 +1795,10 @@
                     <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="2,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
-<ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0">
+<ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU Â°C" IsTemperature="True" Margin="4,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
-                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0">
+                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU Â°C" IsTemperature="True" Margin="4,0">
                         <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
                     </ctrl:ArcGauge>
                 </StackPanel>
@@ -1820,12 +1833,12 @@
             </Border.Effect>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════════════
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              BIG PICTURE TRANSITION OVERLAY
-             Camadas empilhadas que animam em sequência ao entrar/sair
+             Camadas empilhadas que animam em sequÃªncia ao entrar/sair
              do modo Big Picture.
              Panel.ZIndex=9999 garante ficar sobre tudo.
-        ════════════════════════════════════════════════════════════ -->
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
         <Grid x:Name="BpTransitionOverlay"
               Grid.RowSpan="4"
               Panel.ZIndex="10000"
@@ -1875,7 +1888,7 @@
                                       Opacity="0"/>
                 </Grid.Effect>
 
-                <!-- Círculo de fundo com pulso -->
+                <!-- CÃ­rculo de fundo com pulso -->
                 <Ellipse x:Name="BpLogoBg"
                          Width="200" Height="200"
                          Fill="#CC000000"
@@ -1887,7 +1900,7 @@
                     </Ellipse.RenderTransform>
                 </Ellipse>
 
-                <!-- Ícone de TV -->
+                <!-- Ãcone de TV -->
                 <md:PackIcon Kind="TelevisionPlay"
                              Width="80" Height="80"
                              Foreground="{DynamicResource AccentBrush}"
@@ -1918,7 +1931,7 @@
                     Background="{DynamicResource AccentBrush}"
                     Opacity="0.85"/>
 
-            <!-- Camada 6: Overlay de fade final (preto → transparente) -->
+            <!-- Camada 6: Overlay de fade final (preto â†’ transparente) -->
             <Border x:Name="BpFadeOut"
                     Background="Black"
                     Opacity="0"/>

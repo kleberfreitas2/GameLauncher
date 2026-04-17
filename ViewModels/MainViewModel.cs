@@ -1159,15 +1159,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenAiAssistant()
     {
-        OpenAiAssistantCore(viaGamepad: false);
+        // Aberto pelo launcher → chat geral, sem foco em jogo específico
+        OpenAiAssistantCore(viaGamepad: false, fromLauncher: true);
     }
 
     private void OnAiComboTriggered()
     {
-        _dispatcher.BeginInvoke(() => OpenAiAssistantCore(viaGamepad: true));
+        // Ativado por hotkey/controle durante o jogo → focado no jogo em execução
+        _dispatcher.BeginInvoke(() => OpenAiAssistantCore(viaGamepad: true, fromLauncher: false));
     }
 
-    private void OpenAiAssistantCore(bool viaGamepad)
+    private void OpenAiAssistantCore(bool viaGamepad, bool fromLauncher = false)
     {
         // Prioridade: Groq (grátis) → OpenAI (pago)
         var groqKey   = SettingsService.Current.GroqApiKey;
@@ -1196,7 +1198,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             apiKey   = dlg.ApiKey;
         }
 
-        var gameName   = _runningGameName ?? SelectedGame?.DisplayName;
+        // Quando aberto pelo launcher: chat geral (sem jogo em foco).
+        // Quando aberto por hotkey/controle durante o jogo: focado no jogo em execução.
+        string? gameName = fromLauncher ? null : _runningGameName;
+
         var chatDialog = new AiAssistantDialog(provider, apiKey, gameName, viaGamepad, _xinput)
         {
             Owner = Application.Current.MainWindow

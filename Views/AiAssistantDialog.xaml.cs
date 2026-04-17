@@ -33,8 +33,8 @@ public partial class AiAssistantDialog : Window
             : "Assistente Gamer";
 
         AddAssistantMessage(gameName is not null
-            ? $"Ola! Estou pronto para ajudar com **{gameName}**. Qual e a sua duvida?"
-            : "Ola! Sou o GLauncher AI. Pergunte qualquer coisa sobre jogos!");
+            ? $"Ola! Estou pronto para te ajudar com **{gameName}**. Pode perguntar sobre dicas, puzzles, builds, segredos ou qualquer coisa do jogo!"
+            : "Ola! Sou o GLauncher AI, seu assistente gamer. Pode perguntar sobre qualquer jogo — dicas, analises, recomendacoes, builds e muito mais!");
 
         Loaded += (_, _) =>
         {
