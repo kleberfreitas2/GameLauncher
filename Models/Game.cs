@@ -220,8 +220,16 @@ public partial class Game : ObservableObject
             if (diff.TotalMinutes < 1)  return "Agora mesmo";
             if (diff.TotalHours   < 1)  return $"Há {(int)diff.TotalMinutes} min";
             if (diff.TotalDays    < 1)  return $"Há {(int)diff.TotalHours} h";
-            if (diff.TotalDays    < 7)  return $"Há {(int)diff.TotalDays} dias";
-            if (diff.TotalDays    < 30) return $"Há {(int)(diff.TotalDays / 7)} sem.";
+            if (diff.TotalDays    < 7)
+            {
+                var days = (int)diff.TotalDays;
+                return days == 1 ? "Há 1 dia" : $"Há {days} dias";
+            }
+            if (diff.TotalDays    < 30)
+            {
+                var weeks = (int)(diff.TotalDays / 7);
+                return weeks == 1 ? "Há 1 semana" : $"Há {weeks} semanas";
+            }
             return LastPlayed.Value.ToString("dd/MM/yyyy");
         }
     }

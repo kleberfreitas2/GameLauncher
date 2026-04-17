@@ -915,11 +915,11 @@ public partial class MainWindow : Window
             FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
             LineHeight = 18
         };
-        desc.Inlines.Add(new System.Windows.Documents.Run("Dicas, builds, segredos e analises com "));
-        var boldRun = new System.Windows.Documents.Run("inteligencia artificial")
+        desc.Inlines.Add(new System.Windows.Documents.Run("Dicas, segredos e análises com "));
+        var boldRun = new System.Windows.Documents.Run("inteligência artificial")
             { FontWeight = FontWeights.Bold, Foreground = accent };
         desc.Inlines.Add(boldRun);
-        desc.Inlines.Add(new System.Windows.Documents.Run(" na palma da mao."));
+        desc.Inlines.Add(new System.Windows.Documents.Run(" na palma da mão."));
 
         // --- Badge hotkey ---
         _calloutHotkeyBadge = new TextBlock

@@ -96,6 +96,16 @@
                 </StackPanel>
 
 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <StackPanel.Resources>
+                        <!-- Padroniza PackIcon no cabeçalho para alinhamento uniforme -->
+                        <Style TargetType="md:PackIcon">
+                            <Setter Property="Width" Value="20"/>
+                            <Setter Property="Height" Value="20"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0,0,6,0"/>
+                        </Style>
+                    </StackPanel.Resources>
 
 <Border Margin="0,0,12,0">
                         <Border.Style>
@@ -583,104 +593,105 @@
                         </Border.Style>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- BotÃ£o IA -->
-                    <Button ToolTip="GLauncher AI â€” Assistente Gamer"
+                            <!-- BotÃ£o IA -->
+                            <!-- BotÃ£o IA -->
+                            <Button ToolTip="GLauncher AI â€Assistente Gamer"
                             Command="{Binding OpenAiAssistantCommand}"
                             x:Name="BtnAi" Click="BtnAi_Click"
-                            Margin="0,0,4,0"
                             Style="{StaticResource HeaderIconButtonStyle}">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="AiBd" Background="Transparent" CornerRadius="14" Padding="4">
-                                    <md:PackIcon Kind="Robot" Width="20" Height="20" Foreground="#FF3B3B"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="AiBd" Property="Background" Value="#22FFFFFF"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                <Button.Template>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="AiBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                            <md:PackIcon Kind="Robot" Width="20" Height="20" Foreground="#FF3B3B"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="AiBd" Property="Background" Value="#22FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
 
 
-                    <Button x:Name="BtnGear" Click="BtnGear_Click"
+                            <Button x:Name="BtnGear" Click="BtnGear_Click"
                   ToolTip="Configurações"
                   Style="{StaticResource HeaderIconButtonStyle}">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="GearBd" Background="Transparent" CornerRadius="14" Padding="4">
-                                    <md:PackIcon Kind="CogOutline" Width="20" Height="20" Foreground="#8899AA"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="GearBd" Property="Background" Value="#22FFFFFF"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <Button.ContextMenu>
-                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Mode=Self}}">
-                                <MenuItem Header="Adicionar Jogo" Command="{Binding AddGameCommand}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="Plus" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Tema" Command="{Binding OpenThemeCommand}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="ThemeLightDark" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Sons (Ligar/Desligar)" Command="{Binding ToggleSoundCommand}"
+                                <Button.Template>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="GearBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                            <md:PackIcon Kind="CogOutline" Width="20" Height="20" Foreground="#8899AA"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="GearBd" Property="Background" Value="#22FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.ContextMenu>
+                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Mode=Self}}">
+                                        <MenuItem Header="Adicionar Jogo" Command="{Binding AddGameCommand}">
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="Plus" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Tema" Command="{Binding OpenThemeCommand}">
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="ThemeLightDark" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Sons (Ligar/Desligar)" Command="{Binding ToggleSoundCommand}"
                                           IsCheckable="True" IsChecked="{Binding IsSoundEnabled, Mode=OneWay}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="VolumeHigh" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="FPS Overlay no Jogo (Ligar/Desligar)" Command="{Binding ToggleFpsOverlayCommand}"
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="VolumeHigh" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="FPS Overlay no Jogo (Ligar/Desligar)" Command="{Binding ToggleFpsOverlayCommand}"
                                           IsCheckable="True" IsChecked="{Binding IsFpsOverlayEnabled, Mode=OneWay}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="Speedometer" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator/>
-                                <MenuItem Header="Alternar Favorito"
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="Speedometer" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator/>
+                                        <MenuItem Header="Alternar Favorito"
                           Command="{Binding ToggleFavoriteCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <MenuItem Header="Alterar Imagem"
+                                        <MenuItem Header="Alterar Imagem"
                           Command="{Binding ChangeImageCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <MenuItem Header="Buscar Capa Online"
+                                        <MenuItem Header="Buscar Capa Online"
                           Command="{Binding SearchCoverCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <MenuItem Header="Buscar Fundo (Screenshot/Key Art)"
+                                        <MenuItem Header="Buscar Fundo (Screenshot/Key Art)"
                           Command="{Binding SearchBackgroundCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <MenuItem Header="Buscar Info IGDB"
+                                        <MenuItem Header="Buscar Info IGDB"
                           Command="{Binding FetchIgdbInfoCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <MenuItem Header="Re-escanear Tecnologias"
+                                        <MenuItem Header="Re-escanear Tecnologias"
                           Command="{Binding RescanGameTechCommand}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="Gpu" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="RecomendaÃ§Ã£o GrÃ¡fica (Hardware)"
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="Gpu" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="RecomendaÃ§Ã£o GrÃ¡fica (Hardware)"
                           Command="{Binding OpenHwRecommendationCommand}">
-                                    <MenuItem.Icon>
-                                        <md:PackIcon Kind="Chip" Width="16" Height="16"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Renomear"
+                                            <MenuItem.Icon>
+                                                <md:PackIcon Kind="Chip" Width="16" Height="16"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Renomear"
                           Command="{Binding RenameGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                                <Separator/>
-                                <MenuItem Header="Remover Jogo"
+                                        <Separator/>
+                                        <MenuItem Header="Remover Jogo"
                           Command="{Binding RemoveGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
-                    </StackPanel>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </StackPanel>
                     </Border>
 
                     <!-- Big Picture Toggle -->
@@ -691,7 +702,7 @@
                             <ControlTemplate TargetType="{x:Type Button}">
                                 <Grid>
                                     <Border x:Name="BpBd" Background="Transparent" CornerRadius="14" Padding="4">
-                                        <md:PackIcon Kind="{Binding BigPictureIcon}" Width="20" Height="20" Foreground="#8899AA"/>
+                                        <md:PackIcon x:Name="BpIcon" Kind="{Binding BigPictureIcon}" Width="20" Height="20" Foreground="#8899AA"/>
                                     </Border>
                                     <!-- Badge BETA -->
                                     <Border Background="#E65100" CornerRadius="4"
@@ -705,6 +716,9 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="BpBd" Property="Background" Value="#22FFFFFF"/>
                                     </Trigger>
+                                    <DataTrigger Binding="{Binding IsBigPictureMode}" Value="True">
+                                        <Setter TargetName="BpIcon" Property="Foreground" Value="#00E676"/>
+                                    </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
@@ -832,7 +846,7 @@
                   VerticalAlignment="Top" HorizontalAlignment="Center"
                   Margin="0,100,0,0" Padding="30,18">
                     <StackPanel HorizontalAlignment="Center" Width="280">
-                        <TextBlock Text="Carregando animaÃ§Ã£o..." FontSize="14" Foreground="#CCDDEE"
+                        <TextBlock Text="Carregando animação..." FontSize="14" Foreground="#CCDDEE"
                          HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <ProgressBar Value="{Binding LoadingProgress, ElementName=BackgroundAnim, Mode=OneWay}"
                            Minimum="0" Maximum="100" Height="8"
@@ -999,7 +1013,7 @@
                         </Button.Template>
                     </Button>
 
-                    <TextBlock Text="ðŸ’¡ Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
+                    <TextBlock Text="💡 Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
                                FontSize="11" Foreground="#556677" HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"/>
                 </StackPanel>
@@ -1022,7 +1036,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Badge BETA â€” canto superior esquerdo, visÃ­vel sÃ³ no Big Picture -->
+                <!-- Badge BETA — canto superior esquerdo, visível só no Big Picture -->
                 <Border Grid.Row="0"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Margin="18,14,0,0"
@@ -1045,7 +1059,7 @@
                             <TextBlock Text="BETA" FontSize="9" FontWeight="Bold"
                                        Foreground="White" FontFamily="Segoe UI"/>
                         </Border>
-                        <TextBlock Text="Modo Big Picture â€” em teste para TVs"
+                        <TextBlock Text="Modo Big Picture — em teste para TVs"
                                    FontSize="10" Foreground="#AABBCC"
                                    FontFamily="Segoe UI" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -1159,20 +1173,20 @@
                             </Grid>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#AABBCC" Margin="0,0,20,0">
-                                    <Run Text="â±" /><Run Text=" "/><Run Text="{Binding DetailGame.PlayTimeDisplay, Mode=OneWay}"/>
+                                    <Run Text="⏱" /><Run Text=" "/><Run Text="{Binding DetailGame.PlayTimeDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#AABBCC" Margin="0,0,20,0">
-                                    <Run Text="ðŸŽ®" /><Run Text=" "/><Run Text="{Binding DetailGame.GenresDisplay, Mode=OneWay}"/>
+                                    <Run Text="🎮" /><Run Text=" "/><Run Text="{Binding DetailGame.GenresDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#FFD700">
-                                    <Run Text="â­" /><Run Text=" "/><Run Text="{Binding DetailGame.RatingDisplay, Mode=OneWay}"/>
+                                    <Run Text="★" /><Run Text=" "/><Run Text="{Binding DetailGame.RatingDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                             <TextBlock Text="{Binding DetailGame.SummaryDisplay}" FontSize="15" FontWeight="SemiBold" Foreground="#99AABB"
                                        TextWrapping="Wrap" MaxHeight="100" TextTrimming="CharacterEllipsis"/>
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                 <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#667788" Margin="0,0,24,0">
-                                    <Run Text="Ãšltima vez:" /><Run Text=" "/><Run Text="{Binding DetailGame.LastPlayedText, Mode=OneWay}"/>
+                                    <Run Text="Última vez:" /><Run Text=" "/><Run Text="{Binding DetailGame.LastPlayedText, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#667788" Text="{Binding DetailGame.PlatformSource}"/>
                             </StackPanel>
@@ -1560,7 +1574,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Local de instalaÃ§Ã£o" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="Local de instalação" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.InstallDirectory}" FontSize="13"
                                Foreground="#5599CC" TextTrimming="CharacterEllipsis"
                                ToolTip="{Binding DetailGame.InstallDirectory}"/>
@@ -1586,7 +1600,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="GÃªnero" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="Gênero" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.GenresDisplay}" FontSize="13" Foreground="#5599CC" TextWrapping="Wrap"/>
                                     </Grid>
                                     <Grid Margin="0,0,0,5">
@@ -1602,7 +1616,7 @@
                                             <ColumnDefinition Width="155"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="LanÃ§amento" FontSize="13" Foreground="#778899"/>
+                                        <TextBlock Text="Lançamento" FontSize="13" Foreground="#778899"/>
                                         <TextBlock Grid.Column="1" Text="{Binding DetailGame.YearDisplay}" FontSize="13" Foreground="#5599CC"/>
                                     </Grid>
                                 </StackPanel>
@@ -1635,7 +1649,7 @@
                                 <!-- BotÃ£o RecomendaÃ§Ã£o GrÃ¡fica -->
                                 <Button Grid.Column="1" Command="{Binding OpenHwRecommendationCommand}"
                                         Cursor="Hand" BorderThickness="0" Background="Transparent"
-                                        Padding="0" ToolTip="AnÃ¡lise de Hardware â€” RecomendaÃ§Ã£o GrÃ¡fica"
+                                        Padding="0" ToolTip="Análise de Hardware — Recomendação Gráfica"
                                         VerticalAlignment="Center" Margin="0,0,6,0">
                                     <StackPanel Orientation="Horizontal">
                                         <md:PackIcon Kind="Chip" Width="15" Height="15" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
@@ -1931,7 +1945,7 @@
                     Background="{DynamicResource AccentBrush}"
                     Opacity="0.85"/>
 
-            <!-- Camada 6: Overlay de fade final (preto â†’ transparente) -->
+            <!-- Camada 6: Overlay de fade final (preto â†ansparente) -->
             <Border x:Name="BpFadeOut"
                     Background="Black"
                     Opacity="0"/>
