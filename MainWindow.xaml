@@ -836,6 +836,9 @@
                                         <MenuItem Header="Alterar Imagem"
                           Command="{Binding ChangeImageCommand}"
                           CommandParameter="{Binding DetailGame}"/>
+                                        <MenuItem Header="Alterar Logotipo"
+                          Command="{Binding ChangeLogoCommand}"
+                          CommandParameter="{Binding DetailGame}"/>
                                         <MenuItem Header="Buscar Capa Online"
                           Command="{Binding SearchCoverCommand}"
                           CommandParameter="{Binding DetailGame}"/>

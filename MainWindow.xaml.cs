@@ -49,6 +49,7 @@ public partial class MainWindow : Window
     // Easter Egg
     private int _logoClickCount;
     private System.Windows.Threading.DispatcherTimer? _logoClickTimer;
+
     private static readonly string[] EggMessages =
     [
         "🎮 Você encontrou o Easter Egg!",
@@ -118,6 +119,9 @@ public partial class MainWindow : Window
 
             // Serviço de transição Big Picture
             _bpTransition = new BigPictureTransitionService(this);
+
+            // Evento para selecionar logotipo
+
 
             // Interceptar o botão Big Picture para substituir pelo toggle animado
             if (DataContext is MainViewModel bpVm)
