@@ -17,6 +17,12 @@ public partial class Game : ObservableObject
         }
     }
 
+    [JsonIgnore]
+    public bool SupportsXboxController => Platforms?.Contains("Xbox", StringComparison.OrdinalIgnoreCase) == true;
+
+    [JsonIgnore]
+    public bool SupportsPlayStationController => Platforms?.Contains("PlayStation", StringComparison.OrdinalIgnoreCase) == true;
+
     public void NotifyTagsChanged()
     {
         OnPropertyChanged(nameof(Tags));
@@ -91,6 +97,38 @@ public partial class Game : ObservableObject
     [NotifyPropertyChangedFor(nameof(YearDisplay))]
     private int? releaseYear;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ControlsDisplay))]
+    [NotifyPropertyChangedFor(nameof(PlatformsDisplay))]
+    [NotifyPropertyChangedFor(nameof(SupportsXboxController))]
+    [NotifyPropertyChangedFor(nameof(SupportsPlayStationController))]
+    private string? platforms;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GameModesDisplay))]
+    private string? gameModes;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlayerPerspectivesDisplay))]
+    private string? playerPerspectives;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ThemesDisplay))]
+    private string? themes;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DevelopersDisplay))]
+    private string? developers;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PublishersDisplay))]
+    private string? publishers;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FranchisesDisplay))]
+    private string? franchises;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GameEnginesDisplay))]
+    private string? gameEngines;
+
+    [ObservableProperty]
+    private List<string> screenshots = [];
+
     public bool    IsSummaryTranslated { get; set; }
 
     public GameTechInfo? TechInfo { get; set; }
@@ -103,6 +141,28 @@ public partial class Game : ObservableObject
     public string RatingDisplay  => IgdbRating.HasValue ? $"{IgdbRating.Value:F0} / 100" : "—";
     public string YearDisplay    => ReleaseYear?.ToString() ?? "—";
     public string GenresDisplay  => !string.IsNullOrEmpty(Genres) ? Genres : "—";
+    public string PlatformsDisplay => !string.IsNullOrEmpty(Platforms) ? Platforms : "—";
+    public string GameModesDisplay => !string.IsNullOrEmpty(GameModes) ? GameModes : "—";
+    public string PlayerPerspectivesDisplay => !string.IsNullOrEmpty(PlayerPerspectives) ? PlayerPerspectives : "—";
+    public string ThemesDisplay => !string.IsNullOrEmpty(Themes) ? Themes : "—";
+    public string DevelopersDisplay => !string.IsNullOrEmpty(Developers) ? Developers : "—";
+    public string PublishersDisplay => !string.IsNullOrEmpty(Publishers) ? Publishers : "—";
+    public string FranchisesDisplay => !string.IsNullOrEmpty(Franchises) ? Franchises : "—";
+    public string GameEnginesDisplay => !string.IsNullOrEmpty(GameEngines) ? GameEngines : "—";
+    public string ControlsDisplay
+    {
+        get
+        {
+            var values = new List<string> { "Teclado e mouse" };
+            var platformText = Platforms ?? string.Empty;
+            if (platformText.Contains("Xbox", StringComparison.OrdinalIgnoreCase))
+                values.Add("Xbox One / Series X|S");
+            if (platformText.Contains("PlayStation", StringComparison.OrdinalIgnoreCase))
+                values.Add("PlayStation 4 / 5");
+            values.Add("Controle Xbox One / Series X|S");
+            return string.Join(" • ", values);
+        }
+    }
     public string SummaryDisplay => !string.IsNullOrEmpty(Summary) ? Summary : "Sem descrição disponível.";
 
     private static readonly HashSet<string> _binSubfolders = new(StringComparer.OrdinalIgnoreCase)

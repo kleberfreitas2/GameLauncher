@@ -5,7 +5,7 @@
 ; ============================================================
 
 #define MyAppName      "GLauncher"
-#define MyAppVersion   "2.6.0"
+#define MyAppVersion   "2.7.0"
 #define MyAppPublisher "Kleber Freitas"
 #define MyAppURL       "https://github.com/kleberfreitas2/GameLauncher"
 #define MyAppExeName   "GameLauncher.exe"
@@ -46,7 +46,7 @@ LZMANumBlockThreads=4
 WizardStyle=modern
 WizardSizePercent=120,120
 WizardImageFile=WizardImage.bmp
-WizardSmallImageFile=WizardSmallImage.bmp
+; O ícone oficial do GLauncher é usado na barra de título via SetupIconFile.
 
 ; Permissões
 PrivilegesRequired=lowest
@@ -102,13 +102,14 @@ Root: HKCU; Subkey: "Software\{#MyAppPublisher}\{#MyAppName}"; ValueType: string
 // ============================================================
 
 const
-  GLAUNCHER_BG        = $1A1A2E;  // Fundo escuro
-  GLAUNCHER_BG_LIGHT  = $16213E;  // Fundo do painel
-  GLAUNCHER_ACCENT    = $E6B800;  // Dourado (invertido para BGR)
-  GLAUNCHER_GREEN     = $76E600;  // Verde neon (BGR)
+  // As cores do Inno Setup usam a ordem BGR.
+  GLAUNCHER_BG        = $140D0D;  // #0D0D14
+  GLAUNCHER_BG_LIGHT  = $2A1630;  // #30162A
+  GLAUNCHER_ACCENT    = $FF4D7C;  // #7C4DFF - roxo do launcher
+  GLAUNCHER_GREEN     = $FF4D7C;  // compatibilidade: agora também roxo
   GLAUNCHER_TEXT       = $FFFFFF;  // Branco
-  GLAUNCHER_TEXT_DIM   = $AA9988;  // Texto secundário
-  GLAUNCHER_BORDER     = $503522;  // Borda sutil
+  GLAUNCHER_TEXT_DIM   = $D0A8B0;  // #B0A8D0
+  GLAUNCHER_BORDER     = $703A4A;  // #4A3A70
 
 procedure InitializeWizard();
 begin
@@ -117,30 +118,34 @@ begin
 
   // Painel principal (cabeçalho)
   WizardForm.MainPanel.Color := GLAUNCHER_BG_LIGHT;
+  WizardForm.WizardSmallBitmapImage.Visible := False;
 
   // Título e descrição
   WizardForm.PageNameLabel.Font.Color := GLAUNCHER_GREEN;
-  WizardForm.PageNameLabel.Font.Size := 14;
+  WizardForm.PageNameLabel.Font.Size := 10;
   WizardForm.PageNameLabel.Font.Style := [fsBold];
   WizardForm.PageDescriptionLabel.Font.Color := GLAUNCHER_TEXT_DIM;
-  WizardForm.PageDescriptionLabel.Font.Size := 10;
+  WizardForm.PageDescriptionLabel.Font.Size := 8;
 
   // Labels de boas-vindas
   WizardForm.WelcomeLabel1.Font.Color := GLAUNCHER_GREEN;
-  WizardForm.WelcomeLabel1.Font.Size := 22;
+  WizardForm.WelcomeLabel1.Font.Size := 17;
   WizardForm.WelcomeLabel1.Font.Style := [fsBold];
   WizardForm.WelcomeLabel2.Font.Color := GLAUNCHER_TEXT;
-  WizardForm.WelcomeLabel2.Font.Size := 10;
+  WizardForm.WelcomeLabel2.Font.Size := 8;
 
   // Página de finalização
   WizardForm.FinishedHeadingLabel.Font.Color := GLAUNCHER_GREEN;
-  WizardForm.FinishedHeadingLabel.Font.Size := 22;
+  WizardForm.FinishedHeadingLabel.Font.Size := 17;
   WizardForm.FinishedHeadingLabel.Font.Style := [fsBold];
   WizardForm.FinishedLabel.Font.Color := GLAUNCHER_TEXT;
+  WizardForm.FinishedLabel.Font.Size := 8;
 
   // Página de diretório
   WizardForm.DirEdit.Color := GLAUNCHER_BG_LIGHT;
   WizardForm.DirEdit.Font.Color := GLAUNCHER_TEXT;
+  WizardForm.SelectDirLabel.Font.Color := GLAUNCHER_TEXT;
+  WizardForm.SelectDirBitmapImage.Visible := False;
 
   // Label de status
   WizardForm.StatusLabel.Font.Color := GLAUNCHER_TEXT_DIM;
@@ -158,6 +163,10 @@ begin
   // Ready Memo
   WizardForm.ReadyMemo.Color := GLAUNCHER_BG;
   WizardForm.ReadyMemo.Font.Color := GLAUNCHER_TEXT;
+
+  WizardForm.DiskSpaceLabel.Font.Color := GLAUNCHER_TEXT_DIM;
+  WizardForm.FilenameLabel.Font.Color := GLAUNCHER_TEXT_DIM;
+  WizardForm.StatusLabel.Font.Color := GLAUNCHER_TEXT_DIM;
 end;
 
 // Verificar se o GLauncher já está rodando

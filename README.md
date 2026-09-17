@@ -1,14 +1,14 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.5.0
+  # GLauncher V.2.7.0
 
-  **Launcher de jogos pessoal estilo PS5 — feito com WPF e .NET 8**
+  **Launcher de jogos pessoal com interface inspirada em consoles — feito com WPF e .NET 8**
 
   ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)
   ![WPF](https://img.shields.io/badge/WPF-Windows-0078D4?style=flat-square&logo=windows)
   ![C#](https://img.shields.io/badge/C%23-12.0-239120?style=flat-square&logo=csharp)
-  ![SkiaSharp](https://img.shields.io/badge/SkiaSharp-3.119-0B8AC9?style=flat-square)
+  ![SkiaSharp](https://img.shields.io/badge/SkiaSharp-4.152-0B8AC9?style=flat-square)
   ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square)
   ![Discord](https://img.shields.io/badge/Discord-Integration-5865F2?style=flat-square&logo=discord&logoColor=white)
   ![Epic Games](https://img.shields.io/badge/Epic_Games-Integration-2F2D2E?style=flat-square&logo=epicgames&logoColor=white)
@@ -20,7 +20,7 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com visual moderno inspirado no **PlayStation 5**, fundos animados (WEBP/GIF), busca automática de capas e informações, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos) e suporte completo a controles **Xbox** e **PlayStation** (DualSense/DualShock).
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com uma interface inspirada em consoles, busca automática de capas e informações, fundos de jogo estáticos, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos) e suporte a controles via **XInput e HID**.
 
 
 <div align="center">
@@ -29,7 +29,7 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### Baixe a última versão do GLauncher na aba Releases:
 
-### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.5.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest) 👈
+### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.7.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest) 👈
 
 > **Não precisa instalar!** Basta extrair o `.zip` e executar o `GameLauncher.exe`.
 >
@@ -45,36 +45,35 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### 🎮 Biblioteca de Jogos
 - Adicionar jogos individualmente ou vários de uma vez via seleção de `.exe`
-- Lançar jogos diretamente pelo launcher com botão **JOGAR** estilo PS5
+- Lançar jogos diretamente pelo launcher com botão **JOGAR** inspirado em interfaces de consoles
 - Launcher **minimiza automaticamente** ao jogar e restaura quando o jogo fecha
 - Renomear jogos (nome de exibição independente do executável)
 - Remover jogos da biblioteca (não desinstala)
 - Marcar/desmarcar **favoritos** (favoritos aparecem primeiro com estrela ⭐)
-- Carrossel horizontal com cards de capa — visual inspirado no PS5
+- Carrossel de jogos com cards de capa — visual inspirado em consoles
 - Persistência automática em JSON (`%AppData%\GameLauncher\`)
 
-### 🖼️ Capas, Logos e Fundos Animados (SteamGridDB)
+### 🖼️ Capas, Logos e Fundos (SteamGridDB)
 Busca automática e manual de assets visuais via **SteamGridDB**:
 
 | Asset | Descrição |
 |-------|-----------|
 | **Capas (Grids)** | Exibidas no carrossel de jogos |
 | **Logos** | Exibidos sobre o fundo do jogo selecionado |
-| **Fundos (Heroes)** | Imagem de fundo com suporte a **WEBP/GIF animado** |
+| **Fundos (Heroes)** | Imagem de fundo; WEBP/GIF usam o primeiro frame no fundo principal |
 | **Ícones** | Exibidos junto ao nome do jogo |
 
 - Busca visual de capas: menu ⚙️ → "Buscar Capa Online" — grid com miniaturas para seleção
-- Busca visual de fundos: menu ⚙️ → "Buscar Fundo" — previews animados para seleção
+- Busca visual de fundos: menu ⚙️ → "Buscar Fundo" — previews para seleção
 - Troca manual de imagem por arquivo local
 - Extração automática de ícone do `.exe` do jogo
 - Credenciais SteamGridDB já embutidas — **funciona sem configuração**
 
-### 🎬 Fundos Animados (SkiaSharp)
-- Decodificação assíncrona de WEBP animado e GIF via **SkiaSharp**
-- Renderização em **60 FPS** com `CompositionTarget.Rendering`
-- WriteableBitmap com suporte a DPI (alta resolução)
+### 🎬 Fundos e Pré-visualizações (SkiaSharp)
+- Pré-visualização de WEBP/GIF com **SkiaSharp** na tela de seleção
+- Fundo principal carregado com foco em abertura rápida e estabilidade
+- Suporte a imagens de alta resolução e DPI
 - Indicador de progresso durante carregamento
-- Bloqueio de interface durante decode para evitar conflitos
 
 ### 📊 Informações IGDB
 Busca automática de metadados via **IGDB** (Internet Game Database):
@@ -105,6 +104,18 @@ Login com conta Discord via **OAuth2** e **Rich Presence** automático ao jogar:
 - O status é limpo automaticamente quando o jogo fecha
 
 > 💡 Basta ter o Discord aberto no PC — o Rich Presence é detectado automaticamente.
+
+### 🤖 GLauncher AI
+- Assistente integrado para dúvidas sobre o jogo em execução ou sobre a biblioteca
+- Chat com teclado virtual navegável por controle
+- Atalho global configurável por fallback (`Ctrl+Shift+A`, `Ctrl+Shift+G`, `Ctrl+F12` ou `Alt+F12`)
+- Ao abrir durante um jogo, o processo é pausado temporariamente para que o controle funcione somente no chat
+- O jogo e o foco do controle são restaurados ao fechar o assistente
+
+### 🏆 Troféus e Big Picture
+- Sistema local de troféus para acompanhar o uso do launcher e ações realizadas
+- Modo Big Picture com interface ampliada e transição visual
+- Navegação por controle com zonas para cabeçalho, ações e carrossel
 
 ### 🎮 Integração Epic Games
 Importação automática de jogos instalados via **Epic Games Store**:
@@ -148,7 +159,9 @@ Gauges circulares em tempo real no rodapé + descrições do hardware:
 - Temas são aplicados em tempo real e salvos automaticamente
 
 ### 🕹️ Suporte a Controle (Gamepad)
-Navegação completa com gamepad — suporta **Xbox** (XInput) e **PlayStation** (DualSense / DualShock 4 via HID):
+Navegação completa com gamepad — suporta controles **XInput** e **HID**:
+
+- Compatibilidade testada/documentada: Xbox One, Xbox Series X|S, PlayStation 5 (DualSense) e PlayStation 4 (DualShock 4)
 
 **Navegação por Zonas** — a interface é dividida em 3 zonas (Header / Ações / Carrossel), alternadas com D-Pad ▲▼. A zona ativa exibe uma borda verde brilhante.
 
@@ -167,7 +180,7 @@ Navegação completa com gamepad — suporta **Xbox** (XInput) e **PlayStation**
 
 **Nível de bateria 🔋** — exibido no cabeçalho com ícone e percentual colorido (verde → amarelo → vermelho).
 
-O ícone do controle no cabeçalho fica 🟢 verde quando conectado. Os rótulos dos botões se adaptam ao tipo de controle (Xbox / PlayStation).
+O ícone do controle no cabeçalho fica 🟢 verde quando conectado. Os rótulos dos botões se adaptam ao tipo de controle.
 
 ### 🔊 Efeitos Sonoros
 Sons estilo console gerados programaticamente (sem arquivos de áudio externos):
@@ -186,7 +199,7 @@ Sons podem ser ativados/desativados pelo menu ⚙️ → "Sons (Ligar/Desligar)"
 
 ### 🚀 Minimizar ao Jogar
 - Ao iniciar um jogo, o launcher **minimiza automaticamente**
-- O polling do controle é **pausado** (libera o gamepad para o jogo)
+- O launcher ignora comandos do controle enquanto o jogo está em execução, deixando o gamepad disponível para o jogo
 - Quando o jogo fecha, a janela é **restaurada** e o controle é retomado
 
 ### ⚙️ Menu de Opções (Engrenagem)
@@ -197,13 +210,13 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 | Alternar Favorito | Marca/desmarca como favorito ⭐ |
 | Alterar Imagem | Escolhe imagem local para a capa |
 | Buscar Capa Online | Busca capas no SteamGridDB com seleção visual |
-| Buscar Fundo | Busca fundos animados (heroes) com preview |
+| Buscar Fundo | Busca heroes e key arts com preview |
 | Buscar Info IGDB | Busca sinopse, gênero, nota e ano |
 | Renomear | Altera o nome de exibição |
 | Remover Jogo | Remove da biblioteca (não desinstala) |
 
 ### 📖 Manual Integrado
-- Manual interativo com **15 páginas** acessível pelo ícone ❓ no cabeçalho
+- Manual interativo com **14 páginas** acessível pelo ícone ❓ no cabeçalho
 - Navegação lateral com sidebar
 - Navegável por gamepad (D-Pad ▲▼ + B para fechar, analógico direito para scroll)
 - Cobre todas as funcionalidades do launcher
@@ -220,7 +233,7 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 GameLauncher/
 ├── Assets/                       # Ícones e recursos visuais
 ├── Controls/
-│   ├── AnimatedImage.cs          # Image customizado para WEBP/GIF animado (SkiaSharp)
+│   ├── AnimatedImage.cs          # Image customizado para fundos e imagens (SkiaSharp)
 │   └── ArcGauge.xaml             # Controle de gauge circular para hardware
 ├── Converters/
 │   ├── EqualityConverter.cs      # Comparação genérica para bindings
@@ -247,18 +260,18 @@ GameLauncher/
 │   ├── SteamService.cs           # Integração Steam (perfil, jogos instalados)
 │   ├── TranslationService.cs     # Tradução automática para PT-BR
 │   ├── XboxLiveService.cs        # Integração Xbox Live (login, perfil, jogos)
-│   └── XInputService.cs          # Gamepad XInput + HID (Xbox + PlayStation)
+│   └── XInputService.cs          # Gamepad XInput + HID
 ├── ViewModels/
 │   └── MainViewModel.cs          # ViewModel principal (MVVM)
 ├── Views/
 │   ├── ApiKeyDialog.xaml          # Cadastro de API Key SteamGridDB
-│   ├── BackgroundSearchDialog.xaml # Busca e preview de fundos animados
+│   ├── BackgroundSearchDialog.xaml # Busca e preview de fundos
 │   ├── CoverSearchDialog.xaml     # Busca e seleção de capas online
 │   ├── DiscordProfileDialog.xaml   # Perfil Discord (avatar, nome, logout)
 │   ├── DiscordSetupDialog.xaml    # Configuração Discord Client ID
 │   ├── EpicProfileDialog.xaml     # Perfil Epic Games (jogos, importar)
 │   ├── EpicSetupDialog.xaml       # Configuração Epic Games
-│   ├── HelpDialog.xaml            # Manual interativo (15 páginas)
+│   ├── HelpDialog.xaml            # Manual interativo (14 páginas)
 │   ├── IgdbGameInfoDialog.xaml    # Seleção de resultado IGDB
 │   ├── IgdbSetupDialog.xaml       # Configuração de credenciais IGDB
 │   ├── FpsOverlayWindow.xaml      # Overlay FPS em tempo real
@@ -268,7 +281,7 @@ GameLauncher/
 │   ├── ThemeDialog.xaml           # Seleção de temas
 │   ├── XboxProfileDialog.xaml     # Perfil Xbox (Gamertag, Gamerscore, importar)
 │   └── XboxSetupDialog.xaml       # Configuração Xbox Client ID
-├── MainWindow.xaml                # Janela principal (PS5-style)
+├── MainWindow.xaml                # Janela principal inspirada em consoles
 ├── app.manifest                   # Elevação para administrador
 └── GameLauncher.csproj            # Projeto .NET 8
 ```
@@ -281,14 +294,14 @@ GameLauncher/
 
 | Pacote | Versão | Uso |
 |--------|--------|-----|
-| [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.2.2 | MVVM / source generators |
-| [MaterialDesignThemes](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit) | 5.1.0 | UI / ícones / estilos Material Design |
+| [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.2 | MVVM / source generators |
+| [MaterialDesignThemes](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit) | 5.3.2 | UI / ícones / estilos Material Design |
 | [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | 0.9.6 | Leitura de sensores (CPU, GPU, RAM, temperaturas) |
-| [SkiaSharp](https://github.com/mono/SkiaSharp) | 3.119.2 | Decodificação de WEBP/GIF animado |
+| [SkiaSharp](https://github.com/mono/SkiaSharp) | 4.152.0 | Decodificação de imagens |
 | [craftersmine.SteamGridDB.Net](https://github.com/craftersmine/SteamGridDB.Net) | 1.1.7 | API de capas, logos, fundos e ícones |
-| [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) | 4.67.2 | Xbox Live OAuth2 (MSAL) |
-| [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common) | 8.0.0 | Extração de ícones de executáveis |
-| [System.Management](https://www.nuget.org/packages/System.Management) | 10.0.2 | WMI — detecção de drives de armazenamento |
+| [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) | 4.89.0 | Xbox Live OAuth2 (MSAL) |
+| [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common) | 10.0.12 | Extração de ícones de executáveis |
+| [System.Management](https://www.nuget.org/packages/System.Management) | 10.0.12 | WMI — detecção de drives de armazenamento |
 
 ---
 
@@ -314,13 +327,13 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 1. O launcher abre e já está pronto — **credenciais de API já estão embutidas** (SteamGridDB + IGDB + Discord)
 2. Clique em **`+ ADICIONAR JOGO`** e selecione o(s) `.exe` do(s) jogo(s)
-3. O GLauncher busca automaticamente: ícone, capa, logo, fundo animado, sinopse, gênero, nota e ano
+3. O GLauncher busca automaticamente: ícone, capa, logo, fundo, sinopse, gênero, nota e ano
 4. Descrições são traduzidas automaticamente para **Português**
 5. Para alterar o tema: clique em **`TEMA`** no cabeçalho
 6. Para trocar o avatar: clique na foto no canto superior direito
 7. Para opções do jogo: clique no ícone ⚙️ no cabeçalho
 8. Para ajuda: clique no ícone ❓ azul para abrir o manual integrado
-9. Conecte um **controle Xbox ou PlayStation** para navegar com gamepad
+9. Conecte um controle de console compatível para navegar com gamepad
 10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
 11. Clique em **`EPIC`** no cabeçalho para importar jogos da **Epic Games Store**
 
@@ -334,7 +347,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │          ┌─────────────────────────────────────────────┐                 │
-│          │           🎬 Fundo Animado (WEBP/GIF)       │                 │
+│          │           🎬 Fundo do jogo                  │                 │
 │          │                                             │                 │
 │          │    🏷️ Logo do Jogo                          │                 │
 │          │    [▶ JOGAR]                                │                 │
@@ -374,7 +387,7 @@ Todos os dados são salvos em `%AppData%\GameLauncher\`:
 ├── discord_token.json # Token de sessão Discord (OAuth2 refresh token)
 ├── icons/           # Cache de ícones extraídos (.png)
 ├── covers/          # Capas e logos baixados do SteamGridDB
-├── backgrounds/     # Fundos animados (WEBP/GIF)
+├── backgrounds/     # Fundos dos jogos
 ```
 
 ---

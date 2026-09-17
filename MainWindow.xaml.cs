@@ -813,6 +813,26 @@ public partial class MainWindow : Window
         }
     }
 
+    private void YoutubeFooter_Click(object sender, RoutedEventArgs e)
+        => BtnYoutube_Click(sender, e);
+
+    private void Screenshot_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Image image || image.DataContext is not string screenshotUrl)
+            return;
+
+        if (DataContext is not MainViewModel vm || vm.DetailGame?.Screenshots is not { Count: > 0 } screenshots)
+            return;
+
+        var index = screenshots.IndexOf(screenshotUrl);
+        var viewer = new Views.ScreenshotViewerDialog(screenshots, Math.Max(0, index))
+        {
+            Owner = this
+        };
+        viewer.ShowDialog();
+        e.Handled = true;
+    }
+
     private static List<MenuItem> CollectMenuItems(ContextMenu ctx)
     {
         var items = new List<MenuItem>();
@@ -1117,8 +1137,15 @@ public partial class MainWindow : Window
         if (SettingsService.Current.AiNotificationCount >= AiCalloutMaxShows) return;
 
         var delay = new System.Windows.Threading.DispatcherTimer
-            { Interval = TimeSpan.FromSeconds(3) };
-        delay.Tick += (_, _) => { delay.Stop(); BuildAndShowCallout(); };
+            { Interval = TimeSpan.FromSeconds(8) };
+        delay.Tick += (_, _) =>
+        {
+            delay.Stop();
+            // O aviso da IA não pode competir com a inicialização da interface
+            // nem bloquear o primeiro uso do launcher.
+            Dispatcher.BeginInvoke(BuildAndShowCallout,
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        };
         delay.Start();
     }
 

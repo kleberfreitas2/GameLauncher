@@ -53,7 +53,9 @@ public partial class IgdbGameInfoDialog : Window
         StatusText.Visibility   = Visibility.Collapsed;
         ResultsList.ItemsSource = games;
         ResultsList.Visibility  = Visibility.Visible;
-        ResultsList.SelectedIndex = 0;
+
+        var best = IgdbGame.SelectBestMatch(term, games);
+        ResultsList.SelectedItem = best;
     }
 
     private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)

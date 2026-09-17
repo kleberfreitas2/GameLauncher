@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
@@ -288,6 +290,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _dispatcher = Dispatcher.CurrentDispatcher;
 
+        // O controle deve estar disponível antes da inicialização pesada
+        // (hardware, contas e serviços online), para que a interface já abra
+        // responsiva.
+        _xinput = new XInputService();
+        _xinput.ButtonPressed += OnGamepadButton;
+        _xinput.ConnectionChanged += OnGamepadConnectionChanged;
+        _xinput.RightStickY += OnRightStickY;
+        _xinput.BatteryChanged += OnBatteryChanged;
+        _xinput.AiComboTriggered += OnAiComboTriggered;
+        _xinput.Start();
+
         _gamesView = CollectionViewSource.GetDefaultView(Games);
         _gamesView.Filter = obj =>
             obj is Game g &&
@@ -355,14 +368,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _hwMonitor = null;
         }
-
-        _xinput = new XInputService();
-        _xinput.ButtonPressed += OnGamepadButton;
-        _xinput.ConnectionChanged += OnGamepadConnectionChanged;
-        _xinput.RightStickY += OnRightStickY;
-        _xinput.BatteryChanged += OnBatteryChanged;
-        _xinput.AiComboTriggered += OnAiComboTriggered;
-        _xinput.Start();
 
         // ── Troféus: subscrever ANTES dos restores de plataformas ────────────
         _trophyService.TrophyUnlocked += OnTrophyUnlocked;
@@ -574,6 +579,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SoundService.PlayNavigate();
             ScanGameTech(value);
             _trophyService.OnGameDetailOpened();
+
+            // Jogos salvos antes dos metadados estendidos do IGDB podem conter
+            // descrição/plataforma incorretas. Atualiza esses registros uma
+            // única vez ao selecioná-los, usando a busca exata/fallback seguro.
+            if (!string.IsNullOrWhiteSpace(value.Summary) &&
+                (string.IsNullOrWhiteSpace(value.Platforms) ||
+                 value.Platforms.Contains("Android", StringComparison.OrdinalIgnoreCase) ||
+                 value.Screenshots.Count == 0))
+                _ = AutoFetchIgdbAsync(value);
         }
         else
         {
@@ -758,6 +772,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StatusMessage = $"{Games.Count} jogos na biblioteca";
         _trophyService.OnGameAdded(Games.Count);
 
+        // O primeiro jogo adicionado deve assumir a seleção imediatamente,
+        // exibindo o fundo e o painel de detalhes sem exigir um clique extra.
+        if (SelectedGame is null)
+        {
+            _selectedIndex = 0;
+            SelectedGame = newGames[0];
+        }
+
         foreach (var game in newGames)
         {
             await AutoFetchAllWithProgressAsync(game);
@@ -819,7 +841,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     if (path is not null) game.LogoPath = path;
                 }
             }
-            progressDialog.UpdateProgress(30, "Logo concluído!");
+            progressDialog.UpdateProgress(30, "Logo concluída!");
 
             progressDialog.UpdateProgress(33, "Buscando capa...");
             if (hasSteamGridDb && svc is not null && string.IsNullOrEmpty(game.CustomImagePath))
@@ -858,7 +880,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
                 if (results.Count > 0)
                 {
-                    var igdbGame = results[0];
+                    var igdbGame = IgdbGame.SelectBestMatch(game.DisplayName, results);
 
                     progressDialog.UpdateProgress(80, "Traduzindo descrição...");
                     var summary = igdbGame.Summary;
@@ -866,13 +888,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                         summary = await TranslationService.TranslateToPortugueseAsync(summary);
 
                     game.Summary     = summary;
-                    game.IgdbRating  = igdbGame.Rating;
-                    game.IgdbId      = igdbGame.Id;
-                    game.ReleaseYear = igdbGame.ReleaseYear;
+                    ApplyIgdbMetadata(game, igdbGame);
+                    await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
                     game.IsSummaryTranslated = true;
-
-                    var genres = igdbGame.GenreNames;
-                    game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
                 }
             }
             progressDialog.UpdateProgress(90, "Informações IGDB concluídas!");
@@ -1030,6 +1048,45 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private static void ApplyIgdbMetadata(Game game, IgdbGame igdbGame)
+    {
+        game.IgdbId = igdbGame.Id;
+        game.IgdbRating = igdbGame.Rating;
+        game.ReleaseYear = igdbGame.ReleaseYear;
+        game.Genres = igdbGame.GenreNames == "—" ? null : TranslationService.TranslateGenres(igdbGame.GenreNames);
+        game.Platforms = igdbGame.PlatformNames;
+        game.GameModes = igdbGame.GameModeNames;
+        game.PlayerPerspectives = igdbGame.PerspectiveNames;
+        game.Themes = igdbGame.ThemeNames;
+        game.Developers = igdbGame.DeveloperNames;
+        game.Publishers = igdbGame.PublisherNames;
+        game.Franchises = igdbGame.FranchiseNames;
+        game.GameEngines = igdbGame.EngineNames;
+    }
+
+    private static async Task FetchIgdbScreenshotsAsync(Game game, int igdbId)
+    {
+        var clientId = SettingsService.Current.IgdbClientId;
+        var clientSecret = SettingsService.Current.IgdbClientSecret;
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+            return;
+
+        try
+        {
+            using var service = new IgdbService(clientId, clientSecret);
+            var screenshots = await service.GetScreenshotsAsync(igdbId);
+            game.Screenshots = screenshots
+                .Select(screenshot => screenshot.FullUrl)
+                .Where(url => !string.IsNullOrWhiteSpace(url))
+                .Take(3)
+                .ToList();
+        }
+        catch
+        {
+            game.Screenshots = [];
+        }
+    }
+
     private async Task AutoFetchIgdbAsync(Game game)
     {
         var clientId     = SettingsService.Current.IgdbClientId;
@@ -1051,7 +1108,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            var igdbGame = results[0];
+            var igdbGame = IgdbGame.SelectBestMatch(game.DisplayName, results);
 
             var summary = igdbGame.Summary;
             if (!string.IsNullOrEmpty(summary))
@@ -1061,13 +1118,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             game.Summary     = summary;
-            game.IgdbRating  = igdbGame.Rating;
-            game.IgdbId      = igdbGame.Id;
-            game.ReleaseYear = igdbGame.ReleaseYear;
-            game.IsSummaryTranslated = true;
-
-            var genres = igdbGame.GenreNames;
-            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+            ApplyIgdbMetadata(game, igdbGame);
+            await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
 
             SaveGames();
             StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
@@ -2246,12 +2298,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             game.Summary     = summary;
-            game.IgdbRating  = igdbGame.Rating;
-            game.IgdbId      = igdbGame.Id;
-            game.ReleaseYear = igdbGame.ReleaseYear;
-
-            var genres = igdbGame.GenreNames;
-            game.Genres = genres == "\u2014" ? null : TranslationService.TranslateGenres(genres);
+            ApplyIgdbMetadata(game, igdbGame);
+            await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
 
             SaveGames();
             StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
@@ -2365,6 +2413,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
                 case IgdbGameInfoDialog igdbDialog:
                     igdbDialog.HandleGamepadInput(button);
+                    return;
+                case ScreenshotViewerDialog screenshotDialog:
+                    screenshotDialog.HandleGamepadInput(button);
                     return;
             }
 

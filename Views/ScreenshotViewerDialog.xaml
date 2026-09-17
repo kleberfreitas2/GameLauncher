@@ -1,0 +1,65 @@
+<Window x:Class="GameLauncher.Views.ScreenshotViewerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Screenshot do jogo"
+        Width="1100" Height="700"
+        MinWidth="700" MinHeight="450"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        KeyDown="Window_KeyDown">
+    <Border Background="#F00A0A14" BorderBrush="#334466" BorderThickness="1" CornerRadius="12" Padding="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="8,4,4,8">
+                <TextBlock Text="Screenshot do jogo" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+                <Button Click="Close_Click" HorizontalAlignment="Right"
+                        Width="34" Height="30" Background="Transparent"
+                        BorderThickness="0" Cursor="Hand" Panel.ZIndex="100"
+                        ToolTip="Fechar">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="CloseBorder" Width="30" Height="26"
+                                    CornerRadius="13" Background="#D32F2F"
+                                    BorderBrush="#FF8A80" BorderThickness="1">
+                                <TextBlock Text="X" Foreground="White" FontSize="15"
+                                           FontWeight="Bold" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="CloseBorder" Property="Background" Value="#FF5252"/>
+                                    <Setter TargetName="CloseBorder" Property="BorderBrush" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="CloseBorder" Property="Background" Value="#B71C1C"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <Grid Grid.Row="1" Background="#05050A">
+                <Image x:Name="ScreenshotImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <Button x:Name="PreviousButton" Content="&#x2039;" Click="Previous_Click"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Width="58" Height="92" Background="#88000000" Foreground="White"
+                        BorderThickness="0" FontSize="58" Padding="0,-8,0,0" Cursor="Hand"/>
+                <Button x:Name="NextButton" Content="&#x203A;" Click="Next_Click"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Width="58" Height="92" Background="#88000000" Foreground="White"
+                        BorderThickness="0" FontSize="58" Padding="0,-8,0,0" Cursor="Hand"/>
+            </Grid>
+
+            <TextBlock x:Name="CounterText" Grid.Row="2" Foreground="#8899BB"
+                       HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="11"/>
+        </Grid>
+    </Border>
+</Window>

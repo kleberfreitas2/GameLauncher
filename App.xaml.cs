@@ -56,16 +56,15 @@ public partial class App : System.Windows.Application
         await System.Threading.Tasks.Task.Delay(400);
 
         var vm = new MainViewModel();
-        await vm.InitializeAsync(status => splash.SetStatus(status));
-
-        splash.SetStatus("Preparando interface...");
-        await System.Threading.Tasks.Task.Delay(300);
-
         var mainWindow = new MainWindow(vm);
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         mainWindow.Show();
         splash.Close();
+
+        // Exibe a janela imediatamente. A biblioteca, hardware e contas são
+        // carregados em segundo plano sem bloquear menus ou navegação inicial.
+        _ = vm.InitializeAsync(status => vm.StatusMessage = status);
     }
 
     protected override void OnExit(ExitEventArgs e)

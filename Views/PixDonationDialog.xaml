@@ -54,7 +54,7 @@
                             <md:PackIcon Kind="GamepadVariant" Width="18" Height="18" Foreground="#00E676"
                                          VerticalAlignment="Top" Margin="0,2,10,0"/>
                             <StackPanel>
-                                <TextBlock Text="Interface estilo PS5" FontSize="12" FontWeight="SemiBold" Foreground="#DDDDEE"/>
+                                <TextBlock Text="Interface inspirada em consoles" FontSize="12" FontWeight="SemiBold" Foreground="#DDDDEE"/>
                                 <TextBlock Text="Launcher moderno com visual de console" FontSize="10.5" Foreground="#667788"/>
                             </StackPanel>
                         </StackPanel>

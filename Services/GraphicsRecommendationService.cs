@@ -329,21 +329,31 @@ public static class GraphicsRecommendationService
     {
         var list = new List<string>();
 
-        list.Add($"GPU: {hw.GpuDisplay}  |  Score: {hw.GpuScore}/100");
+        var gpuMinimumOk = hw.GpuScore >= e.MinGpu;
+        var gpuRecommended = hw.GpuScore >= e.RecGpu;
+        var gpuStatus = !gpuMinimumOk ? "❌" : gpuRecommended ? "✅" : "⚠️";
+        list.Add($"{gpuStatus} GPU: {hw.GpuDisplay} | Score: {hw.GpuScore}/100 | mínimo {e.MinGpu}, recomendado {e.RecGpu}");
 
         if (hw.GpuVramGb > 0)
         {
-            var vramOk = hw.GpuVramGb >= e.RecVramGb;
-            var vramSuffix = vramOk ? "✓" : $"(recomendado: {e.RecVramGb} GB)";
-            list.Add($"VRAM: {hw.GpuVramGb} GB {vramSuffix}");
+            var vramMinimumOk = hw.GpuVramGb >= e.MinVramGb;
+            var vramRecommended = hw.GpuVramGb >= e.RecVramGb;
+            var vramStatus = !vramMinimumOk ? "❌" : vramRecommended ? "✅" : "⚠️";
+            list.Add($"{vramStatus} VRAM: {hw.GpuVramGb} GB | mínimo {e.MinVramGb} GB, recomendado {e.RecVramGb} GB");
         }
 
-        var ramOk = hw.RamGb >= e.RecRamGb;
-        var ramSuffix = ramOk ? "✓" : $"(recomendado: {e.RecRamGb:F0} GB)";
-        list.Add($"RAM: {hw.RamDisplay} {ramSuffix}");
+        var ramMinimumOk = hw.RamGb >= e.MinRamGb;
+        var ramRecommended = hw.RamGb >= e.RecRamGb;
+        var ramStatus = !ramMinimumOk ? "❌" : ramRecommended ? "✅" : "⚠️";
+        list.Add($"{ramStatus} RAM: {hw.RamDisplay} | mínimo {e.MinRamGb:F0} GB, recomendado {e.RecRamGb:F0} GB");
 
         if (!string.IsNullOrEmpty(hw.CpuDisplay))
-            list.Add($"CPU: {hw.CpuDisplay}");
+        {
+            var cpuMinimumOk = hw.CpuCores >= 2 && hw.CpuClockGhz >= 2.0;
+            var cpuRecommended = hw.CpuCores >= 4 && hw.CpuClockGhz >= 3.0;
+            var cpuStatus = !cpuMinimumOk ? "❌" : cpuRecommended ? "✅" : "⚠️";
+            list.Add($"{cpuStatus} CPU: {hw.CpuDisplay} | mínimo 2 núcleos / 2 GHz, recomendado 4 núcleos / 3 GHz");
+        }
 
         list.Add("");
 
