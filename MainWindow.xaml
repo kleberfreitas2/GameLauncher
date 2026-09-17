@@ -3,14 +3,14 @@
         <WindowChrome CaptionHeight="36" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
     <Window.Resources>
-<Style x:Key="GamepadFocusBorder" TargetType="Border">
+        <Style x:Key="GamepadFocusBorder" TargetType="Border">
             <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="CornerRadius" Value="24"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        
+
         <Style x:Key="HeaderIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="36"/>
@@ -80,7 +80,7 @@
             <RowDefinition Height="275*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-<Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="16,8">
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="16,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -88,7 +88,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <Image x:Name="LogoIcon" Source="Assets/icon.png" Width="36" Height="36" Margin="0,0,14,0"
                            RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand"
                            MouseDown="LogoIcon_MouseDown"
@@ -250,9 +250,9 @@
                     </Border>
                 </Popup>
 
-<StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <StackPanel.Resources>
-                        
+
                         <Style TargetType="md:PackIcon">
                             <Setter Property="Width" Value="20"/>
                             <Setter Property="Height" Value="20"/>
@@ -262,7 +262,7 @@
                         </Style>
                     </StackPanel.Resources>
 
-<Border Margin="0,0,12,0">
+                    <Border Margin="0,0,12,0">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
@@ -277,75 +277,75 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                    <Button Command="{Binding OpenXboxProfileCommand}"
+                        <Button Command="{Binding OpenXboxProfileCommand}"
                             Cursor="Hand" BorderThickness="0"
                             ToolTip="Xbox Live">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="XboxBd" CornerRadius="22" Padding="14,8"
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border x:Name="XboxBd" CornerRadius="22" Padding="14,8"
                                         RenderTransformOrigin="0.5,0.5">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#107C10"/>
-                                        </Style>
-                                    </Border.Style>
-                                    <Border.RenderTransform>
-                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                    </Border.RenderTransform>
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#107C10" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
-                                    </Border.Effect>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <md:PackIcon Kind="MicrosoftXbox" Width="20" Height="20" Foreground="White"
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#107C10"/>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="#107C10" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <md:PackIcon Kind="MicrosoftXbox" Width="20" Height="20" Foreground="White"
                                                      VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding XboxButtonText}" FontSize="12" FontWeight="Bold"
+                                            <TextBlock Text="{Binding XboxButtonText}" FontSize="12" FontWeight="Bold"
                                                    FontFamily="Segoe UI" Foreground="White" VerticalAlignment="Center"/>
-<Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
+                                            <Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
                                                 VerticalAlignment="Center">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsXboxLoggedIn}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal">
-                                                <md:PackIcon Kind="Trophy" Width="12" Height="12" Foreground="#FFD700"
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsXboxLoggedIn}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <md:PackIcon Kind="Trophy" Width="12" Height="12" Foreground="#FFD700"
                                                              VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding XboxProfile.Gamerscore, StringFormat='{}{0:N0}'}"
+                                                    <TextBlock Text="{Binding XboxProfile.Gamerscore, StringFormat='{}{0:N0}'}"
                                                            FontSize="11" FontWeight="SemiBold" Foreground="#FFD700"
                                                            VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="XboxBd" Property="Background" Value="#0E6B0E"/>
-                                        <Setter TargetName="XboxBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="XboxBd" Property="Background" Value="#0A5A0A"/>
-                                        <Setter TargetName="XboxBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="XboxBd" Property="Background" Value="#0E6B0E"/>
+                                            <Setter TargetName="XboxBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="XboxBd" Property="Background" Value="#0A5A0A"/>
+                                            <Setter TargetName="XboxBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Border>
 
-<Border Margin="0,0,12,0">
+                    <Border Margin="0,0,12,0">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
@@ -360,75 +360,75 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                    <Button Command="{Binding OpenSteamProfileCommand}"
+                        <Button Command="{Binding OpenSteamProfileCommand}"
                             Cursor="Hand" BorderThickness="0"
                             ToolTip="Steam">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="SteamBd" CornerRadius="22" Padding="14,8"
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border x:Name="SteamBd" CornerRadius="22" Padding="14,8"
                                         RenderTransformOrigin="0.5,0.5">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1B2838"/>
-                                        </Style>
-                                    </Border.Style>
-                                    <Border.RenderTransform>
-                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                    </Border.RenderTransform>
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#1B2838" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
-                                    </Border.Effect>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <md:PackIcon Kind="Steam" Width="20" Height="20" Foreground="White"
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#1B2838"/>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="#1B2838" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <md:PackIcon Kind="Steam" Width="20" Height="20" Foreground="White"
                                                      VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding SteamButtonText}" FontSize="12" FontWeight="Bold"
+                                            <TextBlock Text="{Binding SteamButtonText}" FontSize="12" FontWeight="Bold"
                                                    FontFamily="Segoe UI" Foreground="White" VerticalAlignment="Center"/>
-<Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
+                                            <Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
                                                 VerticalAlignment="Center">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSteamConnected}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal">
-                                                <md:PackIcon Kind="GamepadVariant" Width="12" Height="12" Foreground="#66C0F4"
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSteamConnected}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <md:PackIcon Kind="GamepadVariant" Width="12" Height="12" Foreground="#66C0F4"
                                                              VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding SteamProfile.OwnedGamesCount, StringFormat='{}{0:N0}'}"
+                                                    <TextBlock Text="{Binding SteamProfile.OwnedGamesCount, StringFormat='{}{0:N0}'}"
                                                            FontSize="11" FontWeight="SemiBold" Foreground="#66C0F4"
                                                            VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="SteamBd" Property="Background" Value="#2A475E"/>
-                                        <Setter TargetName="SteamBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="SteamBd" Property="Background" Value="#171A21"/>
-                                        <Setter TargetName="SteamBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="SteamBd" Property="Background" Value="#2A475E"/>
+                                            <Setter TargetName="SteamBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="SteamBd" Property="Background" Value="#171A21"/>
+                                            <Setter TargetName="SteamBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Border>
 
-<Border Margin="0,0,12,0">
+                    <Border Margin="0,0,12,0">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
@@ -443,74 +443,74 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                    <Button Command="{Binding OpenEpicProfileCommand}"
+                        <Button Command="{Binding OpenEpicProfileCommand}"
                             Cursor="Hand" BorderThickness="0"
                             ToolTip="Epic Games">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="EpicBd" CornerRadius="22" Padding="14,8"
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border x:Name="EpicBd" CornerRadius="22" Padding="14,8"
                                                         RenderTransformOrigin="0.5,0.5">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#000000"/>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <Border.RenderTransform>
-                                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                                    </Border.RenderTransform>
-                                                    <Border.Effect>
-                                                        <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.6"/>
-                                                    </Border.Effect>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                       <Image Source="Assets/epic_logo.png" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,6,0" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                        <TextBlock Text="{Binding EpicButtonText}" FontSize="12" FontWeight="Bold"
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#000000"/>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.6"/>
+                                        </Border.Effect>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Image Source="Assets/epic_logo.png" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,6,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            <TextBlock Text="{Binding EpicButtonText}" FontSize="12" FontWeight="Bold"
                                                    FontFamily="Segoe UI" Foreground="White" VerticalAlignment="Center"/>
-<Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
+                                            <Border CornerRadius="10" Background="#22FFFFFF" Padding="8,2" Margin="8,0,0,0"
                                                 VerticalAlignment="Center">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsEpicConnected}" Value="True">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal">
-                                                <md:PackIcon Kind="GamepadVariant" Width="12" Height="12" Foreground="#00B4D8"
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsEpicConnected}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <md:PackIcon Kind="GamepadVariant" Width="12" Height="12" Foreground="#00B4D8"
                                                              VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding EpicProfile.InstalledGamesCount, StringFormat='{}{0:N0}'}"
+                                                    <TextBlock Text="{Binding EpicProfile.InstalledGamesCount, StringFormat='{}{0:N0}'}"
                                                            FontSize="11" FontWeight="SemiBold" Foreground="#00B4D8"
                                                            VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="EpicBd" Property="Background" Value="#2A2A2A"/>
-                                        <Setter TargetName="EpicBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="EpicBd" Property="Background" Value="#111111"/>
-                                        <Setter TargetName="EpicBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="EpicBd" Property="Background" Value="#2A2A2A"/>
+                                            <Setter TargetName="EpicBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="EpicBd" Property="Background" Value="#111111"/>
+                                            <Setter TargetName="EpicBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Border>
 
-<Border Margin="0,0,12,0">
+                    <Border Margin="0,0,12,0">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
@@ -525,52 +525,52 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                    <Button Command="{Binding OpenDiscordProfileCommand}"
+                        <Button Command="{Binding OpenDiscordProfileCommand}"
                             Cursor="Hand" BorderThickness="0"
                             ToolTip="Discord">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="DiscordBd" CornerRadius="22" Padding="14,8"
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border x:Name="DiscordBd" CornerRadius="22" Padding="14,8"
                                         RenderTransformOrigin="0.5,0.5">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#5865F2"/>
-                                        </Style>
-                                    </Border.Style>
-                                    <Border.RenderTransform>
-                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                    </Border.RenderTransform>
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#5865F2" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
-                                    </Border.Effect>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <md:PackIcon Kind="MessageText" Width="20" Height="20" Foreground="White"
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#5865F2"/>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="#5865F2" BlurRadius="12" ShadowDepth="2" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <md:PackIcon Kind="MessageText" Width="20" Height="20" Foreground="White"
                                                      VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding DiscordButtonText}" FontSize="12" FontWeight="Bold"
+                                            <TextBlock Text="{Binding DiscordButtonText}" FontSize="12" FontWeight="Bold"
                                                    FontFamily="Segoe UI" Foreground="White" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="DiscordBd" Property="Background" Value="#4752C4"/>
-                                        <Setter TargetName="DiscordBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="DiscordBd" Property="Background" Value="#3C45A5"/>
-                                        <Setter TargetName="DiscordBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="DiscordBd" Property="Background" Value="#4752C4"/>
+                                            <Setter TargetName="DiscordBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="DiscordBd" Property="Background" Value="#3C45A5"/>
+                                            <Setter TargetName="DiscordBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Border>
 
                     <Button Click="BtnYoutube_Click" Style="{StaticResource HeaderActionButton}"
@@ -585,7 +585,6 @@
                         </StackPanel>
                     </Button>
 
-                    
                     <Button Command="{Binding OpenDonationCommand}" VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                             ToolTip="Apoie o projeto via PIX" Margin="0,0,14,0">
@@ -643,28 +642,28 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                    <Button Command="{Binding OpenHelpCommand}"
+                        <Button Command="{Binding OpenHelpCommand}"
                             VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
                             ToolTip="Manual de utilização">
-                        <Button.Template>
-                            <ControlTemplate TargetType="{x:Type Button}">
-                                <Border x:Name="HelpBd" Background="Transparent" CornerRadius="14" Padding="4">
-                                    <md:PackIcon Kind="HelpCircle" Width="24" Height="24" Foreground="#2196F3"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="HelpBd" Property="Background" Value="#22FFFFFF"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border x:Name="HelpBd" Background="Transparent" CornerRadius="14" Padding="4">
+                                        <md:PackIcon Kind="HelpCircle" Width="24" Height="24" Foreground="#2196F3"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="HelpBd" Property="Background" Value="#22FFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Border>
-<Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
+                    <Border VerticalAlignment="Center" Margin="0,0,14,0" ToolTip="{Binding GamepadStatus}">
                         <StackPanel Orientation="Horizontal">
                             <Grid>
-                            <md:PackIcon Kind="MicrosoftXboxController" Width="20" Height="20" Foreground="#556677" VerticalAlignment="Center">
+                                <md:PackIcon Kind="MicrosoftXboxController" Width="20" Height="20" Foreground="#556677" VerticalAlignment="Center">
                                     <md:PackIcon.Style>
                                         <Style TargetType="md:PackIcon">
                                             <Setter Property="Visibility" Value="Visible"/>
@@ -693,7 +692,7 @@
                                     </md:PackIcon.Effect>
                                 </md:PackIcon>
                             </Grid>
-<Border Margin="6,0,0,0" CornerRadius="8" Background="#22FFFFFF" Padding="6,2"
+                            <Border Margin="6,0,0,0" CornerRadius="8" Background="#22FFFFFF" Padding="6,2"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding HasGamepadBattery, Converter={StaticResource BoolToVisibility}}">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -845,6 +844,9 @@
                                         <MenuItem Header="Alterar Imagem"
                           Command="{Binding ChangeImageCommand}"
                           CommandParameter="{Binding DetailGame}"/>
+                                        <MenuItem Header="Alterar Logotipo"
+                          Command="{Binding ChangeLogoCommand}"
+                          CommandParameter="{Binding DetailGame}"/>
                                         <MenuItem Header="Buscar Capa Online"
                           Command="{Binding SearchCoverCommand}"
                           CommandParameter="{Binding DetailGame}"/>
@@ -883,7 +885,7 @@
                         </StackPanel>
                     </Border>
 
-                    
+
                     <Button x:Name="BtnBigPicture" Command="{Binding ToggleBigPictureModeCommand}"
                             ToolTip="Modo Big Picture — BETA (em teste para TVs)" Margin="0,0,12,0"
                             Style="{StaticResource HeaderIconButtonStyle}">
@@ -893,7 +895,7 @@
                                     <Border x:Name="BpBd" Background="Transparent" CornerRadius="14" Padding="4">
                                         <md:PackIcon x:Name="BpIcon" Kind="{Binding BigPictureIcon}" Width="20" Height="20" Foreground="#8899AA"/>
                                     </Border>
-                                    
+
                                     <Border Background="#E65100" CornerRadius="4"
                                             HorizontalAlignment="Right" VerticalAlignment="Top"
                                             Padding="2,0" Margin="0,-2,-2,0">
@@ -913,26 +915,29 @@
                         </Button.Template>
                     </Button>
 
-<TextBlock Text="{Binding CurrentTime}" FontSize="16" FontWeight="SemiBold"
+                    <TextBlock Text="{Binding CurrentTime}" FontSize="16" FontWeight="SemiBold"
                      Foreground="White" VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock.Effect>
                             <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.5"/>
                         </TextBlock.Effect>
                     </TextBlock>
 
-<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0"
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0"
                               Cursor="Hand" ToolTip="Clique para alterar avatar"
                               MouseLeftButtonUp="Avatar_Click">
 
                         <!-- Avatar -->
-                        <Border Width="38" Height="38" CornerRadius="19" ClipToBounds="True"
+
+                        <!-- Gamerscore dos Troféus (estilo Xbox) -->
+                        <!-- Avatar -->
+                        <Border Width="34" Height="34" CornerRadius="19" ClipToBounds="True"
                                 Background="#22334455" BorderThickness="2" BorderBrush="#33FFFFFF">
                             <Grid>
-                                <md:PackIcon Kind="AccountCircle" Width="28" Height="28" Foreground="#556677"
-                                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                                             Visibility="{Binding HasNoAvatar, Converter={StaticResource BoolToVisibility}}"/>
-                                <Image Source="{Binding AvatarPath, Converter={StaticResource PathToImageConverter}, ConverterParameter=38}"
+                                <md:PackIcon Kind="AccountCircle" Width="50" Height="34" Foreground="#556677"
+                                             Visibility="{Binding HasNoAvatar, Converter={StaticResource BoolToVisibility}}" HorizontalAlignment="Left" Margin="-10,0,0,0"/>
+                                <Image Source="{Binding AvatarPath, ConverterParameter=38, Converter={StaticResource PathToImageConverter}}"
                                        Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="{Binding HasAvatar, Converter={StaticResource BoolToVisibility}}"/>
                             </Grid>
                         </Border>
@@ -949,7 +954,7 @@
 
                     </StackPanel>
 
-                    
+
                     <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center"
                                 WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button x:Name="BtnWinMinimize" Click="BtnWinMinimize_Click" Width="36" Height="28"
@@ -1006,7 +1011,7 @@
             </Grid>
         </Border>
         <Grid Margin="0,55,0,0" Grid.RowSpan="3">
-<ctrl:AnimatedImage x:Name="BackgroundAnim"
+            <ctrl:AnimatedImage x:Name="BackgroundAnim"
                           ImagePath="{Binding DetailGame.EffectiveBackgroundPath}"
                           Stretch="UniformToFill" Opacity="0.90"
                    RenderOptions.BitmapScalingMode="HighQuality"
@@ -1014,7 +1019,7 @@
                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                    Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}"
                    IsHitTestVisible="False"/>
-<Border IsHitTestVisible="False"
+            <Border IsHitTestVisible="False"
               Visibility="{Binding DetailGame.HasBackground, Converter={StaticResource BoolToVisibility}}">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -1065,10 +1070,10 @@
                 </Button.Template>
             </Button>
 
-<Border Panel.ZIndex="99"
+            <Border Panel.ZIndex="99"
               Visibility="{Binding IsLoading, ElementName=BackgroundAnim, Converter={StaticResource BoolToVisibility}}"
               Background="#01000000" IsHitTestVisible="True">
-<Border Background="#CC0A0A18" CornerRadius="14"
+                <Border Background="#CC0A0A18" CornerRadius="14"
                   VerticalAlignment="Top" HorizontalAlignment="Center"
                   Margin="0,100,0,0" Padding="30,18">
                     <StackPanel HorizontalAlignment="Center" Width="280">
@@ -1087,7 +1092,7 @@
                 </Border>
             </Border>
 
-<Grid Panel.ZIndex="1">
+            <Grid Panel.ZIndex="1">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -1163,7 +1168,7 @@
                                     <TextBlock Text="1"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Clique no botão abaixo ou em ➤ → Adicionar Jogo"
+                                <TextBlock Text="Clique no ícone ⚙️ (engrenagem) no canto superior direito"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -1173,7 +1178,7 @@
                                     <TextBlock Text="2"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="Selecione o executável (.exe) do seu jogo"
+                                <TextBlock Text="Selecione 'Adicionar Jogo' e escolha o executável (.exe)"
                                            FontSize="13" Foreground="#99AABB" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -1189,63 +1194,13 @@
                         </StackPanel>
                     </Border>
 
-                    <Button Command="{Binding AddGameCommand}" Cursor="Hand" HorizontalAlignment="Center"
-                            BorderThickness="0">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="AddBd" CornerRadius="24" Padding="40,16"
-                                        RenderTransformOrigin="0.5,0.5">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#00E676" Offset="0"/>
-                                            <GradientStop Color="#00C853" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                    <Border.RenderTransform>
-                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
-                                    </Border.RenderTransform>
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#00E676" BlurRadius="20" ShadowDepth="0" Opacity="0.45"/>
-                                    </Border.Effect>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <md:PackIcon Kind="Plus" Width="20" Height="20" Foreground="#0A0A14"
-                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="ADICIONAR MEU PRIMEIRO JOGO" FontSize="14" FontWeight="Bold"
-                                                   FontFamily="Segoe UI" Foreground="#0A0A14" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="AddBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="1.06" ScaleY="1.06"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Setter TargetName="AddBd" Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect Color="#00E676" BlurRadius="28" ShadowDepth="0" Opacity="0.65"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="AddBd" Property="RenderTransform">
-                                            <Setter.Value>
-                                                <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
-
                     <TextBlock Text="💡 Dica: Conecte um controle Xbox ou PlayStation para navegar como um console!"
                                FontSize="11" Foreground="#556677" HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center" Margin="0,20,0,0"/>
                 </StackPanel>
             </Grid>
 
-<Grid Panel.ZIndex="2">
+            <Grid Panel.ZIndex="2">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -1262,7 +1217,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                
+
                 <Border Grid.Row="0"
                         HorizontalAlignment="Left" VerticalAlignment="Top"
                         Margin="18,14,0,0"
@@ -1291,7 +1246,7 @@
                     </StackPanel>
                 </Border>
 
-<Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,12">
+                <Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,12">
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -1303,7 +1258,7 @@
                         </Style>
                     </Grid.Style>
                     <StackPanel>
-<Image Source="{Binding DetailGame.LogoPath, Converter={StaticResource PathToImageConverter}}"
+                        <Image Source="{Binding DetailGame.LogoPath, Converter={StaticResource PathToImageConverter}}"
                    MaxHeight="100" MaxWidth="420"
                    Stretch="Uniform" HorizontalAlignment="Left"
                    Margin="0,0,0,10"
@@ -1313,7 +1268,7 @@
                                 <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.85"/>
                             </Image.Effect>
                         </Image>
-<TextBlock Text="{Binding DetailGame.DisplayName}"
+                        <TextBlock Text="{Binding DetailGame.DisplayName}"
                        FontSize="38" FontWeight="Bold" Foreground="White"
                        Margin="0,0,0,10" TextWrapping="Wrap"
                        Visibility="{Binding DetailGame.HasNoLogo, Converter={StaticResource BoolToVisibility}}">
@@ -1321,10 +1276,10 @@
                                 <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="3" Opacity="0.9"/>
                             </TextBlock.Effect>
                         </TextBlock>
-</StackPanel>
+                    </StackPanel>
                 </Grid>
 
-                
+
                 <Grid Grid.Row="0" VerticalAlignment="Bottom" Margin="50,0,50,16">
                     <Grid.Style>
                         <Style TargetType="Grid">
@@ -1341,7 +1296,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    
+
                     <Border Grid.Column="0" HorizontalAlignment="Left" MaxWidth="720" Padding="28,18" CornerRadius="14">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -1360,7 +1315,7 @@
                             <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.5"/>
                         </Border.Effect>
                         <StackPanel>
-                            
+
                             <Grid Margin="0,0,0,10">
                                 <Image Source="{Binding DetailGame.LogoPath}" MaxHeight="100" MaxWidth="440"
                                        HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -1419,10 +1374,44 @@
                         </StackPanel>
                     </Border>
 
-                    
+                    <Border Grid.Column="1" VerticalAlignment="Stretch" Padding="22,16" CornerRadius="14" Margin="16,0,0,0">
+                        <Border.Background>
+                            <SolidColorBrush Color="#000000" Opacity="0.5"/>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.4"/>
+                        </Border.Effect>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" Margin="6,0">
+                                <ctrl:ArcGauge.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.65" ScaleY="1.65"/>
+                                </ctrl:ArcGauge.LayoutTransform>
+                            </ctrl:ArcGauge>
+                            <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" Margin="6,0">
+                                <ctrl:ArcGauge.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.65" ScaleY="1.65"/>
+                                </ctrl:ArcGauge.LayoutTransform>
+                            </ctrl:ArcGauge>
+                            <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="6,0">
+                                <ctrl:ArcGauge.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.65" ScaleY="1.65"/>
+                                </ctrl:ArcGauge.LayoutTransform>
+                            </ctrl:ArcGauge>
+                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="8,0">
+                                <ctrl:ArcGauge.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.75" ScaleY="1.75"/>
+                                </ctrl:ArcGauge.LayoutTransform>
+                            </ctrl:ArcGauge>
+                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="8,0">
+                                <ctrl:ArcGauge.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.75" ScaleY="1.75"/>
+                                </ctrl:ArcGauge.LayoutTransform>
+                            </ctrl:ArcGauge>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
-<Border Grid.Row="1" Padding="30,18,30,16">
+                <Border Grid.Row="1" Padding="30,18,30,16">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="BorderThickness" Value="0,2,0,2"/>
@@ -1535,14 +1524,14 @@
                                                     <Grid.RenderTransform>
                                                         <ScaleTransform ScaleX="1" ScaleY="1"/>
                                                     </Grid.RenderTransform>
-<Border x:Name="Glow" CornerRadius="13" Margin="-4"
+                                                    <Border x:Name="Glow" CornerRadius="13" Margin="-4"
                                                             BorderThickness="2.5" BorderBrush="{DynamicResource AccentBrush}" Opacity="0"
                                                             IsHitTestVisible="False">
                                                         <Border.Effect>
                                                             <DropShadowEffect Color="#107C10" BlurRadius="20" ShadowDepth="0" Opacity="0.75"/>
                                                         </Border.Effect>
                                                     </Border>
- <Border x:Name="Bd" Width="155" Height="210"
+                                                    <Border x:Name="Bd" Width="155" Height="210"
                                                             CornerRadius="10" ClipToBounds="True"
                                                             Background="#44000000" Cursor="Hand">
                                                         <Grid>
@@ -1550,7 +1539,7 @@
                                                                 <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,155,210"/>
                                                             </Grid.Clip>
                                                             <ContentPresenter/>
-<Border x:Name="Shine" CornerRadius="10" Opacity="0" IsHitTestVisible="False">
+                                                            <Border x:Name="Shine" CornerRadius="10" Opacity="0" IsHitTestVisible="False">
                                                                 <Border.Background>
                                                                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                                                         <GradientStop Color="#20FFFFFF" Offset="0"/>
@@ -1563,63 +1552,79 @@
                                                     </Border>
                                                 </Grid>
                                                 <ControlTemplate.Triggers>
-<Trigger Property="IsMouseOver" Value="True">
+                                                    <Trigger Property="IsMouseOver" Value="True">
                                                         <Trigger.EnterActions>
                                                             <BeginStoryboard>
                                                                 <Storyboard>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                                                      To="1.10" Duration="0:0:0.25">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                                                      To="1.10" Duration="0:0:0.25">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                 </Storyboard>
                                                             </BeginStoryboard>
                                                         </Trigger.EnterActions>
                                                         <Trigger.ExitActions>
-                                                             <BeginStoryboard>
+                                                            <BeginStoryboard>
                                                                 <Storyboard>
-                                                                     <DoubleAnimation Storyboard.TargetName="Root"
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
                                                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                                                       To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
-                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-                                                                     </DoubleAnimation>
-                                                                     <DoubleAnimation Storyboard.TargetName="Root"
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                    <DoubleAnimation Storyboard.TargetName="Root"
                                                                                       Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                                                       To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
-                                                                         <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-                                                                     </DoubleAnimation>
-                                                                 </Storyboard>
-                                                             </BeginStoryboard>
-                                                         </Trigger.ExitActions>
-                                                     </Trigger>
-<Trigger Property="IsSelected" Value="True">
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
                                                         <Trigger.EnterActions>
                                                             <BeginStoryboard>
                                                                 <Storyboard>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                                                      To="1.10" Duration="0:0:0.3">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                                                      To="1.10" Duration="0:0:0.3">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Glow"
                                                                                      Storyboard.TargetProperty="Opacity"
                                                                                      To="1" Duration="0:0:0.35">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Shine"
                                                                                      Storyboard.TargetProperty="Opacity"
                                                                                      To="1" Duration="0:0:0.4">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                 </Storyboard>
                                                             </BeginStoryboard>
@@ -1630,43 +1635,51 @@
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                                                                                      To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Root"
                                                                                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                                                                                      To="1.0" Duration="0:0:0.2" FillBehavior="Stop">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Glow"
                                                                                      Storyboard.TargetProperty="Opacity"
                                                                                      To="0" Duration="0:0:0.2">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                     <DoubleAnimation Storyboard.TargetName="Shine"
                                                                                      Storyboard.TargetProperty="Opacity"
                                                                                      To="0" Duration="0:0:0.15">
-                                                                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <CubicEase EasingMode="EaseOut"/>
+                                                                        </DoubleAnimation.EasingFunction>
                                                                     </DoubleAnimation>
                                                                 </Storyboard>
                                                             </BeginStoryboard>
                                                         </Trigger.ExitActions>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                                             </Setter>
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding DataContext.IsBigPictureMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                                                                    <Setter Property="LayoutTransform">
-                                                                                        <Setter.Value>
-                                                                                            <ScaleTransform ScaleX="1.4" ScaleY="1.4"/>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                    <Setter Property="Margin" Value="14,24"/>
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                    </ListBox.ItemContainerStyle>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsBigPictureMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="LayoutTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.4" ScaleY="1.4"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Setter Property="Margin" Value="14,24"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid x:Name="CardRoot" Background="#1A2533" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -1738,9 +1751,9 @@
                                                 </TextBlock.Effect>
                                             </TextBlock>
                                         </Border>
-                                        
+
                                         <Border x:Name="DarkOverlay" Background="#BB000000" Opacity="0" IsHitTestVisible="False"/>
-                                        
+
                                         <Button x:Name="PlayBtn"
                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
                                                 Cursor="Hand" BorderThickness="0">
@@ -1848,7 +1861,7 @@
                     </Grid>
                 </Border>
 
-<Border Grid.Row="2" Height="300" Padding="50,12,50,14">
+                <Border Grid.Row="2" Padding="50,12,50,14">
                     <Border.Background>
                         <SolidColorBrush Color="#0A0A12" Opacity="0.88"/>
                     </Border.Background>
@@ -1975,7 +1988,7 @@
                                         <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="1" Opacity="0.7"/>
                                     </TextBlock.Effect>
                                 </TextBlock>
-                                
+
                                 <Button Grid.Column="1" Command="{Binding OpenHwRecommendationCommand}"
                                         Cursor="Hand" BorderThickness="0" Background="Transparent"
                                         Padding="0" ToolTip="Análise de Hardware — Recomendação Gráfica"
@@ -2090,14 +2103,14 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-<StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="{Binding StatusMessage}" Foreground="#888888" FontSize="12"/>
                     <TextBlock Text="{Binding GamepadStatus}" FontSize="10" Foreground="#00E676" Margin="0,2,0,0"
                                Visibility="{Binding GamepadConnected, Converter={StaticResource BoolToVisibility}}"/>
                     <TextBlock Text="Desenvolvido por Kleber Freitas" Foreground="#666688" FontSize="10" Margin="0,2,0,0"/>
                 </StackPanel>
 
-<StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0">
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -2109,13 +2122,13 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-<TextBlock Grid.Row="0" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Processador"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="0" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Processador"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de Vídeo"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="1" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Placa de Vídeo"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuName}" FontSize="10" Foreground="#8899AA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="320"/>
-<TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Memória"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Center"><Run Text="Memória"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamTotal}" FontSize="10" Foreground="#8899AA" VerticalAlignment="Center"/>
-<TextBlock Grid.Row="3" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Top"><Run Text="Armazenamento"/><Run Language="pt-br" Text=":"/></TextBlock>
+                        <TextBlock Grid.Row="3" Grid.Column="0" FontSize="10" Foreground="#556677" FontWeight="SemiBold" Margin="0,1,10,1" VerticalAlignment="Top"><Run Text="Armazenamento"/><Run Language="pt-br" Text=":"/></TextBlock>
                         <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding StorageDrives}" VerticalAlignment="Center">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -2129,7 +2142,7 @@
             </Grid>
         </Border>
 
-        
+
         <Border x:Name="DragGhost" Grid.RowSpan="4"
                 Width="155" Height="210" CornerRadius="10"
                 Opacity="0.75" IsHitTestVisible="False"
@@ -2146,7 +2159,7 @@
             </Image>
         </Border>
 
-        
+
         <Border x:Name="DropIndicator" Grid.RowSpan="4"
                 Width="3" IsHitTestVisible="False"
                 Visibility="Collapsed" Panel.ZIndex="9998"
@@ -2157,19 +2170,19 @@
             </Border.Effect>
         </Border>
 
-        
+
         <Grid x:Name="BpTransitionOverlay"
               Grid.RowSpan="4"
               Panel.ZIndex="10000"
               IsHitTestVisible="False"
               Visibility="Collapsed">
 
-            
+
             <Border x:Name="BpFlash"
                     Background="White"
                     Opacity="0"/>
 
-            
+
             <Border x:Name="BpVignette" Opacity="0">
                 <Border.Background>
                     <RadialGradientBrush Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
@@ -2181,7 +2194,7 @@
                 </Border.Background>
             </Border>
 
-            
+
             <ItemsControl x:Name="BpScanLines" Opacity="0" IsHitTestVisible="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -2190,7 +2203,7 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
-            
+
             <Grid x:Name="BpLogoContainer"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
@@ -2207,7 +2220,7 @@
                                       Opacity="0"/>
                 </Grid.Effect>
 
-                
+
                 <Ellipse x:Name="BpLogoBg"
                          Width="200" Height="200"
                          Fill="#CC000000"
@@ -2219,7 +2232,7 @@
                     </Ellipse.RenderTransform>
                 </Ellipse>
 
-                
+
                 <md:PackIcon Kind="TelevisionPlay"
                              Width="80" Height="80"
                              Foreground="{DynamicResource AccentBrush}"
@@ -2227,7 +2240,7 @@
                              VerticalAlignment="Center"
                              Margin="0,0,0,10"/>
 
-                
+
                 <TextBlock Text="BIG  PICTURE"
                            FontSize="16"
                            FontWeight="Bold"
@@ -2238,7 +2251,7 @@
                            Margin="0,0,0,36"/>
             </Grid>
 
-            
+
             <Border x:Name="BpBarLeft"
                     HorizontalAlignment="Left"
                     Width="0"
@@ -2250,11 +2263,11 @@
                     Background="{DynamicResource AccentBrush}"
                     Opacity="0.85"/>
 
-            
+
             <Border x:Name="BpFadeOut"
                     Background="Black"
                     Opacity="0"/>
         </Grid>
-        </Grid>
+    </Grid>
 </Window>
 

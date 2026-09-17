@@ -1096,6 +1096,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void ChangeLogo(Game game)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = $"Escolha um logotipo para '{game.DisplayName}'",
+            Filter = "Imagens|*.png;*.jpg;*.jpeg;*.bmp;*.webp",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        game.LogoPath = dialog.FileName;
+        SaveGames();
+        StatusMessage = $"Logotipo de '{game.DisplayName}' atualizado!";
+    }
+
+    [RelayCommand]
     private void RemoveGame(Game game)
     {
         var visible = GetVisibleGames();
