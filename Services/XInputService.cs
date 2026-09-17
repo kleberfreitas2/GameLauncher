@@ -272,11 +272,17 @@ public sealed class XInputService : IDisposable
     private bool _isConnected;
     private uint _activeXInputIndex = uint.MaxValue;
     private int _hidScanCounter;
+    private int _holdLeftTicks, _holdRightTicks, _holdUpTicks, _holdDownTicks;
+    private const int DIRECTION_REPEAT_DELAY_TICKS = 8;
+    private const int DIRECTION_REPEAT_INTERVAL_TICKS = 3;
 
     public event Action<GamepadButton>? ButtonPressed;
+    public event Action<GamepadButton>? ButtonReleased;
+    public event Action<GamepadButton>? ButtonLongPressed;
     public event Action<bool>? ConnectionChanged;
     public event Action<double>? RightStickY;
     public event Action<int>? BatteryChanged;
+    public event Action<double>? RightStickX;
 
     /// <summary>
     /// Disparado quando Start+Y são pressionados juntos por ~0.5 s (abre GLauncher AI).
@@ -287,6 +293,9 @@ public sealed class XInputService : IDisposable
     private int _aiComboTicks;
     private bool _aiComboFired;
     private const int AI_COMBO_TICKS_REQUIRED = 8; // 8 × 60ms ≈ 0.5 s
+    private int _aHoldTicks;
+    private bool _aLongPressFired;
+    private const int A_LONG_PRESS_TICKS_REQUIRED = 33; // 33 × 60ms ≈ 2 s
 
     public bool IsConnected => _isConnected;
     public string ControllerName { get; private set; } = "";
@@ -309,6 +318,25 @@ public sealed class XInputService : IDisposable
 
     public void Start() => _timer.Start();
     public void Stop() => _timer.Stop();
+
+    /// <summary>
+    /// Retoma a leitura após uma janela modal. Além de reiniciar o timer,
+    /// limpa o estado anterior dos botões para que o primeiro comando depois
+    /// do fechamento não seja perdido por comparação com um estado obsoleto.
+    /// </summary>
+    public void Resume()
+    {
+        _prevButtons = 0;
+        _prevStickLeft = _prevStickRight = _prevStickUp = _prevStickDown = false;
+        _prevHidReport = [];
+        _aiComboTicks = 0;
+        _aiComboFired = false;
+        _aHoldTicks = 0;
+        _aLongPressFired = false;
+
+        _timer.Stop();
+        _timer.Start();
+    }
 
     private void Poll(object? sender, EventArgs e)
     {
@@ -366,19 +394,26 @@ public sealed class XInputService : IDisposable
         var gp = state.Gamepad;
         ushort buttons = gp.wButtons;
         ushort pressed = (ushort)(buttons & ~_prevButtons);
+        ushort released = (ushort)(_prevButtons & ~buttons);
 
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_UP, GamepadButton.DPadUp);
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_DOWN, GamepadButton.DPadDown);
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_LEFT, GamepadButton.DPadLeft);
         CheckButton(pressed, XINPUT_GAMEPAD_DPAD_RIGHT, GamepadButton.DPadRight);
         CheckButton(pressed, XINPUT_GAMEPAD_A, GamepadButton.A);
+        if ((released & XINPUT_GAMEPAD_A) != 0)
+            ButtonReleased?.Invoke(GamepadButton.A);
         CheckButton(pressed, XINPUT_GAMEPAD_B, GamepadButton.B);
         CheckButton(pressed, XINPUT_GAMEPAD_X, GamepadButton.X);
-        CheckButton(pressed, XINPUT_GAMEPAD_Y, GamepadButton.Y);
+        if ((buttons & XINPUT_GAMEPAD_START) == 0)
+            CheckButton(pressed, XINPUT_GAMEPAD_Y, GamepadButton.Y);
         CheckButton(pressed, XINPUT_GAMEPAD_LEFT_SHOULDER, GamepadButton.LeftShoulder);
         CheckButton(pressed, XINPUT_GAMEPAD_RIGHT_SHOULDER, GamepadButton.RightShoulder);
-        CheckButton(pressed, XINPUT_GAMEPAD_START, GamepadButton.Start);
+        if ((buttons & XINPUT_GAMEPAD_Y) == 0)
+            CheckButton(pressed, XINPUT_GAMEPAD_START, GamepadButton.Start);
         CheckButton(pressed, XINPUT_GAMEPAD_BACK, GamepadButton.Back);
+
+        ProcessALongPress((buttons & XINPUT_GAMEPAD_A) != 0);
 
         bool stickLeft = gp.sThumbLX < -STICK_DEADZONE;
         bool stickRight = gp.sThumbLX > STICK_DEADZONE;
@@ -417,8 +452,29 @@ public sealed class XInputService : IDisposable
         double rsY = gp.sThumbRY > STICK_DEADZONE || gp.sThumbRY < -STICK_DEADZONE
             ? gp.sThumbRY / 32767.0
             : 0.0;
+        double rsX = gp.sThumbRX > STICK_DEADZONE || gp.sThumbRX < -STICK_DEADZONE
+            ? gp.sThumbRX / 32767.0
+            : 0.0;
+        if (rsX != 0.0)
+            RightStickX?.Invoke(rsX);
         if (rsY != 0.0)
             RightStickY?.Invoke(rsY);
+    }
+
+    private void EmitRepeatedDirection(bool held, ref int ticks, GamepadButton direction)
+    {
+        if (!held)
+        {
+            ticks = 0;
+            return;
+        }
+
+        ticks++;
+        if (ticks >= DIRECTION_REPEAT_DELAY_TICKS
+            && (ticks - DIRECTION_REPEAT_DELAY_TICKS) % DIRECTION_REPEAT_INTERVAL_TICKS == 0)
+        {
+            ButtonPressed?.Invoke(direction);
+        }
     }
 
     private void PollHid()
@@ -499,8 +555,10 @@ public sealed class XInputService : IDisposable
         byte face = (byte)(buttons1 >> 4);
         byte prevFace = (byte)(prevButtons1 >> 4);
         byte facePressed = (byte)(face & ~prevFace);
+        byte faceReleased = (byte)(prevFace & ~face);
 
         if ((facePressed & 0x02) != 0) ButtonPressed?.Invoke(GamepadButton.A);     // Cross
+        if ((faceReleased & 0x02) != 0) ButtonReleased?.Invoke(GamepadButton.A);
         if ((facePressed & 0x04) != 0) ButtonPressed?.Invoke(GamepadButton.B);     // Circle
         if ((facePressed & 0x01) != 0) ButtonPressed?.Invoke(GamepadButton.X);     // Square
         if ((facePressed & 0x08) != 0) ButtonPressed?.Invoke(GamepadButton.Y);     // Triangle
@@ -510,6 +568,8 @@ public sealed class XInputService : IDisposable
         if ((b2Pressed & 0x02) != 0) ButtonPressed?.Invoke(GamepadButton.RightShoulder); // R1
         if ((b2Pressed & 0x10) != 0) ButtonPressed?.Invoke(GamepadButton.Back);          // Share/Create
         if ((b2Pressed & 0x20) != 0) ButtonPressed?.Invoke(GamepadButton.Start);         // Options
+
+        ProcessALongPress((face & 0x02) != 0);
 
         const byte deadLow = 60, deadHigh = 196;
         bool stickLeft = lx < deadLow;
@@ -525,6 +585,19 @@ public sealed class XInputService : IDisposable
         if (stickRight && !pStickRight) ButtonPressed?.Invoke(GamepadButton.DPadRight);
         if (stickUp && !pStickUp) ButtonPressed?.Invoke(GamepadButton.DPadUp);
         if (stickDown && !pStickDown) ButtonPressed?.Invoke(GamepadButton.DPadDown);
+
+        EmitRepeatedDirection(
+            hat == 5 || hat == 6 || hat == 7 || stickLeft,
+            ref _holdLeftTicks, GamepadButton.DPadLeft);
+        EmitRepeatedDirection(
+            hat == 1 || hat == 2 || hat == 3 || stickRight,
+            ref _holdRightTicks, GamepadButton.DPadRight);
+        EmitRepeatedDirection(
+            hat == 0 || hat == 1 || hat == 7 || stickUp,
+            ref _holdUpTicks, GamepadButton.DPadUp);
+        EmitRepeatedDirection(
+            hat == 3 || hat == 4 || hat == 5 || stickDown,
+            ref _holdDownTicks, GamepadButton.DPadDown);
 
         byte ry = report.Length > off + 4 ? report[off + 4] : (byte)128;
         const byte rsDeadLow = 60, rsDeadHigh = 196;
@@ -830,6 +903,23 @@ public sealed class XInputService : IDisposable
     {
         if ((pressed & mask) != 0)
             ButtonPressed?.Invoke(button);
+    }
+
+    private void ProcessALongPress(bool held)
+    {
+        if (!held)
+        {
+            _aHoldTicks = 0;
+            _aLongPressFired = false;
+            return;
+        }
+
+        _aHoldTicks++;
+        if (_aHoldTicks >= A_LONG_PRESS_TICKS_REQUIRED && !_aLongPressFired)
+        {
+            _aLongPressFired = true;
+            ButtonLongPressed?.Invoke(GamepadButton.A);
+        }
     }
 
     /// <summary>

@@ -13,6 +13,7 @@ public partial class CoverSearchDialog : Window
     private readonly string _gameName;
     private string? _selectedImageUrl;
     private Border? _selectedBorder;
+    private int _gamepadIndex = -1;
 
     public string? DownloadedImagePath { get; private set; }
 
@@ -40,6 +41,7 @@ public partial class CoverSearchDialog : Window
         SetLoading(true);
         ResultsScroll.Visibility = Visibility.Collapsed;
         ResultsPanel.Children.Clear();
+        _gamepadIndex = -1;
         _selectedImageUrl = null;
         _selectedBorder   = null;
         ApplyButton.IsEnabled  = false;
@@ -85,6 +87,7 @@ public partial class CoverSearchDialog : Window
             AddThumbnail(cover.Url, cover.ThumbnailUrl);
 
         ResultsScroll.Visibility = Visibility.Visible;
+        MoveSelection(0);
     }
 
     private void AddThumbnail(string fullUrl, string? thumbnailUrl)
@@ -124,6 +127,7 @@ public partial class CoverSearchDialog : Window
         }
 
         border.MouseLeftButtonDown += (_, _) => SelectCover(border, fullUrl);
+        border.Tag = fullUrl;
         ResultsPanel.Children.Add(border);
     }
 
@@ -137,6 +141,7 @@ public partial class CoverSearchDialog : Window
         border.BorderBrush = green;
         _selectedBorder    = border;
         _selectedImageUrl  = url;
+        _gamepadIndex      = ResultsPanel.Children.IndexOf(border);
         ApplyButton.IsEnabled = true;
         SelectedText.Text  = "✓ Capa selecionada";
         SelectedText.Foreground = green;
@@ -157,6 +162,57 @@ public partial class CoverSearchDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+
+    public void HandleGamepadInput(GamepadButton button)
+    {
+        if (LoadingBar.Visibility == Visibility.Visible) return;
+
+        switch (button)
+        {
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                Close();
+                return;
+
+            case GamepadButton.DPadLeft:
+                MoveSelection(-1);
+                return;
+            case GamepadButton.DPadRight:
+                MoveSelection(1);
+                return;
+            case GamepadButton.DPadUp:
+                MoveSelection(-5);
+                return;
+            case GamepadButton.DPadDown:
+                MoveSelection(5);
+                return;
+            case GamepadButton.LeftShoulder:
+                MoveSelection(-10);
+                return;
+            case GamepadButton.RightShoulder:
+                MoveSelection(10);
+                return;
+            case GamepadButton.A:
+                if (_selectedImageUrl is not null)
+                    Apply_Click(this, new RoutedEventArgs());
+                return;
+        }
+    }
+
+    private void MoveSelection(int delta)
+    {
+        if (ResultsPanel.Children.Count == 0) return;
+
+        _gamepadIndex = Math.Clamp(
+            _gamepadIndex < 0 ? (delta < 0 ? ResultsPanel.Children.Count - 1 : 0) : _gamepadIndex + delta,
+            0, ResultsPanel.Children.Count - 1);
+
+        if (ResultsPanel.Children[_gamepadIndex] is Border border && border.Tag is string url)
+        {
+            SelectCover(border, url);
+            border.BringIntoView();
+        }
+    }
 
     private void SetLoading(bool loading)
     {

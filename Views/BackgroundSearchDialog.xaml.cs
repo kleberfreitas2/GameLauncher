@@ -280,6 +280,7 @@ public partial class BackgroundSearchDialog : Window
 
         var displayItems = images.Select(img => new DisplayImage(img)).ToList();
         ImageList.ItemsSource = displayItems;
+        ImageList.SelectedIndex = 0;
         ImageList.Visibility  = Visibility.Visible;
         StatusText.Visibility = Visibility.Collapsed;
         FooterText.Text       = $"{images.Count} imagem(ns) de {typeLabel} encontrada(s)";
@@ -339,6 +340,50 @@ public partial class BackgroundSearchDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+
+    public void HandleGamepadInput(GamepadButton button)
+    {
+        if (LoadingBar.Visibility == Visibility.Visible) return;
+
+        switch (button)
+        {
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                Close();
+                return;
+            case GamepadButton.DPadLeft:
+                MoveSelection(-1);
+                return;
+            case GamepadButton.DPadRight:
+                MoveSelection(1);
+                return;
+            case GamepadButton.DPadUp:
+                MoveSelection(-5);
+                return;
+            case GamepadButton.DPadDown:
+                MoveSelection(5);
+                return;
+            case GamepadButton.LeftShoulder:
+                MoveSelection(-10);
+                return;
+            case GamepadButton.RightShoulder:
+                MoveSelection(10);
+                return;
+            case GamepadButton.A:
+                if (_selectedFullUrl is not null)
+                    Apply_Click(this, new RoutedEventArgs());
+                return;
+        }
+    }
+
+    private void MoveSelection(int delta)
+    {
+        if (ImageList.Items.Count == 0) return;
+
+        var index = ImageList.SelectedIndex < 0 ? 0 : ImageList.SelectedIndex;
+        ImageList.SelectedIndex = Math.Clamp(index + delta, 0, ImageList.Items.Count - 1);
+        ImageList.ScrollIntoView(ImageList.SelectedItem);
+    }
 
     private async Task LoadThumbnailsAsync(List<DisplayImage> items, CancellationToken ct)
     {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,12 +23,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         "GameLauncher", "games.json");
 
     private readonly ICollectionView _gamesView;
-    private HardwareMonitorService _hwMonitor = null!;
+    private HardwareMonitorService? _hwMonitor;
     private XInputService _xinput = null!;
     public  XInputService XInput => _xinput;
     private readonly Dispatcher _dispatcher;
     private int _selectedIndex = -1;
     private string? _runningGameName;
+    private string? _runningGameExecutablePath;
     public  string? RunningGameName => _runningGameName;
 
     // ── Sistema de troféus ────────────────────────────────────────────────────
@@ -167,6 +169,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public Action<GamepadButton>? ContextMenuNavigate { get; set; }
+    public Action? OpenSelectedGameMenu { get; set; }
 
     private bool _isHelpDialogOpen;
     public bool IsHelpDialogOpen
@@ -198,6 +201,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public Action<double>? TrophyDialogScroll { get; set; }
 
     private FpsOverlayWindow? _fpsOverlay;
+    private DispatcherTimer? _aiHintTimer;
+    private int _gamepadGridColumns = 10;
 
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
@@ -290,7 +295,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
              g.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
              g.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
-        _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.IsFavorite), ListSortDirection.Descending));
         _gamesView.SortDescriptions.Add(new SortDescription(nameof(Game.SortOrder), ListSortDirection.Ascending));
 
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
@@ -334,15 +338,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 SelectedGame = first;
         }
 
-        statusCallback?.Invoke("Iniciando serviços...");
+        statusCallback?.Invoke("Iniciando serviços de áudio...");
         await Task.Run(() =>
         {
             SoundService.Initialize();
         });
 
-        _hwMonitor = new HardwareMonitorService();
-        _hwMonitor.MetricsUpdated += OnMetricsUpdated;
-        _hwMonitor.Start();
+        statusCallback?.Invoke("Carregando especificações do computador...");
+        try
+        {
+            _hwMonitor = await Task.Run(() => new HardwareMonitorService());
+            _hwMonitor.MetricsUpdated += OnMetricsUpdated;
+            await Task.Run(() => _hwMonitor.RefreshOnce());
+        }
+        catch
+        {
+            _hwMonitor = null;
+        }
 
         _xinput = new XInputService();
         _xinput.ButtonPressed += OnGamepadButton;
@@ -361,7 +373,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _launcherTimeTimer.Start();
 
         statusCallback?.Invoke("Conectando contas...");
-        _ = RefreshAllAssetsOnStartupAsync();
         _ = TryRestoreXboxSessionAsync();
         _ = TryRestoreSteamSessionAsync();
         _ = TryRestoreEpicSessionAsync();
@@ -405,8 +416,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _clockTimer.Stop();
         _xinput.Stop();
         _xinput.Dispose();
-        _hwMonitor.Stop();
-        _hwMonitor.Dispose();
+        _hwMonitor?.Stop();
+        _hwMonitor?.Dispose();
         _xboxService?.Dispose();
         _steamService?.Dispose();
         _epicService?.Dispose();
@@ -570,6 +581,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void ResumeGamepadAfterDialog()
+    {
+        _xinput.Resume();
+        IsContextMenuOpen = false;
+        ActiveZone = NavZone.Carousel;
+        FocusedHeaderItem = "";
+
+        if (Application.Current.MainWindow is MainWindow mainWindow)
+        {
+            mainWindow.Dispatcher.BeginInvoke(() =>
+            {
+                if (Application.Current.Windows.OfType<Window>()
+                    .Any(window => window != mainWindow && window.IsVisible && window.IsActive))
+                    return;
+
+                mainWindow.Activate();
+                mainWindow.Focus();
+            }, DispatcherPriority.Input);
+        }
+    }
+
     private void LoadGames()
     {
         try
@@ -624,6 +656,49 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private int NextSortOrder() => Games.Count > 0 ? Games.Max(g => g.SortOrder) + 1 : 0;
 
+    private static bool SameExecutable(string? first, string? second)
+    {
+        if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
+            return false;
+
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(first),
+                Path.GetFullPath(second),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return string.Equals(first.Trim(), second.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    private static bool IsExecutableRunning(string executablePath)
+    {
+        try
+        {
+            var processName = Path.GetFileNameWithoutExtension(executablePath);
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                try
+                {
+                    var runningPath = process.MainModule?.FileName;
+                    if (SameExecutable(runningPath, executablePath))
+                        return true;
+                }
+                catch { }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
     [RelayCommand]
     private async Task AddGame()
     {
@@ -637,10 +712,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (dialog.ShowDialog() != true) return;
 
         var newGames = new List<Game>();
+        int duplicateCount = 0;
 
         foreach (var file in dialog.FileNames)
         {
-            if (Games.Any(g => g.ExecutablePath == file)) continue;
+            if (Games.Any(g => SameExecutable(g.ExecutablePath, file)))
+            {
+                duplicateCount++;
+                continue;
+            }
 
             var defaultName = Path.GetFileNameWithoutExtension(file);
 
@@ -664,6 +744,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             Games.Add(game);
             newGames.Add(game);
+        }
+
+        if (newGames.Count == 0)
+        {
+            StatusMessage = duplicateCount > 0
+                ? "Os executáveis selecionados já estão na biblioteca."
+                : $"{Games.Count} jogos na biblioteca";
+            return;
         }
 
         SaveGames();
@@ -1027,9 +1115,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
+            if ((!string.IsNullOrWhiteSpace(_runningGameExecutablePath)
+                 && SameExecutable(_runningGameExecutablePath, game.ExecutablePath))
+                || IsExecutableRunning(game.ExecutablePath))
+            {
+                StatusMessage = $"'{game.DisplayName}' já está em execução.";
+                return;
+            }
+
             SoundService.PlayLaunch();
             _xinput.Vibrate(0.6, 0.4, 400);
             _runningGameName = game.DisplayName;
+            _runningGameExecutablePath = game.ExecutablePath;
 
             var workDir = string.IsNullOrEmpty(game.InstallDirectory)
                 ? Path.GetDirectoryName(game.ExecutablePath) ?? string.Empty
@@ -1041,16 +1138,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 UseShellExecute = true,
                 WorkingDirectory = workDir
             });
+
+            // Mantém o jogo visível em primeiro plano sem deixar o launcher
+            // aparecer por trás do overlay da IA.
+            if (Application.Current.MainWindow is MainWindow launcherWindow)
+                launcherWindow.Hide();
+
             game.LastPlayed = DateTime.Now;
             SaveGames();
             StatusMessage = $"Iniciando {game.DisplayName}...";
 
             SetDiscordRichPresence(game.DisplayName);
 
-            _xinput.Stop();
+            // O launcher preserva seu estado atual durante o jogo.
+            // O monitor do controle continua ativo para que a navegação
+            // possa ser retomada imediatamente ao voltar ao launcher.
             var mainWin = Application.Current.MainWindow;
-            if (mainWin is not null)
-                mainWin.WindowState = WindowState.Minimized;
 
             if (SettingsService.Current.FpsOverlayEnabled)
             {
@@ -1058,9 +1161,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 _fpsOverlay.Show();
             }
 
-            // Mostra dica da IA com a hotkey após o jogo iniciar
-            var aiHint = new AiHintOverlay(_xinput);
-            aiHint.Show();
+            // Mostra a dica da IA 10 segundos após o jogo iniciar.
+            // Se o jogo fechar antes disso, o timer é cancelado em CleanupAfterGameExit.
+            _aiHintTimer?.Stop();
+            _aiHintTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+            _aiHintTimer.Tick += (_, _) =>
+            {
+                _aiHintTimer.Stop();
+                _aiHintTimer = null;
+
+                if (proc is not null && !proc.HasExited)
+                {
+                    var aiHint = new AiHintOverlay(_xinput);
+                    aiHint.Show();
+                }
+            };
+            _aiHintTimer.Start();
 
             var launchTime = DateTime.UtcNow;
             _ = Task.Run(async () =>
@@ -1075,12 +1191,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     SaveGames();
                     CleanupAfterGameExit();
 
-                    if (mainWin is not null)
-                    {
-                        mainWin.Show();
-                        mainWin.WindowState = WindowState.Normal;
-                        mainWin.Activate();
-                    }
+                    if (mainWin is MainWindow launcherWindow)
+                        launcherWindow.RestoreAfterGame();
                     _xinput.Start();
                     StatusMessage = $"{Games.Count} jogos na biblioteca";
                 });
@@ -1100,6 +1212,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         ClearDiscordRichPresence();
         _runningGameName = null;
+        _runningGameExecutablePath = null;
+        _aiHintTimer?.Stop();
+        _aiHintTimer = null;
         _fpsOverlay?.Close();
         _fpsOverlay = null;
 
@@ -1169,6 +1284,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"Capa de '{game.DisplayName}' atualizada!";
         }
+
+        ResumeGamepadAfterDialog();
     }
 
     [RelayCommand]
@@ -1195,6 +1312,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"Fundo de '{game.DisplayName}' atualizado!";
         }
+
+        ResumeGamepadAfterDialog();
     }
 
     [RelayCommand]
@@ -1247,7 +1366,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OpenAiAssistantCore(bool viaGamepad, bool fromLauncher = false)
     {
         // Prioridade: Groq (grátis) → OpenAI (pago)
-        var groqKey   = SettingsService.Current.GroqApiKey;
+        var environmentGroqKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
+        var groqKey   = !string.IsNullOrWhiteSpace(environmentGroqKey)
+            ? environmentGroqKey.Trim()
+            : !string.IsNullOrWhiteSpace(SecretsService.GroqApiKey)
+                ? SecretsService.GroqApiKey
+                : SettingsService.Current.GroqApiKey;
         var openAiKey = SettingsService.Current.OpenAiApiKey;
 
         AiProvider provider;
@@ -1276,13 +1400,49 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Quando aberto pelo launcher: chat geral (sem jogo em foco).
         // Quando aberto por hotkey/controle durante o jogo: focado no jogo em execução.
         string? gameName = fromLauncher ? null : _runningGameName;
+        var gameWindowHandle = fromLauncher ? IntPtr.Zero : FindRunningGameWindow();
 
-        var chatDialog = new AiAssistantDialog(provider, apiKey, gameName, viaGamepad, _xinput)
+        var chatDialog = new AiAssistantDialog(
+            provider, apiKey, gameName, viaGamepad, _xinput,
+            gameWindowHandle, _runningGameExecutablePath)
         {
-            Owner = Application.Current.MainWindow
+            Owner = viaGamepad ? null : Application.Current.MainWindow,
+            Topmost = true,
+            ShowInTaskbar = false,
+            WindowState = viaGamepad ? WindowState.Normal : WindowState.Maximized,
+            Width = 620,
+            Height = 640,
+            ShowActivated = true
         };
         chatDialog.Show();
         _trophyService.OnAiUsed();
+    }
+
+    private IntPtr FindRunningGameWindow()
+    {
+        if (string.IsNullOrWhiteSpace(_runningGameExecutablePath))
+            return IntPtr.Zero;
+
+        try
+        {
+            var processName = Path.GetFileNameWithoutExtension(_runningGameExecutablePath);
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                try
+                {
+                    process.Refresh();
+                    if (process.MainWindowHandle != IntPtr.Zero)
+                        return process.MainWindowHandle;
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+        }
+        catch { }
+
+        return IntPtr.Zero;
     }
 
     [RelayCommand]
@@ -2084,6 +2244,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"'{game.DisplayName}' atualizado!";
         }
+
+        ResumeGamepadAfterDialog();
     }
 
     [RelayCommand]
@@ -2116,7 +2278,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var name = _xinput.ControllerName;
             bool isPlayStation = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
                               || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
-            var buttons = isPlayStation ? "✕ = Jogar  |  △ = Favorito" : "A = Jogar  |  Y = Favorito";
+            var buttons = isPlayStation ? "✕ = Jogar  |  △ = Opções" : "A = Jogar  |  Y = Opções";
             GamepadStatus = connected
                 ? string.IsNullOrEmpty(name)
                     ? $"🎮 Controle conectado  |  {buttons}"
@@ -2136,8 +2298,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
             if (!connected)
             {
-                SelectedGame = null;
-                _selectedIndex = -1;
+                // A desconexão/hibernação do controle não deve apagar a
+                // seleção visual do launcher. Caso contrário, após alguns
+                // minutos sem usar o controle, o painel de detalhes e o
+                // fundo do jogo desaparecem, dando a impressão de que a
+                // biblioteca ficou vazia.
                 FocusedHeaderItem = "";
                 ActiveZone = NavZone.Carousel;
             }
@@ -2157,6 +2322,51 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher.BeginInvoke(() =>
         {
             if (IsAnimationLoading) return;
+
+            // Enquanto o chat da IA estiver aberto, somente ele deve receber
+            // os comandos do controle. Isso evita que X/Y/A acionem ações do
+            // launcher, como buscar capa ou favoritar o jogo em segundo plano.
+            if (Application.Current.Windows.OfType<AiAssistantDialog>().Any())
+                return;
+
+            var activeDialog = Application.Current.Windows
+                .OfType<Window>()
+                .LastOrDefault(window => window != Application.Current.MainWindow &&
+                                         window.IsVisible &&
+                                         (window.IsActive || window.IsKeyboardFocusWithin));
+
+            // Diálogos com listas e grades próprias precisam receber o input
+            // diretamente para que o controle consiga selecionar e aplicar
+            // capas, fundos e resultados do IGDB.
+            switch (activeDialog)
+            {
+                case CoverSearchDialog coverDialog:
+                    coverDialog.HandleGamepadInput(button);
+                    return;
+                case BackgroundSearchDialog backgroundDialog:
+                    backgroundDialog.HandleGamepadInput(button);
+                    return;
+                case IgdbGameInfoDialog igdbDialog:
+                    igdbDialog.HandleGamepadInput(button);
+                    return;
+            }
+
+            if (activeDialog is not null &&
+                !IsHelpDialogOpen && !IsTrophyDialogOpen && !IsProfileDialogOpen)
+            {
+                HandleDialogGamepadInput(activeDialog, button);
+                return;
+            }
+
+            // Com um jogo em execução, o launcher não deve processar comandos
+            // do controle em segundo plano. Select continua disponível para
+            // reabrir o chat.
+            if (!string.IsNullOrWhiteSpace(_runningGameName))
+            {
+                if (button == GamepadButton.Back)
+                    OnAiComboTriggered();
+                return;
+            }
 
             if (IsHelpDialogOpen)
             {
@@ -2186,10 +2396,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
             switch (button)
             {
                 case GamepadButton.DPadUp:
-                    SwitchZone(-1);
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var gamesUp = GetVisibleGames();
+                        if (gamesUp.Count > 0)
+                        {
+                            NavigateCarousel(-_gamepadGridColumns, gamesUp);
+                            SoundService.PlayNavigate();
+                        }
+                    }
+                    else
+                        SwitchZone(-1);
                     return;
                 case GamepadButton.DPadDown:
-                    SwitchZone(1);
+                    if (ActiveZone == NavZone.Carousel)
+                    {
+                        var gamesDown = GetVisibleGames();
+                        if (gamesDown.Count > 0)
+                        {
+                            NavigateCarousel(_gamepadGridColumns, gamesDown);
+                            SoundService.PlayNavigate();
+                        }
+                    }
+                    else
+                        SwitchZone(1);
                     return;
 
                 case GamepadButton.DPadLeft:
@@ -2215,21 +2445,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
 
                 case GamepadButton.A:
-                    // No Big Picture, A sempre lança o jogo selecionado no carrossel
-                    if (IsBigPictureMode && ActiveZone == NavZone.Carousel && SelectedGame is not null)
-                    {
-                        SoundService.PlaySelect();
-                        LaunchGame(SelectedGame);
-                    }
-                    else
-                    {
-                        ActivateCurrentItem();
-                    }
+                    // A volta a executar imediatamente a ação principal.
+                    ExecuteAAction();
                     return;
 
                 case GamepadButton.Y:
                     if (SelectedGame is not null)
-                        ToggleFavorite(SelectedGame);
+                    {
+                        ActiveZone = NavZone.Carousel;
+                        SoundService.PlaySelect();
+                        OpenSelectedGameMenu?.Invoke();
+                    }
                     return;
                 case GamepadButton.X:
                     if (SelectedGame is not null)
@@ -2240,10 +2466,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
 
                 case GamepadButton.Start:
-                    OpenSettingsMenu();
+                    // O botão Start fica livre para os comandos do jogo.
                     return;
                 case GamepadButton.Back:
-                    OpenHelp();
+                    // Select (dois quadrados) abre o assistente durante o jogo.
+                    OnAiComboTriggered();
                     return;
 
                 case GamepadButton.RightThumb:
@@ -2251,6 +2478,46 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     return;
             }
         });
+    }
+
+    private static void HandleDialogGamepadInput(Window dialog, GamepadButton button)
+    {
+        switch (button)
+        {
+            case GamepadButton.DPadUp:
+                dialog.MoveFocus(new TraversalRequest(FocusNavigationDirection.Up));
+                break;
+            case GamepadButton.DPadDown:
+                dialog.MoveFocus(new TraversalRequest(FocusNavigationDirection.Down));
+                break;
+            case GamepadButton.DPadLeft:
+                dialog.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
+                break;
+            case GamepadButton.DPadRight:
+                dialog.MoveFocus(new TraversalRequest(FocusNavigationDirection.Right));
+                break;
+            case GamepadButton.A when Keyboard.FocusedElement is System.Windows.Controls.Button buttonElement:
+                buttonElement.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+                break;
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                dialog.Close();
+                break;
+        }
+    }
+
+    private void ExecuteAAction()
+    {
+        // No Big Picture, A sempre lança o jogo selecionado no carrossel.
+        if (IsBigPictureMode && ActiveZone == NavZone.Carousel && SelectedGame is not null)
+        {
+            SoundService.PlaySelect();
+            LaunchGame(SelectedGame);
+        }
+        else
+        {
+            ActivateCurrentItem();
+        }
     }
 
     private void OnRightStickY(double value)
@@ -2333,6 +2600,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _selectedIndex = newIndex;
         SelectedGame = visible[newIndex];
     }
+
+    public void SetGamepadGridColumns(int columns)
+        => _gamepadGridColumns = Math.Max(1, columns);
 
     private void ActivateCurrentItem()
     {
@@ -2432,8 +2702,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 ? "✕ = Jogar  |  ⬆ Menu  |  ⬇ Jogos"
                 : "A = Jogar  |  ⬆ Menu  |  ⬇ Jogos",
             NavZone.Carousel => isPS
-                ? "⬅➡ Jogos  |  ✕ = Jogar  |  △ = Favorito  |  ⬆ Ações"
-                : "⬅➡ Jogos  |  A = Jogar  |  Y = Favorito  |  ⬆ Ações",
+                ? "⬅➡ Jogos  |  ✕ = Jogar  |  △ = Opções  |  ⬆ Ações"
+                : "⬅➡ Jogos  |  A = Jogar  |  Y = Opções  |  ⬆ Ações",
             _ => ""
         };
 

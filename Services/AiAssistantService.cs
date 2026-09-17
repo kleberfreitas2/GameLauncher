@@ -28,9 +28,10 @@ public class AiAssistantService : IDisposable
 
         if (provider == AiProvider.Groq)
         {
-            // Groq é compatível com a API OpenAI; usa llama-3.3-70b gratuito
+            // Groq é compatível com a API OpenAI.
+            // Modelo OpenAI open-weight disponível no catálogo atual da Groq.
             builder.AddOpenAIChatCompletion(
-                modelId: "llama-3.3-70b-versatile",
+                modelId: "openai/gpt-oss-20b",
                 apiKey: apiKey,
                 endpoint: GroqEndpoint);
         }

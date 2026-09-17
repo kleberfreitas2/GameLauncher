@@ -3,11 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:models="clr-namespace:GameLauncher.Models"
-        Title="GLauncher AI" Height="640" Width="480"
+         Title="GLauncher AI" Height="640" Width="620"
         WindowStyle="None" AllowsTransparency="True"
-        Background="Transparent"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResizeWithGrip">
+         Background="Transparent" WindowState="Maximized"
+         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+         ShowInTaskbar="False">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -36,7 +36,10 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="#0D0D1A" CornerRadius="16"
+    <Grid Background="#B8000000">
+     <Border Width="620" Height="640"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="#0D0D1A" CornerRadius="16"
             BorderBrush="#2A2A4A" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="8" Opacity="0.7"/>
@@ -122,8 +125,11 @@
             <Border Grid.Row="3" Background="#16163A" CornerRadius="0"
                     Padding="10,10">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                      <Grid.ColumnDefinitions>
-                         <ColumnDefinition Width="Auto"/>
                          <ColumnDefinition Width="Auto"/>
                          <ColumnDefinition Width="*"/>
                          <ColumnDefinition Width="Auto"/>
@@ -138,16 +144,7 @@
                     </Button>
 
                     
-                    <Button x:Name="BtnScreenshot" Grid.Column="1"
-                            Click="Screenshot_Click" ToolTip="Analisar Screenshot"
-                            Background="Transparent" BorderThickness="0"
-                            Cursor="Hand" Padding="6" Margin="0,0,6,0">
-                        <md:PackIcon Kind="ImageSearch" Width="22" Height="22"
-                                     Foreground="#8899BB"/>
-                    </Button>
-
-                    
-                    <Border Grid.Column="2" Background="#0D0D1A" CornerRadius="12"
+                    <Border Grid.Column="1" Background="#0D0D1A" CornerRadius="12"
                             Padding="12,8">
                         <TextBox x:Name="InputBox"
                                  Background="Transparent" BorderThickness="0"
@@ -181,7 +178,7 @@
                     </Border>
 
                     
-                    <Button x:Name="BtnSend" Grid.Column="3"
+                    <Button x:Name="BtnSend" Grid.Column="2"
                             Click="Send_Click" Cursor="Hand"
                             Margin="6,0,0,0" Padding="10"
                             BorderThickness="0">
@@ -212,6 +209,13 @@
                         </Button.Style>
                         <md:PackIcon Kind="Send" Width="18" Height="18" Foreground="White"/>
                     </Button>
+
+                    <Border x:Name="GameKeyboardPanel" Grid.Row="1" Grid.ColumnSpan="3"
+                            Visibility="Collapsed" Margin="0,10,0,0"
+                            Background="#111126" BorderBrush="#3B2A70" BorderThickness="1"
+                            CornerRadius="14" Padding="8,10">
+                        <StackPanel x:Name="KeyboardRows" HorizontalAlignment="Center"/>
+                    </Border>
                 </Grid>
             </Border>
 
@@ -229,15 +233,20 @@
                         </Border>
                         <TextBlock Text=" Enviar  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
                         <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeY" Text="Y" FontSize="10" FontWeight="Bold"
+                                       Foreground="#FFD600" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Espaço  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
                             <TextBlock x:Name="HintBadgeX" Text="X" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource AccentBrush}" FontFamily="Consolas"/>
+                                       Foreground="#2196F3" FontFamily="Consolas"/>
+                        </Border>
+                        <TextBlock Text=" Apagar  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
+                            <TextBlock x:Name="HintBadgeStart" Text="☰" FontSize="10" FontWeight="Bold"
+                                       Foreground="#FFFFFF" FontFamily="Consolas"/>
                         </Border>
                         <TextBlock Text=" Teclado  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
-                        <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
-                            <TextBlock x:Name="HintBadgeY" Text="Y" FontSize="10" FontWeight="Bold"
-                                       Foreground="#FFD740" FontFamily="Consolas"/>
-                        </Border>
-                        <TextBlock Text=" Screenshot  " FontSize="10" Foreground="#8899BB" VerticalAlignment="Center"/>
                         <Border Background="#2A2A4A" CornerRadius="4" Padding="5,1" Margin="0,0,2,0">
                             <TextBlock x:Name="HintBadgeB" Text="B" FontSize="10" FontWeight="Bold"
                                        Foreground="#FF5252" FontFamily="Consolas"/>
@@ -264,5 +273,6 @@
             </Border>
         </Grid>
     </Border>
+    </Grid>
 </Window>
 

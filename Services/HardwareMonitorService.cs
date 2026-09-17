@@ -53,6 +53,8 @@ public sealed class HardwareMonitorService : IDisposable
     public void Start() => _timer.Start();
     public void Stop() => _timer.Stop();
 
+    public void RefreshOnce() => OnTimerElapsed(null, null!);
+
     private static IEnumerable<ISensor> GetAllSensors(IHardware hw)
     {
         foreach (var sensor in hw.Sensors)

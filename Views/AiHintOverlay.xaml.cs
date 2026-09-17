@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GameLauncher.Services;
@@ -16,7 +17,7 @@ public partial class AiHintOverlay : Window
     private const int WS_EX_TOOLWINDOW  = 0x00000080;
     private const int WS_EX_NOACTIVATE  = 0x08000000;
 
-    private const double VisibleSeconds = 7;
+    private const double VisibleSeconds = 15;
     private readonly DispatcherTimer _dismissTimer;
     private readonly XInputService? _xinput;
 
@@ -62,11 +63,10 @@ public partial class AiHintOverlay : Window
             PanelGamepad.Visibility  = Visibility.Visible;
             PanelKeyboard.Visibility = Visibility.Collapsed;
 
-            // Adapta o botao Y conforme o controle (PlayStation usa Triangulo)
+            // Adapta o nome do botão Select conforme o controle.
             bool isPlayStation = controllerName.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
                               || controllerName.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
-            BadgeStart.Text = isPlayStation ? "Options" : "Start";
-            BadgeY.Text     = isPlayStation ? "△" : "Y";
+            BadgeSelect.Text = isPlayStation ? "Share" : "Select";
         }
         else
         {
@@ -96,9 +96,14 @@ public partial class AiHintOverlay : Window
 
     private void PlayFadeIn()
     {
+        RootBorder.RenderTransform = new TranslateTransform(0, 14);
         var anim = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400))
             { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
         BeginAnimation(OpacityProperty, anim);
+
+        var slide = new DoubleAnimation(14, 0, TimeSpan.FromMilliseconds(550))
+            { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        RootBorder.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slide);
     }
 
     private void PlayFadeOutAndClose()
@@ -107,5 +112,9 @@ public partial class AiHintOverlay : Window
             { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn } };
         anim.Completed += (_, _) => Close();
         BeginAnimation(OpacityProperty, anim);
+
+        var slide = new DoubleAnimation(0, -10, TimeSpan.FromMilliseconds(700))
+            { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } };
+        RootBorder.RenderTransform.BeginAnimation(TranslateTransform.YProperty, slide);
     }
 }

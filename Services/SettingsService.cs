@@ -19,7 +19,11 @@ public static class SettingsService
     {
         try
         {
-            if (!File.Exists(SettingsPath)) return;
+            if (!File.Exists(SettingsPath))
+            {
+                Current.GroqApiKey = string.Empty;
+                return;
+            }
             var json = File.ReadAllText(SettingsPath);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
             if (Current.SteamGridDbApiKey.StartsWith("http", StringComparison.OrdinalIgnoreCase))
@@ -30,8 +34,18 @@ public static class SettingsService
             Current.GroqApiKey        = SecretsService.Unprotect(Current.GroqApiKey);
             Current.DiscordClientSecret = SecretsService.Unprotect(Current.DiscordClientSecret);
             Current.DiscordWebhookUrl = SecretsService.Unprotect(Current.DiscordWebhookUrl);
+
+            // A chave Groq embutida é apenas um valor legado/ofuscado.
+            // Nunca a use como credencial padrão: solicite uma chave configurada pelo usuário.
+            if (SecretsService.IsLegacyGroqApiKey(Current.GroqApiKey))
+                Current.GroqApiKey = string.Empty;
         }
         catch { Current = new AppSettings(); }
+
+        // A chave Groq embutida não deve ser usada automaticamente, inclusive
+        // quando não existe um arquivo de configurações anterior.
+        if (SecretsService.IsLegacyGroqApiKey(Current.GroqApiKey))
+            Current.GroqApiKey = string.Empty;
 
         if (IsInvalidKey(Current.SteamGridDbApiKey))
             Current.SteamGridDbApiKey = AppSettings.DefaultSteamGridDbApiKey;

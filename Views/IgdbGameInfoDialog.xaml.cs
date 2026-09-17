@@ -53,6 +53,7 @@ public partial class IgdbGameInfoDialog : Window
         StatusText.Visibility   = Visibility.Collapsed;
         ResultsList.ItemsSource = games;
         ResultsList.Visibility  = Visibility.Visible;
+        ResultsList.SelectedIndex = 0;
     }
 
     private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -96,6 +97,44 @@ public partial class IgdbGameInfoDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+
+    public void HandleGamepadInput(GamepadButton button)
+    {
+        if (LoadingBar.Visibility == Visibility.Visible) return;
+
+        switch (button)
+        {
+            case GamepadButton.B:
+            case GamepadButton.Back:
+                Close();
+                return;
+            case GamepadButton.DPadUp:
+                MoveSelection(-1);
+                return;
+            case GamepadButton.DPadDown:
+                MoveSelection(1);
+                return;
+            case GamepadButton.LeftShoulder:
+                MoveSelection(-5);
+                return;
+            case GamepadButton.RightShoulder:
+                MoveSelection(5);
+                return;
+            case GamepadButton.A:
+                if (_selected is not null)
+                    ApplyInfo_Click(this, new RoutedEventArgs());
+                return;
+        }
+    }
+
+    private void MoveSelection(int delta)
+    {
+        if (ResultsList.Items.Count == 0) return;
+
+        var index = ResultsList.SelectedIndex < 0 ? 0 : ResultsList.SelectedIndex;
+        ResultsList.SelectedIndex = Math.Clamp(index + delta, 0, ResultsList.Items.Count - 1);
+        ResultsList.ScrollIntoView(ResultsList.SelectedItem);
+    }
 
     private void SetLoading(bool loading)
     {

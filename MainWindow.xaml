@@ -250,7 +250,7 @@
                     </Border>
                 </Popup>
 
-<StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+<StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <StackPanel.Resources>
                         
                         <Style TargetType="md:PackIcon">
@@ -573,6 +573,18 @@
                     </Button>
                     </Border>
 
+                    <Button Click="BtnYoutube_Click" Style="{StaticResource HeaderActionButton}"
+                            Background="#FF0000" Foreground="White" Padding="14,8"
+                            Cursor="Hand" ToolTip="Inscreva-se no canal CarecaRetrô"
+                            Margin="0,0,14,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Youtube" Width="18" Height="18"
+                                         Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="INSCREVA-SE" FontSize="11" FontWeight="Bold"
+                                       Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     
                     <Button Command="{Binding OpenDonationCommand}" VerticalAlignment="Center"
                             Cursor="Hand" BorderThickness="0" Background="Transparent" Padding="0"
@@ -731,7 +743,7 @@
                             </Border>
                         </StackPanel>
                     </Border>
-                    <Border Margin="0,0,16,0">
+                    <Border Grid.Column="2" HorizontalAlignment="Right" Margin="0,0,16,0">
                         <Border.Style>
                             <Style TargetType="Border" BasedOn="{StaticResource GamepadFocusBorder}">
                                 <Style.Triggers>
@@ -747,9 +759,6 @@
                             </Style>
                         </Border.Style>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    
-                            
-                            
                             <Button ToolTip="GLauncher AI — Assistente Gamer"
                             Command="{Binding OpenAiAssistantCommand}"
                             x:Name="BtnAi" Click="BtnAi_Click"
@@ -861,9 +870,13 @@
                           Command="{Binding RenameGameCommand}"
                           CommandParameter="{Binding DetailGame}"/>
                                         <Separator/>
-                                        <MenuItem Header="Remover Jogo"
-                          Command="{Binding RemoveGameCommand}"
-                          CommandParameter="{Binding DetailGame}"/>
+                                         <MenuItem Header="Remover Jogo" FontWeight="Bold" Foreground="#FF5252"
+                           Command="{Binding RemoveGameCommand}"
+                           CommandParameter="{Binding DetailGame}">
+                                             <MenuItem.Icon>
+                                                 <md:PackIcon Kind="Delete" Width="16" Height="16" Foreground="#FF5252"/>
+                                             </MenuItem.Icon>
+                                         </MenuItem>
                                     </ContextMenu>
                                 </Button.ContextMenu>
                             </Button>
@@ -1012,23 +1025,45 @@
                 </Border.Background>
             </Border>
 
-<Border x:Name="FpsBadge"
+            <Button Grid.RowSpan="3" Command="{Binding AddGameCommand}"
+                    Width="168" Height="62"
                     HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Margin="0,10,20,0" Panel.ZIndex="100"
-                    Background="#CC0A0A18" CornerRadius="12"
-                    Padding="16,8" IsHitTestVisible="False">
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="2" Opacity="0.6"/>
-                </Border.Effect>
-                <StackPanel Orientation="Horizontal">
-                    <md:PackIcon Kind="Speedometer" Width="22" Height="22"
-                                 Foreground="#8888AA" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="FpsText" Text="--" FontSize="28" FontWeight="Bold"
-                               Foreground="#00E676" VerticalAlignment="Center"/>
-                    <TextBlock Text=" FPS" FontSize="14" FontWeight="Bold"
-                               Foreground="#8888AA" VerticalAlignment="Center" Margin="4,4,0,0"/>
-                </StackPanel>
-            </Border>
+                    Margin="0,10,20,0"
+                    Panel.ZIndex="100" ToolTip="Adicionar um novo jogo"
+                    Background="Transparent" BorderThickness="0" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="AddGameOverlayBd" Background="#CC0A0A18"
+                                BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="12" Padding="12,8">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="12"
+                                                  ShadowDepth="2" Opacity="0.65"/>
+                            </Border.Effect>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <md:PackIcon Kind="GamepadVariant" Width="28" Height="28"
+                                             Foreground="#C7D0DC" VerticalAlignment="Center"
+                                             Margin="0,0,9,0"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="ADICIONAR JOGO" FontSize="11"
+                                               FontWeight="Bold" Foreground="#F5F7FA"/>
+                                    <TextBlock Text="Clique para adicionar" FontSize="9"
+                                               Foreground="#8D99A8" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="AddGameOverlayBd" Property="Background" Value="#E61A2330"/>
+                                <Setter TargetName="AddGameOverlayBd" Property="BorderBrush" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="AddGameOverlayBd" Property="Opacity" Value="0.75"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
 
 <Border Panel.ZIndex="99"
               Visibility="{Binding IsLoading, ElementName=BackgroundAnim, Converter={StaticResource BoolToVisibility}}"
@@ -1385,31 +1420,6 @@
                     </Border>
 
                     
-                    <Border Grid.Column="1" VerticalAlignment="Stretch" Padding="22,16" CornerRadius="14" Margin="16,0,0,0">
-                        <Border.Background>
-                            <SolidColorBrush Color="#000000" Opacity="0.5"/>
-                        </Border.Background>
-                        <Border.Effect>
-                            <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.4"/>
-                        </Border.Effect>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" Margin="6,0">
-                                <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.65" ScaleY="1.65"/></ctrl:ArcGauge.LayoutTransform>
-                            </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" Margin="6,0">
-                                <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.65" ScaleY="1.65"/></ctrl:ArcGauge.LayoutTransform>
-                            </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="6,0">
-                                <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.65" ScaleY="1.65"/></ctrl:ArcGauge.LayoutTransform>
-                            </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="8,0">
-                                <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
-                            </ctrl:ArcGauge>
-                            <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="8,0">
-                                <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.75" ScaleY="1.75"/></ctrl:ArcGauge.LayoutTransform>
-                            </ctrl:ArcGauge>
-                        </StackPanel>
-                    </Border>
                 </Grid>
 
 <Border Grid.Row="1" Padding="30,18,30,16">
@@ -1430,20 +1440,88 @@
                             <GradientStop Color="#88080815" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <StackPanel>
-                        <ListBox ItemsSource="{Binding GamesView}"
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                         <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Visibility="Collapsed" Command="{Binding AddGameCommand}"
+                                Cursor="Hand" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Width="155" Height="210" BorderThickness="0"
+                                ToolTip="Adicionar um novo jogo">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="AddGameBd" Width="155" Height="210"
+                                            CornerRadius="10" BorderThickness="2"
+                                            BorderBrush="#00E676" Background="#18182A"
+                                            RenderTransformOrigin="0.5,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="#00E676" BlurRadius="18"
+                                                              ShadowDepth="0" Opacity="0.28"/>
+                                        </Border.Effect>
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Width="58" Height="58" CornerRadius="29"
+                                                    Background="#2200E676" BorderBrush="#00E676"
+                                                    BorderThickness="1" HorizontalAlignment="Center">
+                                                <md:PackIcon Kind="Plus" Width="30" Height="30"
+                                                             Foreground="#00E676"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="ADICIONAR JOGO" FontSize="12"
+                                                       FontWeight="Bold" Foreground="#00E676"
+                                                       HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                                            <TextBlock Text="Clique para adicionar" FontSize="10"
+                                                       Foreground="#7788AA" HorizontalAlignment="Center"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="AddGameBd" Property="Background" Value="#222442"/>
+                                            <Setter TargetName="AddGameBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.06" ScaleY="1.06"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Setter TargetName="AddGameBd" Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect Color="#00E676" BlurRadius="28"
+                                                                      ShadowDepth="0" Opacity="0.6"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="AddGameBd" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <ListBox Grid.Column="1" ItemsSource="{Binding GamesView}"
                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                     VirtualizingPanel.IsVirtualizing="True"
-                     VirtualizingPanel.VirtualizationMode="Recycling"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      ScrollViewer.CanContentScroll="False"
                      x:Name="GameCarousel"
+                     Focusable="True" IsTabStop="True"
+                     KeyboardNavigation.DirectionalNavigation="Contained"
+                     PreviewKeyDown="GameCarousel_PreviewKeyDown"
                      SelectionChanged="GameCarousel_SelectionChanged"
-                     Padding="0,0,20,0">
+                      Padding="0,8,20,18">
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel Orientation="Horizontal"/>
+                                    <WrapPanel Orientation="Horizontal"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                             <ListBox.ItemContainerStyle>
@@ -1464,7 +1542,7 @@
                                                             <DropShadowEffect Color="#107C10" BlurRadius="20" ShadowDepth="0" Opacity="0.75"/>
                                                         </Border.Effect>
                                                     </Border>
-<Border x:Name="Bd" Width="155" Height="210"
+ <Border x:Name="Bd" Width="155" Height="210"
                                                             CornerRadius="10" ClipToBounds="True"
                                                             Background="#44000000" Cursor="Hand">
                                                         <Grid>
@@ -1591,11 +1669,56 @@
                                                     </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid x:Name="CardRoot" Background="#1A2533">
+                                    <Grid x:Name="CardRoot" Background="#1A2533" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          ContextMenuOpening="GameCardContextMenu_Opening">
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <ContextMenu.Resources>
+                                                    <Style TargetType="{x:Type MenuItem}">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                                <Setter Property="Background" Value="#1ED76B"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ContextMenu.Resources>
+                                                <MenuItem Header="Alternar Favorito"
+                                                          Command="{Binding PlacementTarget.Tag.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Alterar Imagem"
+                                                          Command="{Binding PlacementTarget.Tag.ChangeImageCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Buscar Capa Online"
+                                                          Command="{Binding PlacementTarget.Tag.SearchCoverCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Buscar Fundo (Screenshot/Key Art)"
+                                                          Command="{Binding PlacementTarget.Tag.SearchBackgroundCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Buscar Info IGDB"
+                                                          Command="{Binding PlacementTarget.Tag.FetchIgdbInfoCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Re-escanear Tecnologias"
+                                                          Command="{Binding PlacementTarget.Tag.RescanGameTechCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Recomendação Gráfica (Hardware)"
+                                                          Command="{Binding PlacementTarget.Tag.OpenHwRecommendationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <MenuItem Header="Renomear"
+                                                          Command="{Binding PlacementTarget.Tag.RenameGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                 <Separator/>
+                                                 <MenuItem Header="Remover Jogo" FontWeight="Bold" Foreground="#FF5252"
+                                                           Command="{Binding PlacementTarget.Tag.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                     <MenuItem.Icon>
+                                                         <md:PackIcon Kind="Delete" Width="16" Height="16" Foreground="#FF5252"/>
+                                                     </MenuItem.Icon>
+                                                 </MenuItem>
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
                                         <md:PackIcon Kind="GamepadVariant" Width="30" Height="30"
                                  Foreground="#334455" HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Visibility="{Binding HasNoImage, Converter={StaticResource BoolToVisibility}}"/>
-                                        <Image Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=155}"
+                                         <Image Source="{Binding EffectiveImagePath, Converter={StaticResource PathToImageConverter}, ConverterParameter=155}"
                            Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"
                            Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility}}"/>
                                         <md:PackIcon Kind="Star" Width="16" Height="16" Foreground="#FFD700"
@@ -1707,10 +1830,25 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </StackPanel>
+                         <Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                 Margin="0,0,8,-7" Padding="7,3"
+                                 Background="#0A0A14" BorderBrush="#334455" BorderThickness="1"
+                                 CornerRadius="8" IsHitTestVisible="False">
+                             <StackPanel Orientation="Horizontal">
+                                 <md:PackIcon Kind="DotsVertical" Width="11" Height="11"
+                                              Foreground="#00E676" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                 <TextBlock FontSize="8" Foreground="White" VerticalAlignment="Center">
+                                     <Run Text="Para menu de opções pressione: " FontWeight="SemiBold"/>
+                                     <Run Text="Mouse: botão direito" FontWeight="SemiBold"/>
+                                     <Run Text="  •  Xbox: pressione " Foreground="#D5D9E0"/>
+                                     <Run Text="Y" FontWeight="Bold" Foreground="#00E676"/>
+                                 </TextBlock>
+                             </StackPanel>
+                         </Border>
+                    </Grid>
                 </Border>
 
-<Border Grid.Row="2" Padding="50,12,50,14">
+<Border Grid.Row="2" Height="300" Padding="50,12,50,14">
                     <Border.Background>
                         <SolidColorBrush Color="#0A0A12" Opacity="0.88"/>
                     </Border.Background>
@@ -1950,8 +2088,6 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="16"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="10,0,0,0">
@@ -1990,23 +2126,6 @@
                     </Grid>
                 </StackPanel>
 
-<StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-<ctrl:ArcGauge Value="{Binding CpuUsage}" Label="CPU" Margin="2,0">
-                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
-                    </ctrl:ArcGauge>
-                    <ctrl:ArcGauge Value="{Binding GpuUsage}" Label="GPU" Margin="2,0">
-                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
-                    </ctrl:ArcGauge>
-                    <ctrl:ArcGauge Value="{Binding RamUsage}" Label="RAM" Margin="2,0">
-                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="0.85" ScaleY="0.85"/></ctrl:ArcGauge.LayoutTransform>
-                    </ctrl:ArcGauge>
-<ctrl:ArcGauge Value="{Binding CpuTemp}" Label="CPU °C" IsTemperature="True" Margin="4,0">
-                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
-                    </ctrl:ArcGauge>
-                    <ctrl:ArcGauge Value="{Binding GpuTemp}" Label="GPU °C" IsTemperature="True" Margin="4,0">
-                        <ctrl:ArcGauge.LayoutTransform><ScaleTransform ScaleX="1.1" ScaleY="1.1"/></ctrl:ArcGauge.LayoutTransform>
-                    </ctrl:ArcGauge>
-                </StackPanel>
             </Grid>
         </Border>
 

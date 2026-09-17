@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,25 +17,30 @@ namespace GameLauncher;
 
 public partial class MainWindow : Window
 {
-    private static readonly SolidColorBrush FpsGreen;
-    private static readonly SolidColorBrush FpsAmber;
-    private static readonly SolidColorBrush FpsRed;
-
-    static MainWindow()
+    private void GameCardContextMenu_Opening(object sender, ContextMenuEventArgs e)
     {
-        FpsGreen = new SolidColorBrush(Color.FromRgb(0, 230, 118));
-        FpsGreen.Freeze();
-        FpsAmber = new SolidColorBrush(Color.FromRgb(255, 215, 64));
-        FpsAmber.Freeze();
-        FpsRed = new SolidColorBrush(Color.FromRgb(255, 82, 82));
-        FpsRed.Freeze();
+        if (sender is FrameworkElement element && element.DataContext is Game game
+            && DataContext is MainViewModel viewModel)
+        {
+            viewModel.DetailGame = game;
+            if (element.ContextMenu is { } menu)
+            {
+                _activeContextMenu = menu;
+                _menuItems = CollectMenuItems(menu);
+                _menuIndex = 0;
+                viewModel.IsContextMenuOpen = true;
+                if (_menuItems.Count > 0)
+                    HighlightMenuItem(_menuItems[0]);
+                menu.Opened -= ContextMenu_Opened;
+                menu.Opened += ContextMenu_Opened;
+                menu.Closed -= ContextMenu_Closed;
+                menu.Closed += ContextMenu_Closed;
+            }
+        }
     }
-
-    private int _frameCount;
-    private TimeSpan _lastFpsTime;
-
     private List<MenuItem> _menuItems = [];
     private int _menuIndex;
+    private ContextMenu? _activeContextMenu;
 
     private bool _isFullscreen;
     private WindowStyle _previousWindowStyle;
@@ -79,12 +85,14 @@ public partial class MainWindow : Window
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.ContextMenuNavigate = NavigateContextMenu;
+            viewModel.OpenSelectedGameMenu = OpenSelectedGameMenu;
 
             // Atualiza o gamerscore de troféus no header
             if (BtnGear.ContextMenu is { } ctx)
             {
                 ctx.Opened += (_, _) =>
                 {
+                     _activeContextMenu = ctx;
                     viewModel.IsContextMenuOpen = true;
                     _menuItems = CollectMenuItems(ctx);
                     _menuIndex = 0;
@@ -93,6 +101,7 @@ public partial class MainWindow : Window
                 };
                 ctx.Closed += (_, _) =>
                 {
+                     _activeContextMenu = null;
                     viewModel.IsContextMenuOpen = false;
                     _menuItems.Clear();
                     _menuIndex = 0;
@@ -114,7 +123,9 @@ public partial class MainWindow : Window
 
         Loaded += (_, _) =>
         {
-            CompositionTarget.Rendering += OnFpsRendering;
+            Dispatcher.BeginInvoke(
+                new Action(SelectFirstGameOnEntry),
+                System.Windows.Threading.DispatcherPriority.Loaded);
 
             // Serviço de transição Big Picture
             _bpTransition = new BigPictureTransitionService(this);
@@ -128,6 +139,12 @@ public partial class MainWindow : Window
             GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove;
             GameCarousel.PreviewMouseMove += GameCarousel_PreviewMouseMove_Drag;
             GameCarousel.PreviewMouseLeftButtonUp += GameCarousel_PreviewMouseLeftButtonUp;
+            GameCarousel.SizeChanged += (_, _) =>
+            {
+                if (DataContext is MainViewModel gridVm)
+                    gridVm.SetGamepadGridColumns(
+                        Math.Max(1, (int)(GameCarousel.ActualWidth / 175)));
+            };
 
             // Sincronizar DropShadowEffects nomeados com o tema atual
             SettingsService.ThemeApplied += UpdateNamedGlowEffects;
@@ -150,7 +167,6 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) =>
         {
-            CompositionTarget.Rendering -= OnFpsRendering;
             SettingsService.ThemeApplied -= UpdateNamedGlowEffects;
             _hotkeys?.Dispose();
             _trayIcon?.Dispose();
@@ -159,6 +175,126 @@ public partial class MainWindow : Window
         };
     }
 
+
+    private void SelectFirstGameOnEntry()
+    {
+        if (GameCarousel.Items.Count == 0)
+            return;
+
+        GameCarousel.SelectedIndex = 0;
+        GameCarousel.Focus();
+        Keyboard.Focus(GameCarousel);
+    }
+
+    private void OpenSelectedGameMenu()
+    {
+        if (GameCarousel.SelectedItem is not Game game)
+            return;
+
+        GameCarousel.ScrollIntoView(game);
+        GameCarousel.UpdateLayout();
+        var item = GetListBoxItemForGame(game);
+        var target = item is null ? null : FindContextMenuTarget(item);
+        if (target?.ContextMenu is not ContextMenu menu)
+            return;
+
+        // O ContextMenu é exibido em uma janela Popup separada. Ao abri-lo pelo
+        // gamepad, o evento Opening/Opened pode ocorrer depois que o evento Y
+        // já terminou. Marcar o estado antes de IsOpen evita que o próximo
+        // comando do controle volte a ser tratado pelo carrossel.
+        if (DataContext is MainViewModel viewModel)
+        {
+            _activeContextMenu = menu;
+            _menuItems = CollectMenuItems(menu);
+            _menuIndex = 0;
+            viewModel.IsContextMenuOpen = true;
+        }
+
+        menu.PlacementTarget = target;
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.IsOpen = true;
+    }
+
+    private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ContextMenu menu)
+            return;
+
+        _activeContextMenu = menu;
+        _menuItems = CollectMenuItems(menu);
+        _menuIndex = 0;
+        if (DataContext is MainViewModel viewModel)
+            viewModel.IsContextMenuOpen = true;
+
+        // O primeiro item precisa receber foco imediatamente. Deixar esse
+        // foco para um callback posterior permite que o ListBox do carrossel
+        // o recupere e interprete o D-Pad como navegação entre jogos.
+        if (_menuItems.Count > 0)
+        {
+            menu.Focus();
+            HighlightMenuItem(_menuItems[0]);
+        }
+    }
+
+    private void ContextMenu_Closed(object? sender, RoutedEventArgs e)
+    {
+        var restoreFocus = sender is ContextMenu closedMenu && closedMenu.PlacementTarget is not null;
+
+        if (sender is ContextMenu menu && ReferenceEquals(_activeContextMenu, menu))
+            _activeContextMenu = null;
+
+        _menuItems.Clear();
+        _menuIndex = 0;
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.IsContextMenuOpen = false;
+
+            // O Popup do ContextMenu fica fora da árvore visual principal e,
+            // ao fechá-lo, o foco pode permanecer no MenuItem. Devolvê-lo ao
+            // carrossel garante que o próximo comando continue navegando pelos
+            // cards, inclusive após B/○.
+            if (restoreFocus)
+            {
+                Dispatcher.BeginInvoke(RestoreGamepadFocus,
+                    System.Windows.Threading.DispatcherPriority.Input);
+            }
+        }
+    }
+
+    private void RestoreGamepadFocus()
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            // Libera explicitamente o estado do menu antes de devolver o foco.
+            // Isso evita que o próximo comando do controle seja descartado
+            // enquanto o Popup do ContextMenu ainda está sendo desmontado.
+            viewModel.IsContextMenuOpen = false;
+            viewModel.ActiveZone = MainViewModel.NavZone.Carousel;
+        }
+
+        // Não roubar o foco de diálogos abertos por uma opção do menu.
+        if (Application.Current.Windows.OfType<Window>()
+            .Any(window => window != this && window.IsVisible && window.IsActive))
+            return;
+
+        GameCarousel.Focus();
+        Keyboard.Focus(GameCarousel);
+    }
+
+    private static FrameworkElement? FindContextMenuTarget(DependencyObject root)
+    {
+        if (root is FrameworkElement element && element.ContextMenu is not null)
+            return element;
+
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var target = FindContextMenuTarget(VisualTreeHelper.GetChild(root, i));
+            if (target is not null)
+                return target;
+        }
+
+        return null;
+    }
 
     #region System Tray
 
@@ -186,11 +322,30 @@ public partial class MainWindow : Window
 
     private void RestoreFromTray()
     {
-        Show();
-        WindowState = WindowState.Maximized;
-        Activate();
+        RestoreLauncherWindow(WindowState.Maximized);
+    }
+
+    public void RestoreAfterGame()
+    {
         if (_trayIcon is not null)
             _trayIcon.Visible = false;
+
+        Show();
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+        Activate();
+        Focus();
+    }
+
+    private void RestoreLauncherWindow(WindowState state)
+    {
+        if (_trayIcon is not null)
+            _trayIcon.Visible = false;
+
+        Show();
+        WindowState = state;
+        Activate();
+        Focus();
     }
 
     /// <summary>
@@ -202,7 +357,12 @@ public partial class MainWindow : Window
         {
             if (DataContext is not MainViewModel vm) return;
 
-            var groqKey   = GameLauncher.Services.SettingsService.Current.GroqApiKey;
+            var environmentGroqKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
+            var groqKey = !string.IsNullOrWhiteSpace(environmentGroqKey)
+                ? environmentGroqKey.Trim()
+                : !string.IsNullOrWhiteSpace(GameLauncher.Services.SecretsService.GroqApiKey)
+                    ? GameLauncher.Services.SecretsService.GroqApiKey
+                    : GameLauncher.Services.SettingsService.Current.GroqApiKey;
             var openAiKey = GameLauncher.Services.SettingsService.Current.OpenAiApiKey;
 
             AiProvider provider;
@@ -231,11 +391,17 @@ public partial class MainWindow : Window
             }
 
             var gameName = vm.SelectedGame?.DisplayName ?? vm.RunningGameName;
-            var overlay  = new Views.AiAssistantDialog(provider, apiKey, gameName, viaGamepad: false)
+            var openedDuringGame = !string.IsNullOrWhiteSpace(vm.RunningGameName);
+            var overlay  = new Views.AiAssistantDialog(
+                provider, apiKey, gameName, viaGamepad: openedDuringGame, xinput: vm.XInput)
             {
                 Topmost       = true,
                 Owner         = null,
-                ShowInTaskbar = true
+                ShowInTaskbar = false,
+                WindowState   = WindowState.Normal,
+                Width         = 620,
+                Height        = 640,
+                ShowActivated = true
             };
             overlay.Show();
             ForceForeground(overlay);
@@ -436,7 +602,10 @@ public partial class MainWindow : Window
 
             // Aplicar seleção diferida
             if (_pendingSelectGame is not null)
+            {
                 GameCarousel.SelectedItem = _pendingSelectGame;
+                GameCarousel.Focus();
+            }
 
             // Se clicou no JOGAR, lançar o jogo
             if (isPlayButton && _pendingSelectGame is not null && DataContext is MainViewModel vm)
@@ -457,6 +626,76 @@ public partial class MainWindow : Window
             vm2.ReorderGame(_draggedGame!, target);
 
         EndDrag();
+    }
+
+    private void GameCarousel_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (GameCarousel.Items.Count == 0)
+            return;
+
+        if (e.Key == Key.Enter &&
+            GameCarousel.SelectedItem is Game selectedGame &&
+            DataContext is MainViewModel viewModel)
+        {
+            viewModel.LaunchGameCommand.Execute(selectedGame);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key is not (Key.Left or Key.Right or Key.Up or Key.Down))
+            return;
+
+        var currentIndex = GameCarousel.SelectedIndex;
+        if (currentIndex < 0)
+            currentIndex = 0;
+
+        var targetIndex = e.Key switch
+        {
+            Key.Left => currentIndex - 1,
+            Key.Right => currentIndex + 1,
+            _ => FindVerticalGameIndex(currentIndex, e.Key == Key.Down)
+        };
+
+        if (targetIndex >= 0 && targetIndex < GameCarousel.Items.Count)
+        {
+            GameCarousel.SelectedIndex = targetIndex;
+            GameCarousel.ScrollIntoView(GameCarousel.SelectedItem);
+            e.Handled = true;
+        }
+    }
+
+    private int FindVerticalGameIndex(int currentIndex, bool down)
+    {
+        if (GameCarousel.ItemContainerGenerator.ContainerFromIndex(currentIndex) is not ListBoxItem currentItem)
+            return currentIndex;
+
+        var currentCenter = currentItem.TranslatePoint(
+            new Point(currentItem.ActualWidth / 2, currentItem.ActualHeight / 2), GameCarousel);
+        var bestIndex = currentIndex;
+        var bestScore = double.MaxValue;
+
+        for (var i = 0; i < GameCarousel.Items.Count; i++)
+        {
+            if (i == currentIndex ||
+                GameCarousel.ItemContainerGenerator.ContainerFromIndex(i) is not ListBoxItem item)
+                continue;
+
+            var center = item.TranslatePoint(
+                new Point(item.ActualWidth / 2, item.ActualHeight / 2), GameCarousel);
+            var verticalDistance = center.Y - currentCenter.Y;
+
+            if ((down && verticalDistance <= 5) || (!down && verticalDistance >= -5))
+                continue;
+
+            var score = Math.Abs(verticalDistance) * 10 + Math.Abs(center.X - currentCenter.X);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
     }
 
     private void UpdateDragVisuals(Point mousePos)
@@ -555,6 +794,21 @@ public partial class MainWindow : Window
 
     private void BtnWinClose_Click(object sender, RoutedEventArgs e) => Close();
 
+    private void BtnYoutube_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://www.youtube.com/@CarecaRetro",
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+        }
+    }
+
     private static List<MenuItem> CollectMenuItems(ContextMenu ctx)
     {
         var items = new List<MenuItem>();
@@ -568,7 +822,14 @@ public partial class MainWindow : Window
 
     private void NavigateContextMenu(GamepadButton button)
     {
-        if (_menuItems.Count == 0) return;
+        if (_activeContextMenu is null || !_activeContextMenu.IsOpen)
+            return;
+
+        if (_menuItems.Count == 0)
+            _menuItems = CollectMenuItems(_activeContextMenu);
+
+        if (_menuItems.Count == 0)
+            return;
 
         switch (button)
         {
@@ -577,30 +838,102 @@ public partial class MainWindow : Window
                 HighlightMenuItem(_menuItems[_menuIndex]);
                 break;
 
+            case GamepadButton.DPadLeft:
             case GamepadButton.DPadDown:
                 _menuIndex = (_menuIndex + 1) % _menuItems.Count;
                 HighlightMenuItem(_menuItems[_menuIndex]);
                 break;
 
+            case GamepadButton.DPadRight:
+                _menuIndex = (_menuIndex - 1 + _menuItems.Count) % _menuItems.Count;
+                HighlightMenuItem(_menuItems[_menuIndex]);
+                break;
+
             case GamepadButton.A:
                 var mi = _menuItems[_menuIndex];
-                if (mi.Command is { } cmd && cmd.CanExecute(mi.CommandParameter))
+                var game = (_activeContextMenu?.PlacementTarget as FrameworkElement)?.DataContext as Game;
+                if (game is not null && IsGameMenuItem(mi.Header?.ToString()))
                 {
-                    BtnGear.ContextMenu!.IsOpen = false;
-                    cmd.Execute(mi.CommandParameter);
+                    if (_activeContextMenu is not null)
+                        _activeContextMenu.IsOpen = false;
+                    ExecuteGameMenuItem(mi.Header?.ToString(), game);
+                    break;
                 }
+
+                if (_activeContextMenu is not null)
+                    _activeContextMenu.IsOpen = false;
+                mi.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
                 break;
 
             case GamepadButton.B:
             case GamepadButton.Back:
-                BtnGear.ContextMenu!.IsOpen = false;
+                if (_activeContextMenu is not null)
+                    _activeContextMenu.IsOpen = false;
+                RestoreGamepadFocus();
                 break;
         }
     }
 
-    private static void HighlightMenuItem(MenuItem target)
+    private void ExecuteGameMenuItem(string? header, Game game)
     {
+        if (DataContext is not MainViewModel viewModel || string.IsNullOrWhiteSpace(header))
+            return;
+
+        switch (header)
+        {
+            case "Alternar Favorito":
+                viewModel.ToggleFavoriteCommand.Execute(game);
+                break;
+            case "Alterar Imagem":
+                viewModel.ChangeImageCommand.Execute(game);
+                break;
+            case "Buscar Capa Online":
+                viewModel.SearchCoverCommand.Execute(game);
+                break;
+            case "Buscar Fundo (Screenshot/Key Art)":
+                viewModel.SearchBackgroundCommand.Execute(game);
+                break;
+            case "Buscar Info IGDB":
+                viewModel.FetchIgdbInfoCommand.Execute(game);
+                break;
+            case "Re-escanear Tecnologias":
+                viewModel.RescanGameTechCommand.Execute(null);
+                break;
+            case "Recomendação Gráfica (Hardware)":
+                viewModel.OpenHwRecommendationCommand.Execute(null);
+                break;
+            case "Renomear":
+                viewModel.RenameGameCommand.Execute(game);
+                break;
+            case "Remover Jogo":
+                viewModel.RemoveGameCommand.Execute(game);
+                break;
+        }
+    }
+
+    private static bool IsGameMenuItem(string? header)
+    {
+        return header is "Alternar Favorito"
+            or "Alterar Imagem"
+            or "Buscar Capa Online"
+            or "Buscar Fundo (Screenshot/Key Art)"
+            or "Buscar Info IGDB"
+            or "Re-escanear Tecnologias"
+            or "Recomendação Gráfica (Hardware)"
+            or "Renomear"
+            or "Remover Jogo";
+    }
+
+    private void HighlightMenuItem(MenuItem target)
+    {
+        var selectedBrush = new SolidColorBrush(Color.FromRgb(0x1E, 0xD7, 0x6B));
+        foreach (var item in _menuItems)
+            item.Background = ReferenceEquals(item, target)
+                ? selectedBrush
+                : Brushes.Transparent;
+
         target.Focus();
+        Keyboard.Focus(target);
     }
 
     private void UpdateNamedGlowEffects()
@@ -685,33 +1018,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnFpsRendering(object? sender, EventArgs e)
-    {
-        var args = (RenderingEventArgs)e;
-        _frameCount++;
-
-        if (_lastFpsTime == TimeSpan.Zero)
-        {
-            _lastFpsTime = args.RenderingTime;
-            return;
-        }
-
-        var elapsed = (args.RenderingTime - _lastFpsTime).TotalSeconds;
-        if (elapsed >= 1.0)
-        {
-            var fps = (int)Math.Round(_frameCount / elapsed);
-            FpsText.Text = fps.ToString();
-            FpsText.Foreground = fps switch
-            {
-                >= 50 => FpsGreen,
-                >= 30 => FpsAmber,
-                _     => FpsRed
-            };
-            _frameCount = 0;
-            _lastFpsTime = args.RenderingTime;
-        }
-    }
-
     private void BtnGear_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.ContextMenu is not null)
@@ -788,7 +1094,7 @@ public partial class MainWindow : Window
     // =========================================================================
 
     private const int    AiCalloutMaxShows    = 5;
-    private const double CalloutDisplaySec    = 15.0;
+    private const double CalloutDisplaySec    = 6.0;
 
     private System.Windows.Threading.DispatcherTimer? _calloutTimer;
 
@@ -832,7 +1138,7 @@ public partial class MainWindow : Window
         // --- Seta apontando para cima ---
         _calloutArrow = new System.Windows.Shapes.Path
         {
-            Data = System.Windows.Media.Geometry.Parse("M 108,0 L 118,10 L 98,10 Z"),
+            Data = System.Windows.Media.Geometry.Parse("M 135,0 L 145,10 L 125,10 Z"),
             Fill = dark,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment   = VerticalAlignment.Top,
@@ -1026,9 +1332,13 @@ public partial class MainWindow : Window
             Placement       = System.Windows.Controls.Primitives.PlacementMode.Bottom,
             AllowsTransparency = true,
             StaysOpen       = false,
-            HorizontalOffset = -130,
+            HorizontalOffset = -(290 - BtnAi.ActualWidth) / 2,
             VerticalOffset   = 6,
             Child            = container
+        };
+        _aiPopup.Opened += (_, _) =>
+        {
+            _aiPopup.HorizontalOffset = -(290 - BtnAi.ActualWidth) / 2;
         };
         _aiPopup.StaysOpen = false;
 

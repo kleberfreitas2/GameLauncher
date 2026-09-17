@@ -38,7 +38,6 @@ public sealed class GlobalHotkeyService : IDisposable
     private uint _pollMods;
     private uint _pollVk;
     private Action? _pollCallback;
-    private bool _pollKeyWasDown;
     private Thread? _pollThread;
     private volatile bool _pollRunning;
 

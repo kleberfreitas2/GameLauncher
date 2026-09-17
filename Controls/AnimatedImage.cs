@@ -76,8 +76,11 @@ public class AnimatedImage : Image
             return;
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
+        // Fundos animados podem conter centenas de frames e bloquear a
+        // experiência enquanto são decodificados. O launcher usa somente o
+        // primeiro frame como fundo estático para abrir imediatamente.
         if (ext is ".webp" or ".gif")
-            TryLoadAnimated(path);
+            LoadFirstFrame(path);
         else
             LoadStatic(path);
     }
@@ -319,7 +322,51 @@ public class AnimatedImage : Image
         if (ImageData is not byte[] data || data.Length == 0)
             return;
 
-        TryLoadAnimatedFromBytes(data);
+        // Mantém fundos obtidos em memória estáticos pelo mesmo motivo
+        // aplicado aos arquivos locais: abertura imediata e menor uso de RAM.
+        LoadFirstFrameFromBytes(data);
+    }
+
+    private void LoadFirstFrame(string path)
+    {
+        try
+        {
+            var skData = SKData.Create(path);
+            var codec = SKCodec.Create(skData);
+            if (codec is null)
+            {
+                skData.Dispose();
+                LoadStatic(path);
+                return;
+            }
+
+            DecodeSingleFrame(codec, skData);
+        }
+        catch
+        {
+            LoadStatic(path);
+        }
+    }
+
+    private void LoadFirstFrameFromBytes(byte[] bytes)
+    {
+        try
+        {
+            var skData = SKData.CreateCopy(bytes);
+            var codec = SKCodec.Create(skData);
+            if (codec is null)
+            {
+                skData.Dispose();
+                LoadStaticFromBytes(bytes);
+                return;
+            }
+
+            DecodeSingleFrame(codec, skData);
+        }
+        catch
+        {
+            LoadStaticFromBytes(bytes);
+        }
     }
 
     private void TryLoadAnimatedFromBytes(byte[] bytes)
