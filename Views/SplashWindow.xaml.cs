@@ -6,13 +6,20 @@ namespace GameLauncher.Views;
 
 public partial class SplashWindow : Window
 {
+    private const int MinimumBackgroundWidth = 1280;
+    private const int MinimumBackgroundHeight = 720;
+
     private static readonly string[] EmbeddedBackgroundFiles =
     [
-        "360_F_861510294_6Je3kKMSC7wNfW0JIZf0OyYQcGCzB8y9.jpg",
-        "86462-593059278_tiny.jpg",
-        "pc-gaming-broken-controller-zvbj1ryoiptz09af.jpg",
-        "pngtree-neon-glowing-video-game-controllers-on-a-black-background-image_16521725.jpg",
-        "pngtree-vibrant-dual-tone-video-game-controller-a-unique-blend-of-blue-image_16314927.jpg",
+        "1736550.jpg",
+        "3090584.jpg",
+        "4k-gaming-background-bud9k5ffqi3r2ds9.jpg",
+        "b0b982d2b084ed74173750ef5d8f118d.jpg",
+        "pexels-cmrcn-30353202.jpg",
+        "R.jpg",
+        "wp10312652.jpg",
+        "wp4585047.jpg",
+        "wp9001771.jpg",
     ];
 
     private static readonly string LastSplashBgPath = Path.Combine(
@@ -73,6 +80,14 @@ public partial class SplashWindow : Window
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             bitmap.EndInit();
+
+            // Não ampliar imagens pequenas para preencher a tela. Isso deixa
+            // o fundo pixelado/estourado mesmo quando a imagem original tem
+            // boa qualidade em seu tamanho nativo.
+            if (bitmap.PixelWidth < MinimumBackgroundWidth ||
+                bitmap.PixelHeight < MinimumBackgroundHeight)
+                return false;
+
             bitmap.Freeze();
 
             BackgroundImage.Source = bitmap;

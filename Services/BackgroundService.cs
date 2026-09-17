@@ -9,11 +9,15 @@ public static class BackgroundService
 {
     private static readonly List<string> BackgroundPaths = new()
     {
-        "/Assets/Backgrounds/360_F_861510294_6Je3kKMSC7wNfW0JIZf0OyYQcGCzB8y9.jpg",
-        "/Assets/Backgrounds/86462-593059278_tiny.jpg",
-        "/Assets/Backgrounds/pc-gaming-broken-controller-zvbj1ryoiptz09af.jpg",
-        "/Assets/Backgrounds/pngtree-neon-glowing-video-game-controllers-on-a-black-background-image_16521725.jpg",
-        "/Assets/Backgrounds/pngtree-vibrant-dual-tone-video-game-controller-a-unique-blend-of-blue-image_16314927.jpg"
+        "/Assets/Backgrounds/1736550.jpg",
+        "/Assets/Backgrounds/3090584.jpg",
+        "/Assets/Backgrounds/4k-gaming-background-bud9k5ffqi3r2ds9.jpg",
+        "/Assets/Backgrounds/b0b982d2b084ed74173750ef5d8f118d.jpg",
+        "/Assets/Backgrounds/pexels-cmrcn-30353202.jpg",
+        "/Assets/Backgrounds/R.jpg",
+        "/Assets/Backgrounds/wp10312652.jpg",
+        "/Assets/Backgrounds/wp4585047.jpg",
+        "/Assets/Backgrounds/wp9001771.jpg"
     };
 
     private static readonly Random Random = new();

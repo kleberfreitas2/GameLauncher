@@ -59,10 +59,6 @@
     <Resource Include="Assets\icon.png" />
     <Resource Include="Assets\xbox_a_button.png" />
     <Resource Include="Assets\epic_logo.png" />
-    <Resource Include="Assets\Backgrounds\360_F_861510294_6Je3kKMSC7wNfW0JIZf0OyYQcGCzB8y9.jpg" />
-    <Resource Include="Assets\Backgrounds\86462-593059278_tiny.jpg" />
-    <Resource Include="Assets\Backgrounds\pc-gaming-broken-controller-zvbj1ryoiptz09af.jpg" />
-    <Resource Include="Assets\Backgrounds\pngtree-neon-glowing-video-game-controllers-on-a-black-background-image_16521725.jpg" />
-    <Resource Include="Assets\Backgrounds\pngtree-vibrant-dual-tone-video-game-controller-a-unique-blend-of-blue-image_16314927.jpg" />
+    <Resource Include="Assets\Backgrounds\*.jpg" />
   </ItemGroup>
 </Project>
