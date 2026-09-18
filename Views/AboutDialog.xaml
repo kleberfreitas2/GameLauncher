@@ -1,0 +1,46 @@
+<Window x:Class="GameLauncher.Views.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Sobre o GLauncher"
+        Width="620" Height="390"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#0F1527"
+        TextElement.Foreground="White"
+        TextElement.FontFamily="Segoe UI">
+    <Grid Margin="28">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#151B30" CornerRadius="14" Padding="20">
+            <StackPanel VerticalAlignment="Center">
+                <Image Source="/Assets/icon.png" Width="130" Height="130"
+                       HorizontalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Text="GLauncher" FontSize="22" FontWeight="Bold"
+                           HorizontalAlignment="Center" Margin="0,16,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Column="1" Margin="30,8,0,0" VerticalAlignment="Center">
+            <TextBlock Text="Sobre o GLauncher" FontSize="25" FontWeight="Bold"/>
+            <TextBlock x:Name="VersionText" FontSize="15" Foreground="#00E676" Margin="0,8,0,20"/>
+            <TextBlock Text="Desenvolvido por Kleber Freitas" FontSize="14" Foreground="#AABBCC"/>
+            <TextBlock Text="Game Launcher para Windows" FontSize="13" Foreground="#7788AA" Margin="0,4,0,14"/>
+            <TextBlock Text="github.com/kleberfreitas2/GameLauncher"
+                       Foreground="#66C0F4" TextDecorations="Underline" Cursor="Hand"
+                       MouseLeftButtonUp="GitHub_Click"/>
+            <TextBlock x:Name="UpdateStatus" TextWrapping="Wrap" Foreground="#BBAADD"
+                       FontSize="12" Margin="0,18,0,10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="UpdateButton" Content="ATUALIZAR"
+                        Click="Update_Click" Padding="18,9" Margin="0,0,8,0"
+                        Background="#00E676" Foreground="#07120D" FontWeight="Bold"/>
+                <Button Content="OK" Click="Ok_Click" Padding="25,9"
+                        Background="#303B60" Foreground="White"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

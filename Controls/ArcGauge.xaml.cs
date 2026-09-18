@@ -22,10 +22,6 @@ public partial class ArcGauge : UserControl
         DependencyProperty.Register(nameof(SubLabel), typeof(string), typeof(ArcGauge),
             new PropertyMetadata("", OnSubLabelChanged));
 
-    public static readonly DependencyProperty IsTemperatureProperty =
-        DependencyProperty.Register(nameof(IsTemperature), typeof(bool), typeof(ArcGauge),
-            new PropertyMetadata(false));
-
     public double Value
     {
         get => (double)GetValue(ValueProperty);
@@ -42,12 +38,6 @@ public partial class ArcGauge : UserControl
     {
         get => (string)GetValue(SubLabelProperty);
         set => SetValue(SubLabelProperty, value);
-    }
-
-    public bool IsTemperature
-    {
-        get => (bool)GetValue(IsTemperatureProperty);
-        set => SetValue(IsTemperatureProperty, value);
     }
 
     public ArcGauge()
@@ -90,8 +80,7 @@ public partial class ArcGauge : UserControl
     {
         percent = Math.Clamp(percent, 0, 100);
 
-        var suffix = IsTemperature ? "°C" : "%";
-        ValueText.Text = $"{percent:F0}{suffix}";
+        ValueText.Text = $"{percent:F0}%";
 
         var brush = GetGradientBrush(percent);
         ValuePath.Stroke = brush;
@@ -129,27 +118,13 @@ public partial class ArcGauge : UserControl
 
     private SolidColorBrush GetGradientBrush(double percent)
     {
-        Color color;
-        if (IsTemperature)
+        var color = percent switch
         {
-            color = percent switch
-            {
-                <= 45 => Color.FromRgb(0, 200, 255),   // Cool blue
-                <= 65 => LerpColor(Color.FromRgb(0, 230, 118), Color.FromRgb(255, 235, 59), (percent - 45) / 20),
-                <= 80 => LerpColor(Color.FromRgb(255, 235, 59), Color.FromRgb(255, 100, 0), (percent - 65) / 15),
-                _ => LerpColor(Color.FromRgb(255, 100, 0), Color.FromRgb(255, 23, 68), (percent - 80) / 20),
-            };
-        }
-        else
-        {
-            color = percent switch
-            {
-                <= 30 => LerpColor(Color.FromRgb(0, 230, 118), Color.FromRgb(0, 230, 118), 0),
-                <= 60 => LerpColor(Color.FromRgb(0, 230, 118), Color.FromRgb(255, 235, 59), (percent - 30) / 30),
-                <= 85 => LerpColor(Color.FromRgb(255, 235, 59), Color.FromRgb(255, 100, 0), (percent - 60) / 25),
-                _ => LerpColor(Color.FromRgb(255, 100, 0), Color.FromRgb(255, 23, 68), (percent - 85) / 15),
-            };
-        }
+            <= 30 => LerpColor(Color.FromRgb(0, 230, 118), Color.FromRgb(0, 230, 118), 0),
+            <= 60 => LerpColor(Color.FromRgb(0, 230, 118), Color.FromRgb(255, 235, 59), (percent - 30) / 30),
+            <= 85 => LerpColor(Color.FromRgb(255, 235, 59), Color.FromRgb(255, 100, 0), (percent - 60) / 25),
+            _ => LerpColor(Color.FromRgb(255, 100, 0), Color.FromRgb(255, 23, 68), (percent - 85) / 15),
+        };
         var brush = new SolidColorBrush(color);
         brush.Freeze();
         return brush;

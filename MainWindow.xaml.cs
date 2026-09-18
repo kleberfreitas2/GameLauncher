@@ -12,6 +12,7 @@ using GameLauncher.Controls;
 using GameLauncher.Models;
 using GameLauncher.Services;
 using GameLauncher.ViewModels;
+using GameLauncher.Views;
 
 namespace GameLauncher;
 
@@ -166,8 +167,8 @@ public partial class MainWindow : Window
             ],
             OpenAiOverlay);
 
-            // Callout flutuante convidando o usuario a experimentar a IA
-            ScheduleAiCallout();
+            // Aviso inicial da IA desativado intencionalmente.
+            // ScheduleAiCallout();
         };
         Closed += (_, _) =>
         {
@@ -188,6 +189,12 @@ public partial class MainWindow : Window
         GameCarousel.SelectedIndex = 0;
         GameCarousel.Focus();
         Keyboard.Focus(GameCarousel);
+    }
+
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AboutDialog { Owner = this };
+        dialog.ShowDialog();
     }
 
     private void OpenSelectedGameMenu()

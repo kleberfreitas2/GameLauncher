@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.7.0
+  # GLauncher V.2.9.0
 
   **Launcher de jogos pessoal com interface inspirada em consoles — feito com WPF e .NET 8**
 
@@ -29,7 +29,7 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### Baixe a última versão do GLauncher na aba Releases:
 
-### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.7.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest) 👈
+### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.9.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
 > **Não precisa instalar!** Basta extrair o `.zip` e executar o `GameLauncher.exe`.
 >
@@ -135,8 +135,6 @@ Gauges circulares em tempo real no rodapé + descrições do hardware:
 |-------|-----------|
 | CPU % | Uso do processador |
 | GPU % | Uso da placa de vídeo |
-| CPU °C | Temperatura do processador |
-| GPU °C | Temperatura da placa de vídeo |
 | RAM % | Uso de memória RAM |
 
 **Informações do sistema** exibidas ao lado dos gauges:
@@ -296,7 +294,7 @@ GameLauncher/
 |--------|--------|-----|
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.2 | MVVM / source generators |
 | [MaterialDesignThemes](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit) | 5.3.2 | UI / ícones / estilos Material Design |
-| [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | 0.9.6 | Leitura de sensores (CPU, GPU, RAM, temperaturas) |
+| [LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | 0.9.6 | Leitura de sensores (CPU, GPU e RAM) |
 | [SkiaSharp](https://github.com/mono/SkiaSharp) | 4.152.0 | Decodificação de imagens |
 | [craftersmine.SteamGridDB.Net](https://github.com/craftersmine/SteamGridDB.Net) | 1.1.7 | API de capas, logos, fundos e ícones |
 | [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) | 4.89.0 | Xbox Live OAuth2 (MSAL) |
@@ -368,7 +366,7 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 │  └────────────────────────────┘  └─────────────────────────────────┘      │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  12 jogos  🎮 Xbox  🔋 85%  CPU: Ryzen 7 5800X  [CPU%][GPU%][CPU°C][GPU°C][RAM] │  ← Footer
+│  12 jogos  🎮 Xbox  🔋 85%  CPU: Ryzen 7 5800X  [CPU%][GPU%][RAM] │  ← Footer
 │  por Kleber       GPU: RTX 3070                                          │
 │                   RAM: 32 GB · SSD: 1TB                                  │
 └──────────────────────────────────────────────────────────────────────────┘

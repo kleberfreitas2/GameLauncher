@@ -57,13 +57,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string searchText = string.Empty;
 
     [ObservableProperty] private double cpuUsage;
-    [ObservableProperty] private double cpuTemp;
     [ObservableProperty] private double gpuUsage;
-    [ObservableProperty] private double gpuTemp;
     [ObservableProperty] private double ramUsage;
-    [ObservableProperty] private string cpuTempText = "--°C";
-    [ObservableProperty] private string gpuTempText = "--°C";
-
     [ObservableProperty] private string cpuName = "";
     [ObservableProperty] private string gpuName = "";
     [ObservableProperty] private string ramTotal = "";
@@ -389,12 +384,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher.BeginInvoke(() =>
         {
             CpuUsage = Math.Round(m.CpuUsage);
-            CpuTemp = Math.Round(m.CpuTemp);
             GpuUsage = Math.Round(m.GpuUsage);
-            GpuTemp = Math.Round(m.GpuTemp);
             RamUsage = Math.Round(m.RamUsage);
-            CpuTempText = m.CpuTemp > 0 ? $"{m.CpuTemp:F0}°C" : "--°C";
-            GpuTempText = m.GpuTemp > 0 ? $"{m.GpuTemp:F0}°C" : "--°C";
 
             if (!string.IsNullOrEmpty(m.CpuName) && string.IsNullOrEmpty(CpuName))
                 CpuName = m.CpuName;

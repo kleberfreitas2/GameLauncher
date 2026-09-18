@@ -59,12 +59,18 @@ public partial class App : System.Windows.Application
         var mainWindow = new MainWindow(vm);
         MainWindow = mainWindow;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        // Aguarda a biblioteca antes de exibir a janela para não mostrar
+        // momentaneamente o estado de biblioteca vazia.
+        await vm.InitializeAsync(status =>
+        {
+            vm.StatusMessage = status;
+            splash.SetStatus(status);
+        });
+
         mainWindow.Show();
         splash.Close();
 
-        // Exibe a janela imediatamente. A biblioteca, hardware e contas são
-        // carregados em segundo plano sem bloquear menus ou navegação inicial.
-        _ = vm.InitializeAsync(status => vm.StatusMessage = status);
     }
 
     protected override void OnExit(ExitEventArgs e)

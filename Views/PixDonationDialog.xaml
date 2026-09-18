@@ -85,7 +85,7 @@
                                          VerticalAlignment="Top" Margin="0,2,10,0"/>
                             <StackPanel>
                                 <TextBlock Text="Monitoramento de hardware em tempo real" FontSize="12" FontWeight="SemiBold" Foreground="#DDDDEE"/>
-                                <TextBlock Text="CPU, GPU, RAM e temperaturas" FontSize="10.5" Foreground="#667788"/>
+                                <TextBlock Text="CPU, GPU e RAM" FontSize="10.5" Foreground="#667788"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

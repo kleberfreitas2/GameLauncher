@@ -2,17 +2,29 @@
 
 <img src="Assets/icon.png" width="80" alt="GLauncher"/>
 
-# 🚀 GLauncher v2.5.0 — Beta Teste
+# 🚀 GLauncher v2.8.0
 
 ### Launcher de jogos estilo PS5 para PC
 
-[![Download GLauncher v2.5.0](https://img.shields.io/badge/⬇_DOWNLOAD_v2.5.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+[![Download GLauncher v2.8.0](https://img.shields.io/badge/⬇_DOWNLOAD_v2.8.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
 > **Não precisa instalar!** Extraia o `.zip` e execute `GameLauncher.exe`
 >
 > Requer **Windows 10/11 (x64)** • [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 </div>
+
+---
+
+## 🆕 Novidades da versão 2.8.0
+
+- 🎮 Navegação completa por controle nos cards, menus de opções e diálogos.
+- 🕹️ `Y` abre o menu de opções; `A` confirma; `B` retorna ou fecha a tela atual.
+- ⌨️ Navegação por teclado com setas e `Enter` para iniciar o jogo.
+- 🔄 Reprocessamento de assets após renomear um jogo.
+- 🌐 Tradução automática de descrições com fallback de serviço.
+- ▶️ Botão de inscrição no canal CarecaRetrô integrado ao launcher.
+- 🛡️ Proteções contra execução duplicada e adição do mesmo executável.
 
 ---
 
@@ -70,7 +82,7 @@ O GLauncher é um launcher de jogos desktop com interface inspirada no **PlaySta
 - 🔑 Credenciais IGDB já embutidas — **funciona sem configuração**
 
 ### 🖥️ Monitor de Hardware
-- 📊 **5 gauges circulares** em tempo real: CPU %, GPU %, RAM %, CPU °C, GPU °C
+- 📊 **3 gauges circulares** em tempo real: CPU %, GPU % e RAM %
 - 🖥️ Especificações do PC detectadas automaticamente (processador, GPU, RAM, armazenamento)
 - 🎯 Contador de **FPS** da interface no canto superior direito
 - 🎨 Cores dos gauges mudam conforme o nível (verde → amarelo → vermelho)

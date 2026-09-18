@@ -8,9 +8,7 @@ namespace GameLauncher.Services;
 public class HardwareMetrics
 {
     public float CpuUsage { get; init; }
-    public float CpuTemp { get; init; }
     public float GpuUsage { get; init; }
-    public float GpuTemp { get; init; }
     public float RamUsage { get; init; }
     public string CpuName { get; init; } = "";
     public string GpuName { get; init; } = "";
@@ -30,12 +28,12 @@ public sealed class HardwareMonitorService : IDisposable
 
     public HardwareMonitorService(double intervalMs = 1500)
     {
-        _computer = new Computer
+            _computer = new Computer
         {
             IsCpuEnabled = true,
             IsGpuEnabled = true,
             IsMemoryEnabled = true,
-            IsMotherboardEnabled = true
+                IsMotherboardEnabled = false
         };
 
         try { _computer.Open(); }
@@ -68,8 +66,8 @@ public sealed class HardwareMonitorService : IDisposable
     {
         try
         {
-            float cpuUsage = 0, cpuTemp = 0;
-            float gpuUsage = 0, gpuTemp = 0;
+            float cpuUsage = 0;
+            float gpuUsage = 0;
             float ramUsage = 0;
             string cpuName = "", gpuName = "";
             float ramUsed = 0, ramAvailable = 0;
@@ -90,16 +88,6 @@ public sealed class HardwareMonitorService : IDisposable
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Total"))
                                 cpuUsage = sensor.Value ?? 0;
-                            if (sensor.SensorType == SensorType.Temperature && sensor.Name.Contains("Package"))
-                                cpuTemp = sensor.Value ?? 0;
-                        }
-                        if (cpuTemp == 0)
-                        {
-                            foreach (var sensor in GetAllSensors(hw))
-                            {
-                                if (sensor.SensorType == SensorType.Temperature && sensor.Value > 0)
-                                { cpuTemp = sensor.Value ?? 0; break; }
-                            }
                         }
                         break;
 
@@ -111,8 +99,6 @@ public sealed class HardwareMonitorService : IDisposable
                         {
                             if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Core"))
                                 gpuUsage = sensor.Value ?? 0;
-                            if (sensor.SensorType == SensorType.Temperature && sensor.Name.Contains("Core"))
-                                gpuTemp = sensor.Value ?? 0;
                         }
                         break;
 
@@ -128,18 +114,6 @@ public sealed class HardwareMonitorService : IDisposable
                         }
                         break;
 
-                    case HardwareType.Motherboard:
-                        if (cpuTemp == 0)
-                        {
-                            foreach (var sensor in allSensors)
-                            {
-                                if (sensor.SensorType == SensorType.Temperature &&
-                                    (sensor.Name.Contains("CPU") || sensor.Name.Contains("Package")) &&
-                                    sensor.Value > 0)
-                                { cpuTemp = sensor.Value ?? 0; break; }
-                            }
-                        }
-                        break;
                 }
             }
 
@@ -149,31 +123,13 @@ public sealed class HardwareMonitorService : IDisposable
                 catch { }
             }
 
-            if (cpuTemp == 0)
-            {
-                try
-                {
-                    using var searcher = new ManagementObjectSearcher(@"root\WMI",
-                        "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
-                    foreach (var obj in searcher.Get())
-                    {
-                        var kelvinTenths = Convert.ToSingle(obj["CurrentTemperature"]);
-                        var celsius = (kelvinTenths / 10f) - 273.15f;
-                        if (celsius is > 0 and < 150) { cpuTemp = celsius; break; }
-                    }
-                }
-                catch { }
-            }
-
             var totalRam = ramUsed + ramAvailable;
             var ramText = totalRam > 0 ? $"{totalRam:F0} GB" : "";
 
             MetricsUpdated?.Invoke(new HardwareMetrics
             {
                 CpuUsage = cpuUsage,
-                CpuTemp = cpuTemp,
                 GpuUsage = gpuUsage,
-                GpuTemp = gpuTemp,
                 RamUsage = ramUsage,
                 CpuName = cpuName,
                 GpuName = gpuName,

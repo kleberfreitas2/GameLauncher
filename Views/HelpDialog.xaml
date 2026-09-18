@@ -22,7 +22,7 @@
                         <TextBlock Text="&#x1f4d6;" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Manual" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="GLauncher v2.7.0" FontSize="11" Foreground="#556688"/>
+                    <TextBlock x:Name="VersionText" FontSize="11" Foreground="#556688"/>
                 </StackPanel>
 
 <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
@@ -147,7 +147,7 @@
                                         <TextBlock Text="&#x2022; N&#xed;vel de bateria do controle em tempo real &#x1f50b;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Efeitos sonoros estilo console (navegar, selecionar, favoritar, erro)" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Minimiza o launcher ao jogar e restaura ao sair do jogo" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
-                                        <TextBlock Text="&#x2022; Monitor de CPU, GPU, RAM e temperaturas" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
+                                         <TextBlock Text="&#x2022; Monitor de CPU, GPU e RAM" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Sistema de favoritos com estrela &#x2b50;" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; M&#xfa;ltiplos temas visuais" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
                                         <TextBlock Text="&#x2022; Avatar personaliz&#xe1;vel" FontSize="13" Foreground="#AABBCC" Margin="0,3"/>
@@ -196,13 +196,14 @@
 
                             <Border Background="#151B30" CornerRadius="10" Padding="20,16" Margin="0,0,0,14">
                                 <StackPanel>
-                                    <TextBlock Text="Importar da Steam ou Xbox" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                     <TextBlock Text="Importar da Steam, Xbox ou Epic Games" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="#AABBCC" LineHeight="22">
                                         Voc&#xea; tamb&#xe9;m pode importar jogos instalados automaticamente atrav&#xe9;s das integra&#xe7;&#xf5;es:
                                     </TextBlock>
                                     <StackPanel Margin="12,8,0,0">
                                         <TextBlock FontSize="13" Foreground="#66C0F4" Margin="0,3" TextWrapping="Wrap"><Run Text="&#x2022; Steam" FontWeight="SemiBold"/> <Run Text="&#x2014; Clique no bot&#xe3;o STEAM no cabe&#xe7;alho. Detecta sua conta automaticamente e importa os jogos instalados." Foreground="#AABBCC"/></TextBlock>
                                         <TextBlock FontSize="13" Foreground="#107C10" Margin="0,3" TextWrapping="Wrap"><Run Text="&#x2022; Xbox" FontWeight="SemiBold"/> <Run Text="&#x2014; Clique no bot&#xe3;o XBOX no cabe&#xe7;alho. Fa&#xe7;a login com sua conta Microsoft e importe os jogos instalados." Foreground="#AABBCC"/></TextBlock>
+                                         <TextBlock FontSize="13" Foreground="#B39DDB" Margin="0,3" TextWrapping="Wrap"><Run Text="&#x2022; Epic Games" FontWeight="SemiBold"/> <Run Text="&#x2014; Clique no bot&#xe3;o EPIC no cabe&#xe7;alho para detectar e importar os jogos instalados." Foreground="#AABBCC"/></TextBlock>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -947,8 +948,6 @@
                                     <StackPanel Margin="12,8,0,0">
                                         <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; CPU" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso do processador (%)" Foreground="#88AACC"/></TextBlock>
                                         <TextBlock FontSize="13" Foreground="#00E676" Margin="0,3"><Run Text="&#x2022; GPU" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso da placa de v&#xed;deo (%)" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="&#x2022; CPU &#xb0;C" FontWeight="SemiBold"/> <Run Text="&#x2014; Temperatura do processador" Foreground="#88AACC"/></TextBlock>
-                                        <TextBlock FontSize="13" Foreground="#FF8800" Margin="0,3"><Run Text="&#x2022; GPU &#xb0;C" FontWeight="SemiBold"/> <Run Text="&#x2014; Temperatura da placa de v&#xed;deo" Foreground="#88AACC"/></TextBlock>
                                         <TextBlock FontSize="13" Foreground="#4488FF" Margin="0,3"><Run Text="&#x2022; RAM" FontWeight="SemiBold"/> <Run Text="&#x2014; Uso de mem&#xf3;ria RAM (%)" Foreground="#88AACC"/></TextBlock>
                                     </StackPanel>
                                 </StackPanel>
@@ -1000,8 +999,8 @@
                                 <DockPanel>
                                     <TextBlock Text="&#x1f4a1;" FontSize="16" DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,0,10,0"/>
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#BBAADD" LineHeight="20">
-                                        As cores dos gauges mudam conforme o n&#xed;vel: verde (normal),
-                                        amarelo (aten&#xe7;&#xe3;o) e vermelho (cr&#xed;tico). Temperaturas acima de 80&#xb0;C ficam vermelhas.
+                                         As cores dos gauges mudam conforme o n&#xed;vel: verde (normal),
+                                         amarelo (aten&#xe7;&#xe3;o) e vermelho (cr&#xed;tico).
                                     </TextBlock>
                                 </DockPanel>
                             </Border>
