@@ -22,11 +22,12 @@ $ProjectVersion = $versionMatch.Groups[1].Value.Trim()
 
 # Mantém o README e o instalador com a mesma versão do projeto.
 $readmePath = Join-Path $ProjectRoot "README.md"
-$readme = Get-Content $readmePath -Raw
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+$readme = [System.IO.File]::ReadAllText($readmePath, $utf8)
 $readme = $readme -replace 'GLauncher V\.\d+\.\d+\.\d+', "GLauncher V.$ProjectVersion"
 $readme = $readme -replace 'GLauncher_v\d+\.\d+\.\d+', "GLauncher_v$ProjectVersion"
 $readme = $readme -replace 'GLauncher_Setup_v\d+\.\d+\.\d+', "GLauncher_Setup_v$ProjectVersion"
-Set-Content -Path $readmePath -Value $readme -Encoding UTF8
+[System.IO.File]::WriteAllText($readmePath, $readme, $utf8)
 
 $issPath = Join-Path $InstallerDir "GLauncher_Setup.iss"
 $iss = Get-Content $issPath -Raw
