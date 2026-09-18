@@ -18,7 +18,9 @@ public partial class AboutDialog : Window
         {
             var version = await _updateService.GetAvailableVersionAsync();
             if (version is not null)
-                UpdateStatus.Text = $"Nova versão disponível: {version}";
+                UpdateStatus.Text = $"Nova versão para baixar: {version}";
+            else if (_updateService.LastError is not null)
+                UpdateStatus.Text = "Não foi possível verificar novas versões.";
             else
                 UpdateStatus.Text = "Você está usando a versão mais recente.";
         };
@@ -29,11 +31,12 @@ public partial class AboutDialog : Window
         Process.Start(new ProcessStartInfo(AppInfo.GitHubUrl) { UseShellExecute = true });
     }
 
-    private async void Update_Click(object sender, RoutedEventArgs e)
+    private void Update_Click(object sender, RoutedEventArgs e)
     {
-        UpdateButton.IsEnabled = false;
-        await _updateService.UpdateToLatestAsync(status => UpdateStatus.Text = status);
-        UpdateButton.IsEnabled = true;
+        Process.Start(new ProcessStartInfo(AppInfo.ReleasesUrl)
+        {
+            UseShellExecute = true
+        });
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e) => Close();

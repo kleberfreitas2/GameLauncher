@@ -1,10 +1,8 @@
 using System.Diagnostics;
-using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace GameLauncher.Services;
 
@@ -14,6 +12,8 @@ public sealed class UpdateService
     private const string UpdateBranch = "Feature-GameLauncher";
     private readonly HttpClient _http = new();
 
+    public string? LastError { get; private set; }
+
     public UpdateService()
     {
         _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("GLauncher", AppInfo.Version));
@@ -21,6 +21,7 @@ public sealed class UpdateService
 
     public async Task<string?> GetAvailableVersionAsync()
     {
+        LastError = null;
         try
         {
             using var release = await LoadLatestReleaseAsync();
@@ -30,63 +31,12 @@ public sealed class UpdateService
                 Version.TryParse(AppInfo.Version, out var current) && latest > current)
                 return tag;
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
         }
 
         return null;
-    }
-
-    public async Task<bool> UpdateToLatestAsync(Action<string>? status = null)
-    {
-        try
-        {
-            status?.Invoke("Verificando a última versão...");
-            using var release = await LoadLatestReleaseAsync();
-            var tag = GetReleaseVersion(release.RootElement);
-
-            if (Version.TryParse(tag, out var latest) &&
-                Version.TryParse(AppInfo.Version, out var current) && latest <= current)
-            {
-                status?.Invoke("Você já está usando a versão mais recente.");
-                return false;
-            }
-
-            var asset = release.RootElement.GetProperty("assets")
-                .EnumerateArray()
-                .Select(item => new
-                {
-                    Name = item.GetProperty("name").GetString() ?? string.Empty,
-                    Url = item.GetProperty("browser_download_url").GetString() ?? string.Empty
-                })
-                .FirstOrDefault(item => item.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-
-            if (asset is null || string.IsNullOrWhiteSpace(asset.Url))
-            {
-                status?.Invoke("A release mais recente não possui instalador disponível.");
-                return false;
-            }
-
-            status?.Invoke("Baixando a atualização...");
-            var installerPath = Path.Combine(Path.GetTempPath(), asset.Name);
-            await using (var installer = File.Create(installerPath))
-            await using (var download = await _http.GetStreamAsync(asset.Url))
-                await download.CopyToAsync(installer);
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = installerPath,
-                UseShellExecute = true
-            });
-
-            Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            status?.Invoke($"Não foi possível atualizar: {ex.Message}");
-            return false;
-        }
     }
 
     private async Task<JsonDocument> LoadLatestReleaseAsync()

@@ -58,6 +58,7 @@ MinVersion=10.0
 ; Extras
 AllowNoIcons=yes
 CloseApplications=yes
+CloseApplicationsFilter=GameLauncher.exe
 RestartApplications=no
 ShowLanguageDialog=no
 
@@ -197,6 +198,7 @@ begin
     end;
   end;
 end;
+
 
 
 
