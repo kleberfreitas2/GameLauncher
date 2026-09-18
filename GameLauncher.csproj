@@ -10,14 +10,14 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyTitle>GLauncher</AssemblyTitle>
     <Product>GLauncher</Product>
-     <Version>2.9.5</Version>
+     <Version>2.9.7</Version>
     <Authors>Kleber Freitas</Authors>
     <Company>Kleber Freitas</Company>
     <Copyright>Copyright (c) 2024-2026 Kleber Freitas</Copyright>
     <Description>GLauncher - Game Launcher estilo PS5</Description>
     <FileDescription>GLauncher - Game Launcher</FileDescription>
-     <AssemblyVersion>2.9.5.0</AssemblyVersion>
-     <FileVersion>2.9.5.0</FileVersion>
+     <AssemblyVersion>2.9.7.0</AssemblyVersion>
+     <FileVersion>2.9.7.0</FileVersion>
   </PropertyGroup>
 
   <!-- Release publish settings: self-contained, single file, optimized -->

@@ -11,6 +11,7 @@ namespace GameLauncher.Services;
 public sealed class UpdateService
 {
     private const string Repository = "kleberfreitas2/GameLauncher";
+    private const string UpdateBranch = "Feature-GameLauncher";
     private readonly HttpClient _http = new();
 
     public UpdateService()
@@ -90,10 +91,20 @@ public sealed class UpdateService
 
     private async Task<JsonDocument> LoadLatestReleaseAsync()
     {
+        // Os instaladores oficiais ficam versionados diretamente nesta pasta.
+        try
+        {
+            return await LoadReleaseFromOutputFolderAsync();
+        }
+        catch
+        {
+            // Mantém a API de releases como fallback.
+        }
+
         using var response = await _http.GetAsync(
             $"https://api.github.com/repos/{Repository}/releases?per_page=100");
         if (!response.IsSuccessStatusCode)
-            return await LoadReleaseFromGitHubPageAsync();
+            return await LoadReleaseFromOutputFolderAsync();
 
         using var releases = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var newest = releases.RootElement
@@ -108,15 +119,15 @@ public sealed class UpdateService
             .FirstOrDefault();
 
         if (newest is null)
-            return await LoadReleaseFromGitHubPageAsync();
+            return await LoadReleaseFromOutputFolderAsync();
 
         // Cria um documento independente antes de liberar a resposta HTTP.
         return JsonDocument.Parse(newest.Release.GetRawText());
     }
 
-    private async Task<JsonDocument> LoadReleaseFromGitHubPageAsync()
+    private async Task<JsonDocument> LoadReleaseFromOutputFolderAsync()
     {
-        var pageUrl = $"https://github.com/{Repository}/releases/tag/game";
+        var pageUrl = $"https://github.com/{Repository}/tree/{UpdateBranch}/Installer/Output";
         var html = await _http.GetStringAsync(pageUrl);
         var names = Regex.Matches(
                 html,
@@ -131,14 +142,14 @@ public sealed class UpdateService
             .ToList();
 
         var newest = names.FirstOrDefault()
-            ?? throw new InvalidOperationException("Nenhum instalador versionado foi encontrado na release game.");
+            ?? throw new InvalidOperationException("Nenhum instalador versionado foi encontrado na pasta Output.");
 
         var downloadUrl =
-            $"https://github.com/{Repository}/releases/download/game/{Uri.EscapeDataString(newest.Name)}";
+            $"https://raw.githubusercontent.com/{Repository}/{UpdateBranch}/Installer/Output/{Uri.EscapeDataString(newest.Name)}";
 
         var release = new
         {
-            tag_name = "game",
+            tag_name = UpdateBranch,
             assets = new[]
             {
                 new
