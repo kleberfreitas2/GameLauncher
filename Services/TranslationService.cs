@@ -137,6 +137,15 @@ public static class TranslationService
 
     private static async Task<string> TranslateChunkAsync(string text)
     {
+        var translatedByMemory = await TranslateWithMyMemoryAsync(text);
+        if (!string.Equals(translatedByMemory, text, StringComparison.Ordinal))
+            return translatedByMemory;
+
+        return await TranslateWithGoogleAsync(text);
+    }
+
+    private static async Task<string> TranslateWithMyMemoryAsync(string text)
+    {
         try
         {
             var encoded = HttpUtility.UrlEncode(text);
@@ -161,6 +170,29 @@ public static class TranslationService
             }
 
             return text;
+        }
+        catch
+        {
+            return text;
+        }
+    }
+
+    private static async Task<string> TranslateWithGoogleAsync(string text)
+    {
+        try
+        {
+            var encoded = Uri.EscapeDataString(text);
+            var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pt&dt=t&q={encoded}";
+            var response = await _http.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            var translated = string.Concat(
+                doc.RootElement[0].EnumerateArray()
+                    .Where(part => part.GetArrayLength() > 0)
+                    .Select(part => part[0].GetString()));
+
+            return string.IsNullOrWhiteSpace(translated) ? text : translated;
         }
         catch
         {

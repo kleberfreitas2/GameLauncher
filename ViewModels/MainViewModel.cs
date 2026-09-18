@@ -584,7 +584,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // descrição/plataforma incorretas. Atualiza esses registros uma
             // única vez ao selecioná-los, usando a busca exata/fallback seguro.
             if (!string.IsNullOrWhiteSpace(value.Summary) &&
-                (string.IsNullOrWhiteSpace(value.Platforms) ||
+                (!value.IsSummaryTranslated || LooksLikeEnglish(value.Summary) ||
+                 string.IsNullOrWhiteSpace(value.Platforms) ||
                  value.Platforms.Contains("Android", StringComparison.OrdinalIgnoreCase) ||
                  value.Screenshots.Count == 0))
                 _ = AutoFetchIgdbAsync(value);
@@ -593,6 +594,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             TechCompatItems.Clear();
         }
+    }
+
+    private static bool LooksLikeEnglish(string text)
+    {
+        string[] markers = [" the ", " is ", " and ", " of ", " this ", " game ", " developed ", " published "];
+        var normalized = $" {text.ToLowerInvariant()} ";
+        return markers.Any(normalized.Contains);
     }
 
     private void ResumeGamepadAfterDialog()
@@ -890,7 +898,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                     game.Summary     = summary;
                     ApplyIgdbMetadata(game, igdbGame);
                     await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
-                    game.IsSummaryTranslated = true;
+                    game.IsSummaryTranslated = !string.IsNullOrWhiteSpace(summary) &&
+                                               !string.Equals(summary, igdbGame.Summary, StringComparison.Ordinal);
                 }
             }
             progressDialog.UpdateProgress(90, "Informações IGDB concluídas!");
@@ -1317,7 +1326,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void RenameGame(Game game)
+    private async Task RenameGame(Game game)
     {
         var dialog = new RenameDialog(game.DisplayName) { Owner = Application.Current.MainWindow };
         if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.NewName))
@@ -1327,6 +1336,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             _trophyService.OnGameRenamed();
             StatusMessage = $"Jogo renomeado para '{game.DisplayName}'";
+
+            await RescanRenamedGameAsync(game);
+        }
+    }
+
+    private async Task RescanRenamedGameAsync(Game game)
+    {
+        try
+        {
+            game.IsSummaryTranslated = false;
+            StatusMessage = $"Procurando novamente informações e assets de '{game.DisplayName}'...";
+
+            await AutoFetchSteamGridDbAssetsAsync(game);
+
+            if (!game.HasIgdbInfo || !game.IsSummaryTranslated)
+                await AutoFetchIgdbAsync(game);
+
+            SaveGames();
+            _gamesView.Refresh();
+
+            if (SelectedGame == game)
+            {
+                DetailGame = null;
+                DetailGame = game;
+                ShowDetailPanel = true;
+            }
+
+            StatusMessage = $"'{game.DisplayName}' renomeado e assets atualizados!";
+        }
+        catch
+        {
+            StatusMessage = $"'{game.DisplayName}' renomeado. Não foi possível atualizar todos os assets.";
         }
     }
 
