@@ -2,13 +2,13 @@
 
 <img src="Assets/icon.png" width="80" alt="GLauncher"/>
 
-# 🚀 GLauncher v2.8.0
+# 🚀 GLauncher v2.9.3
 
 ### Launcher de jogos estilo PS5 para PC
 
-[![Download GLauncher v2.8.0](https://img.shields.io/badge/⬇_DOWNLOAD_v2.8.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+[![Download GLauncher v2.9.3](https://img.shields.io/badge/⬇_DOWNLOAD_v2.9.3-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> **Não precisa instalar!** Extraia o `.zip` e execute `GameLauncher.exe`
+> Baixe e execute o instalador `GLauncher_Setup_v2.9.3.exe`.
 >
 > Requer **Windows 10/11 (x64)** • [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 
@@ -16,7 +16,11 @@
 
 ---
 
-## 🆕 Novidades da versão 2.8.0
+## 🆕 Novidades da versão 2.9.3
+
+- 🔄 Verificação de atualizações consultando todas as releases do GitHub.
+- 🧭 Seleção automática da maior versão disponível por tag ou nome do instalador.
+- 📝 README, manual e instalador sincronizados com a versão do projeto.
 
 - 🎮 Navegação completa por controle nos cards, menus de opções e diálogos.
 - 🕹️ `Y` abre o menu de opções; `A` confirma; `B` retorna ou fecha a tela atual.
