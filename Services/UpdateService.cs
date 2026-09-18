@@ -90,17 +90,27 @@ public sealed class UpdateService
 
     private async Task<JsonDocument> LoadLatestReleaseAsync()
     {
-        var latestUrl = $"https://api.github.com/repos/{Repository}/releases/latest";
-        using var latestResponse = await _http.GetAsync(latestUrl);
+        using var response = await _http.GetAsync(
+            $"https://api.github.com/repos/{Repository}/releases?per_page=100");
+        response.EnsureSuccessStatusCode();
 
-        if (latestResponse.IsSuccessStatusCode)
-            return JsonDocument.Parse(await latestResponse.Content.ReadAsStringAsync());
+        using var releases = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var newest = releases.RootElement
+            .EnumerateArray()
+            .Select(release => new
+            {
+                Release = release,
+                Version = GetReleaseVersion(release)
+            })
+            .Where(item => Version.TryParse(item.Version, out _))
+            .OrderByDescending(item => Version.Parse(item.Version!))
+            .FirstOrDefault();
 
-        // Compatibilidade com a release antiga publicada na tag "game".
-        using var taggedResponse = await _http.GetAsync(
-            $"https://api.github.com/repos/{Repository}/releases/tags/game");
-        taggedResponse.EnsureSuccessStatusCode();
-        return JsonDocument.Parse(await taggedResponse.Content.ReadAsStringAsync());
+        if (newest is null)
+            throw new InvalidOperationException("Nenhuma release com versão válida foi encontrada.");
+
+        // Cria um documento independente antes de liberar a resposta HTTP.
+        return JsonDocument.Parse(newest.Release.GetRawText());
     }
 
     private static string? GetReleaseVersion(JsonElement release)
