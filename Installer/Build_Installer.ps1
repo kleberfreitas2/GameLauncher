@@ -12,6 +12,26 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $InstallerDir = $PSScriptRoot
 
+$projectFile = Join-Path $ProjectRoot "GameLauncher.csproj"
+$projectContent = Get-Content $projectFile -Raw
+$versionMatch = [regex]::Match($projectContent, '<Version>([^<]+)</Version>')
+if (-not $versionMatch.Success) {
+    throw "Versão não encontrada em $projectFile."
+}
+$ProjectVersion = $versionMatch.Groups[1].Value.Trim()
+
+# Mantém o README e o instalador com a mesma versão do projeto.
+$readmePath = Join-Path $ProjectRoot "README.md"
+$readme = Get-Content $readmePath -Raw
+$readme = $readme -replace 'GLauncher V\.\d+\.\d+\.\d+', "GLauncher V.$ProjectVersion"
+$readme = $readme -replace 'GLauncher_v\d+\.\d+\.\d+', "GLauncher_v$ProjectVersion"
+Set-Content -Path $readmePath -Value $readme -Encoding UTF8
+
+$issPath = Join-Path $InstallerDir "GLauncher_Setup.iss"
+$iss = Get-Content $issPath -Raw
+$iss = $iss -replace '#define MyAppVersion\s+"[^"]+"', ('#define MyAppVersion   "' + $ProjectVersion + '"')
+Set-Content -Path $issPath -Value $iss -Encoding UTF8
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "   GLauncher - Build do Instalador" -ForegroundColor Green

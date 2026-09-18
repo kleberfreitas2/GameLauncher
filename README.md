@@ -31,7 +31,7 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.9.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> **Não precisa instalar!** Basta extrair o `.zip` e executar o `GameLauncher.exe`.
+> Baixe o instalador `GLauncher_Setup_v2.9.0.exe` na release e siga as etapas de instalação.
 >
 > 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
 
@@ -49,6 +49,7 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 - Lançar jogos diretamente pelo launcher com botão **JOGAR** inspirado em interfaces de consoles
 - Launcher **minimiza automaticamente** ao jogar e restaura quando o jogo fecha
 - Renomear jogos (nome de exibição independente do executável)
+- Ao renomear, o launcher pesquisa novamente capas, logos, fundos e informações que não foram encontradas
 - Remover jogos da biblioteca (não desinstala)
 - Marcar/desmarcar **favoritos** (favoritos aparecem primeiro com estrela ⭐)
 - Carrossel de jogos com cards de capa — visual inspirado em consoles
@@ -85,6 +86,11 @@ Busca automática de metadados via **IGDB** (Internet Game Database):
 - **Ano de lançamento**
 - Busca manual: menu ⚙️ → "Buscar Info IGDB"
 - Credenciais IGDB já embutidas — **funciona sem configuração**
+
+### 🔄 Atualizações
+- A versão atual do launcher é exibida no manual e na tela **Sobre**
+- A tela **Sobre** verifica automaticamente se existe uma release mais nova no GitHub
+- O botão **ATUALIZAR** baixa e executa o instalador da última release disponível
 
 ### 💬 Integração Discord
 Login com conta Discord via **OAuth2** e **Rich Presence** automático ao jogar:
@@ -202,7 +208,7 @@ Sons podem ser ativados/desativados pelo menu ⚙️ → "Sons (Ligar/Desligar)"
 - Quando o jogo fecha, a janela é **restaurada** e o controle é retomado
 
 ### ⚙️ Menu de Opções (Engrenagem)
-Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
+Clique no ícone ⚙️ no cabeçalho para acessar as opções do launcher e do jogo selecionado:
 
 | Opção | Descrição |
 |-------|-----------|
@@ -213,9 +219,12 @@ Clique no ícone ⚙️ no cabeçalho para acessar opções do jogo selecionado:
 | Buscar Info IGDB | Busca sinopse, gênero, nota e ano |
 | Renomear | Altera o nome de exibição |
 | Remover Jogo | Remove da biblioteca (não desinstala) |
+| Sobre | Exibe a versão, o link do GitHub e a opção de atualizar o launcher |
 
 ### 📖 Manual Integrado
 - Manual interativo com **14 páginas** acessível pelo ícone ❓ no cabeçalho
+- A versão exibida no manual acompanha a versão do instalador
+- Inclui instruções para importar jogos da Steam, Xbox Live e Epic Games
 - Navegação lateral com sidebar
 - Navegável por gamepad (D-Pad ▲▼ + B para fechar, analógico direito para scroll)
 - Cobre todas as funcionalidades do launcher
