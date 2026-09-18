@@ -25,6 +25,7 @@ $readmePath = Join-Path $ProjectRoot "README.md"
 $readme = Get-Content $readmePath -Raw
 $readme = $readme -replace 'GLauncher V\.\d+\.\d+\.\d+', "GLauncher V.$ProjectVersion"
 $readme = $readme -replace 'GLauncher_v\d+\.\d+\.\d+', "GLauncher_v$ProjectVersion"
+$readme = $readme -replace 'GLauncher_Setup_v\d+\.\d+\.\d+', "GLauncher_Setup_v$ProjectVersion"
 Set-Content -Path $readmePath -Value $readme -Encoding UTF8
 
 $issPath = Join-Path $InstallerDir "GLauncher_Setup.iss"

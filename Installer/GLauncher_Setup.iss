@@ -1,17 +1,17 @@
-; ============================================================
+﻿; ============================================================
 ; GLauncher - Inno Setup Installer Script
 ; Instalador personalizado com identidade visual do GLauncher
 ; Autor: Kleber Freitas
 ; ============================================================
 
 #define MyAppName      "GLauncher"
-#define MyAppVersion   "2.9.0"
+#define MyAppVersion   "2.9.1"
 #define MyAppPublisher "Kleber Freitas"
 #define MyAppURL       "https://github.com/kleberfreitas2/GameLauncher"
 #define MyAppExeName   "GameLauncher.exe"
 #define MyAppCopyright "Copyright (c) 2024-2026 Kleber Freitas"
 
-; Caminho para os arquivos publicados (ajustar se necessário)
+; Caminho para os arquivos publicados (ajustar se necessÃ¡rio)
 #define PublishDir     "..\bin\Release\net8.0-windows\win-x64\publish"
 
 [Setup]
@@ -25,18 +25,18 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}/releases
 AppCopyright={#MyAppCopyright}
 
-; Diretórios
+; DiretÃ³rios
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 
-; Saída do instalador
+; SaÃ­da do instalador
 OutputDir=Output
 OutputBaseFilename=GLauncher_Setup_v{#MyAppVersion}
 SetupIconFile=..\Assets\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
-; Compressão máxima
+; CompressÃ£o mÃ¡xima
 Compression=lzma2/ultra64
 SolidCompression=yes
 LZMAUseSeparateProcess=yes
@@ -46,13 +46,13 @@ LZMANumBlockThreads=4
 WizardStyle=modern
 WizardSizePercent=120,120
 WizardImageFile=WizardImage.bmp
-; O ícone oficial do GLauncher é usado na barra de título via SetupIconFile.
+; O Ã­cone oficial do GLauncher Ã© usado na barra de tÃ­tulo via SetupIconFile.
 
-; Permissões
+; PermissÃµes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 
-; Versão mínima do Windows
+; VersÃ£o mÃ­nima do Windows
 MinVersion=10.0
 
 ; Extras
@@ -61,15 +61,15 @@ CloseApplications=yes
 RestartApplications=no
 ShowLanguageDialog=no
 
-; Informações do desinstalador
+; InformaÃ§Ãµes do desinstalador
 UninstallDisplayName={#MyAppName}
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [CustomMessages]
-brazilianportuguese.LaunchAfterInstall=Iniciar o {#MyAppName} após a instalação
-brazilianportuguese.CreateDesktopShortcut=Criar atalho na Área de Trabalho
+brazilianportuguese.LaunchAfterInstall=Iniciar o {#MyAppName} apÃ³s a instalaÃ§Ã£o
+brazilianportuguese.CreateDesktopShortcut=Criar atalho na Ãrea de Trabalho
 brazilianportuguese.CreateStartMenuShortcut=Criar atalho no Menu Iniciar
 
 [Tasks]
@@ -98,7 +98,7 @@ Root: HKCU; Subkey: "Software\{#MyAppPublisher}\{#MyAppName}"; ValueType: string
 
 [Code]
 // ============================================================
-// PERSONALIZAÇÃO VISUAL - Tema escuro estilo GLauncher
+// PERSONALIZAÃ‡ÃƒO VISUAL - Tema escuro estilo GLauncher
 // ============================================================
 
 const
@@ -106,7 +106,7 @@ const
   GLAUNCHER_BG        = $140D0D;  // #0D0D14
   GLAUNCHER_BG_LIGHT  = $2A1630;  // #30162A
   GLAUNCHER_ACCENT    = $FF4D7C;  // #7C4DFF - roxo do launcher
-  GLAUNCHER_GREEN     = $FF4D7C;  // compatibilidade: agora também roxo
+  GLAUNCHER_GREEN     = $FF4D7C;  // compatibilidade: agora tambÃ©m roxo
   GLAUNCHER_TEXT       = $FFFFFF;  // Branco
   GLAUNCHER_TEXT_DIM   = $D0A8B0;  // #B0A8D0
   GLAUNCHER_BORDER     = $703A4A;  // #4A3A70
@@ -116,11 +116,11 @@ begin
   // Cor de fundo do wizard
   WizardForm.Color := GLAUNCHER_BG;
 
-  // Painel principal (cabeçalho)
+  // Painel principal (cabeÃ§alho)
   WizardForm.MainPanel.Color := GLAUNCHER_BG_LIGHT;
   WizardForm.WizardSmallBitmapImage.Visible := False;
 
-  // Título e descrição
+  // TÃ­tulo e descriÃ§Ã£o
   WizardForm.PageNameLabel.Font.Color := GLAUNCHER_GREEN;
   WizardForm.PageNameLabel.Font.Size := 10;
   WizardForm.PageNameLabel.Font.Style := [fsBold];
@@ -134,14 +134,14 @@ begin
   WizardForm.WelcomeLabel2.Font.Color := GLAUNCHER_TEXT;
   WizardForm.WelcomeLabel2.Font.Size := 8;
 
-  // Página de finalização
+  // PÃ¡gina de finalizaÃ§Ã£o
   WizardForm.FinishedHeadingLabel.Font.Color := GLAUNCHER_GREEN;
   WizardForm.FinishedHeadingLabel.Font.Size := 17;
   WizardForm.FinishedHeadingLabel.Font.Style := [fsBold];
   WizardForm.FinishedLabel.Font.Color := GLAUNCHER_TEXT;
   WizardForm.FinishedLabel.Font.Size := 8;
 
-  // Página de diretório
+  // PÃ¡gina de diretÃ³rio
   WizardForm.DirEdit.Color := GLAUNCHER_BG_LIGHT;
   WizardForm.DirEdit.Font.Color := GLAUNCHER_TEXT;
   WizardForm.SelectDirLabel.Font.Color := GLAUNCHER_TEXT;
@@ -151,7 +151,7 @@ begin
   WizardForm.StatusLabel.Font.Color := GLAUNCHER_TEXT_DIM;
   WizardForm.FilenameLabel.Font.Color := GLAUNCHER_TEXT_DIM;
 
-  // Botões
+  // BotÃµes
   WizardForm.BackButton.Font.Color := GLAUNCHER_TEXT;
   WizardForm.NextButton.Font.Color := GLAUNCHER_TEXT;
   WizardForm.CancelButton.Font.Color := GLAUNCHER_TEXT;
@@ -169,7 +169,7 @@ begin
   WizardForm.StatusLabel.Font.Color := GLAUNCHER_TEXT_DIM;
 end;
 
-// Verificar se o GLauncher já está rodando
+// Verificar se o GLauncher jÃ¡ estÃ¡ rodando
 function IsAppRunning(): Boolean;
 var
   ResultCode: Integer;
@@ -188,8 +188,8 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usPostUninstall then
   begin
-    // Remover pasta de dados do usuário (perguntar)
-    if MsgBox('Deseja remover também os dados salvos do GLauncher (configurações, biblioteca, etc.)?',
+    // Remover pasta de dados do usuÃ¡rio (perguntar)
+    if MsgBox('Deseja remover tambÃ©m os dados salvos do GLauncher (configuraÃ§Ãµes, biblioteca, etc.)?',
               mbConfirmation, MB_YESNO) = IDYES then
     begin
       DelTree(ExpandConstant('{localappdata}\GLauncher'), True, True, True);
@@ -197,3 +197,4 @@ begin
     end;
   end;
 end;
+
