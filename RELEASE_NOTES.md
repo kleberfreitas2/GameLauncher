@@ -2,13 +2,13 @@
 
 <img src="Assets/icon.png" width="80" alt="GLauncher"/>
 
-# 🚀 GLauncher v2.10.1
+# 🚀 GLauncher v2.10.2
 
 ### Launcher de jogos estilo PS5 para PC
 
-[![Download GLauncher v2.10.1](https://img.shields.io/badge/⬇_DOWNLOAD_v2.10.1-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+[![Download GLauncher v2.10.2](https://img.shields.io/badge/⬇_DOWNLOAD_v2.10.2-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> Baixe e execute o instalador `GLauncher_Setup_v2.10.1.exe`.
+> Baixe e execute o instalador `GLauncher_Setup_v2.10.2.exe`.
 >
 > Requer **Windows 10/11 (x64)** • [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 🆕 Novidades da versão 2.10.1
+## 🆕 Novidades da versão 2.10.2
 
 Esta versão consolida os ajustes realizados nos cinco commits anteriores e prioriza estabilidade, navegação por controle, documentação e distribuição.
 
@@ -28,15 +28,15 @@ Esta versão consolida os ajustes realizados nos cinco commits anteriores e prio
 - `361e0ad` — Ajustes do instalador: script Inno Setup, atalhos, permissões, compressão e identificação do aplicativo.
 - `bd1e316` — Versão 2.9.7: atualização da versão distribuída e sincronização inicial da documentação com o instalador.
 
-### Ajustes da versão 2.10.1
+### Ajustes da versão 2.10.2
 
 - Correção completa de caracteres inválidos e textos com encoding incorreto.
 - Correção dos textos de navegação e conexão dos controles Xbox e PlayStation.
 - Revisão das mensagens de áudio, navegação, seleção, ações e menus.
 - Correção das mensagens de status do Xbox, Steam, Epic e IGDB.
 - Revisão dos scripts de verificação e correção de encoding.
-- README e release notes atualizados para `2.10.1`.
-- Instalador atualizado para gerar `GLauncher_Setup_v2.10.1.exe`.
+- README e release notes atualizados para `2.10.2`.
+- Instalador atualizado para gerar `GLauncher_Setup_v2.10.2.exe`.
 - Build `.NET 8` validado com sucesso.
 
 ---
@@ -211,6 +211,7 @@ O GLauncher é um launcher de jogos desktop com interface inspirada no **PlaySta
 ## 📄 Licença
 
 MIT — Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
 
 
 

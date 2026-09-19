@@ -1,7 +1,7 @@
 ﻿<div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.10.1
+  # GLauncher V.2.10.2
 
   **Launcher de jogos pessoal com interface inspirada em consoles — feito com WPF e .NET 8**
 
@@ -28,9 +28,9 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### Baixe a última versão do GLauncher na aba Releases:
 
-  ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.10.1-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+  ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.10.2-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> Baixe o instalador `GLauncher_Setup_v2.10.1.exe` na release e siga as etapas de instalação.
+> Baixe o instalador `GLauncher_Setup_v2.10.2.exe` na release e siga as etapas de instalação.
 >
 > 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
 
@@ -308,6 +308,7 @@ dotnet run --project GameLauncher.csproj
 Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 > ⚠️ O app é executado como **Administrador** automaticamente (necessário para leitura completa dos sensores de hardware).
+
 
 
 

@@ -167,8 +167,8 @@ public partial class MainWindow : Window
             ],
             OpenAiOverlay);
 
-            // Aviso inicial da IA desativado intencionalmente.
-            // ScheduleAiCallout();
+            // Exibe o aviso da IA depois que a interface estiver pronta.
+            ScheduleAiCallout();
         };
         Closed += (_, _) =>
         {
