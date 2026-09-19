@@ -5,7 +5,7 @@
 ; ============================================================
 
 #define MyAppName      "GLauncher"
-#define MyAppVersion   "2.9.9"
+#define MyAppVersion   "2.10.0"
 #define MyAppPublisher "Kleber Freitas"
 #define MyAppURL       "https://github.com/kleberfreitas2/GameLauncher"
 #define MyAppExeName   "GameLauncher.exe"

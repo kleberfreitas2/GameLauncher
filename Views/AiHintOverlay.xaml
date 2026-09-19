@@ -18,7 +18,8 @@
             <DropShadowEffect Color="Black" BlurRadius="24" ShadowDepth="4" Opacity="0.8"/>
         </Border.Effect>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Border Background="#7C4DFF" CornerRadius="10"
+            <Border Background="#7C4DFF" BorderBrush="#B388FF" BorderThickness="1"
+                    CornerRadius="10"
                     Width="38" Height="38" Margin="0,0,12,0">
                 <md:PackIcon Kind="Robot" Width="22" Height="22" Foreground="White"
                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -30,10 +31,10 @@
                             Margin="0,3,0,0" Visibility="Collapsed">
                     <TextBlock Text="Pressione " FontSize="11" Foreground="White"
                                FontFamily="Segoe UI" VerticalAlignment="Center"/>
-                    <Border Background="#33204F" BorderBrush="#B388FF" BorderThickness="1"
+                    <Border Background="#241044" BorderBrush="#B388FF" BorderThickness="1"
                             CornerRadius="5" Padding="6,2" Margin="0,0,3,0">
                         <TextBlock x:Name="BadgeSelect" Text="Select" FontSize="11" FontWeight="Bold"
-                                    Foreground="#D0B8FF" FontFamily="Consolas"/>
+                                    Foreground="White" FontFamily="Consolas"/>
                     </Border>
                     <TextBlock Text="para abrir" FontSize="11" Foreground="White"
                                FontFamily="Segoe UI" VerticalAlignment="Center"/>
@@ -42,10 +43,10 @@
                             Margin="0,3,0,0" Visibility="Visible">
                     <TextBlock Text="Pressione " FontSize="11" Foreground="White"
                                FontFamily="Segoe UI" VerticalAlignment="Center"/>
-                    <Border Background="#33204F" BorderBrush="#B388FF" BorderThickness="1"
+                    <Border Background="#241044" BorderBrush="#B388FF" BorderThickness="1"
                             CornerRadius="5" Padding="6,2" Margin="0,0,4,0">
                         <TextBlock x:Name="HotkeyBadge" Text="Ctrl+Shift+G" FontSize="11"
-                                    FontWeight="Bold" Foreground="#D0B8FF"
+                                    FontWeight="Bold" Foreground="White"
                                    FontFamily="Consolas"/>
                     </Border>
                     <TextBlock Text="para abrir" FontSize="11" Foreground="White"

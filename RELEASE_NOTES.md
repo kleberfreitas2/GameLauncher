@@ -2,13 +2,13 @@
 
 <img src="Assets/icon.png" width="80" alt="GLauncher"/>
 
-# 🚀 GLauncher v2.9.8
+# 🚀 GLauncher v2.10.0
 
 ### Launcher de jogos estilo PS5 para PC
 
-[![Download GLauncher v2.9.8](https://img.shields.io/badge/⬇_DOWNLOAD_v2.9.8-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+[![Download GLauncher v2.10.0](https://img.shields.io/badge/⬇_DOWNLOAD_v2.10.0-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> Baixe e execute o instalador `GLauncher_Setup_v2.9.8.exe`.
+> Baixe e execute o instalador `GLauncher_Setup_v2.10.0.exe`.
 >
 > Requer **Windows 10/11 (x64)** • [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 🆕 Novidades da versão 2.9.8
+## 🆕 Novidades da versão 2.10.0
 
 - 🔄 Verificação de atualizações consultando todas as releases do GitHub.
 - 🧭 Seleção automática da maior versão disponível por tag ou nome do instalador.
