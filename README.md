@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.9.8
+  # GLauncher V.2.9.9
 
   **Launcher de jogos pessoal com interface inspirada em consoles — feito com WPF e .NET 8**
 
@@ -29,9 +29,9 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### Baixe a última versão do GLauncher na aba Releases:
 
-### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.9.8-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+  ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.9.9-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> Baixe o instalador `GLauncher_Setup_v2.9.8.exe` na release e siga as etapas de instalação.
+> Baixe o instalador `GLauncher_Setup_v2.9.9.exe` na release e siga as etapas de instalação.
 >
 > 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
 
@@ -136,13 +136,13 @@ Importação automática de jogos instalados via **Epic Games Store**:
 > 💡 Basta ter a Epic Games Store instalada — o GLauncher detecta os jogos automaticamente.
 
 ### 🖥️ Monitor de Hardware
-Gauges circulares em tempo real no rodapé + descrições do hardware:
+Informações do hardware detectado no rodapé e na área de compatibilidade gráfica:
 
 | Gauge | Informação |
 |-------|-----------|
-| CPU % | Uso do processador |
-| GPU % | Uso da placa de vídeo |
-| RAM % | Uso de memória RAM |
+| Processador | Modelo identificado |
+| GPU | Placa de vídeo identificada |
+| RAM | Memória total disponível |
 
 **Informações do sistema** exibidas ao lado dos gauges:
 - Nome do processador (ex: "AMD Ryzen 7 5800X")
@@ -150,7 +150,7 @@ Gauges circulares em tempo real no rodapé + descrições do hardware:
 - Total de memória RAM
 - Drives de armazenamento (modelo + capacidade, via WMI)
 
-> As cores dos gauges mudam conforme o nível: 🟢 verde (normal), 🟡 amarelo (atenção), 🔴 vermelho (crítico).
+> O monitoramento contínuo de gauges foi removido da interface para manter o launcher mais leve. A leitura das especificações continua disponível para análise de compatibilidade.
 
 ### 🎨 Temas e Personalização
 - **6 presets de tema** incluídos:
@@ -176,11 +176,13 @@ Navegação completa com gamepad — suporta controles **XInput** e **HID**:
 | **D-Pad** ◀ ▶ | Navegar entre jogos ou itens do Header |
 | **LB / RB** | Pular 5 jogos por vez (paginação rápida) |
 | **A / ✕** | Confirmar / Jogar / Selecionar item do Header |
-| **Y / △** | Alternar favorito ⭐ |
+| **Y / △** | Abrir o menu de opções do jogo |
 | **X / □** | Buscar capa online |
 | **B / ○** | Voltar / Limpar busca / Fechar diálogos |
-| **Start / Options** | Abrir menu de configurações (engrenagem) |
-| **Back / Create** | Abrir manual de ajuda |
+| **Enter** | Iniciar o jogo selecionado pelo teclado |
+| **Start / Options** | Reservado para o jogo em execução |
+| **Back / Create** | Abrir o assistente de IA / voltar conforme a tela |
+| **Analógico Direito pressionado** | Alternar o modo Big Picture |
 | **Analógico Direito** | Scroll vertical no manual |
 
 **Nível de bateria 🔋** — exibido no cabeçalho com ícone e percentual colorido (verde → amarelo → vermelho).
@@ -209,6 +211,8 @@ Sons podem ser ativados/desativados pelo menu ⚙️ → "Sons (Ligar/Desligar)"
 
 ### ⚙️ Menu de Opções (Engrenagem)
 Clique no ícone ⚙️ no cabeçalho para acessar as opções do launcher e do jogo selecionado:
+
+> O menu também pode ser aberto com o botão direito do mouse ou pressionando `Y` uma vez no jogo selecionado. Use `↑` e `↓` para navegar, `A` para confirmar e `B` para voltar.
 
 | Opção | Descrição |
 |-------|-----------|
