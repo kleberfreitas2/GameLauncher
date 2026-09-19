@@ -153,14 +153,14 @@ public partial class AiAssistantDialog : Window
 
         AddAssistantMessage(gameName is not null
             ? $"Ola! Estou pronto para te ajudar com **{gameName}**. Pode perguntar sobre dicas, puzzles, builds, segredos ou qualquer coisa do jogo!"
-            : "Ola! Sou o GLauncher AI, seu assistente gamer. Pode perguntar sobre qualquer jogo — dicas, analises, recomendacoes, builds e muito mais!");
+            : "Ola! Sou o GLauncher AI, seu assistente gamer. Pode perguntar sobre qualquer jogo ? dicas, analises, recomendacoes, builds e muito mais!");
 
         Loaded += (_, _) =>
         {
             if (_viaGamepad && _returnToGame && _previousForegroundWindow != IntPtr.Zero)
             {
-                // Não desabilitar a janela do jogo. Em jogos fullscreen/borderless
-                // isso pode removê-la da composição e impedir o retorno correto.
+                // N?o desabilitar a janela do jogo. Em jogos fullscreen/borderless
+                // isso pode remov?-la da composi??o e impedir o retorno correto.
                 SuspendGameProcess();
                 PositionOverGameWindow();
                 var chatHandle = new WindowInteropHelper(this).Handle;
@@ -282,7 +282,7 @@ public partial class AiAssistantDialog : Window
                 0, MessagesScroll.ScrollableHeight)));
     }
 
-    // -- Hints dinâmicos ----------------------------------------------------
+    // -- Hints din?micos ----------------------------------------------------
 
     private void OnConnectionChanged(bool connected)
     {
@@ -325,7 +325,7 @@ public partial class AiAssistantDialog : Window
         HintsKeyboard.Visibility = Visibility.Visible;
     }
 
-    // -- Navegação por controle ---------------------------------------------
+    // -- Navega??o por controle ---------------------------------------------
 
     private void OnGamepadButton(GamepadButton btn)
     {
@@ -412,11 +412,11 @@ public partial class AiAssistantDialog : Window
     {
         string[][] rows =
         [
-            ["1|!", "2|@", "3|#", "4|$", "5|%", "6|¨", "7|&", "8|*", "9|(", "0|)", "-|_", "=|+"],
-            ["q|Q", "w|W", "e|E", "r|R", "t|T", "y|Y", "u|U", "i|I", "o|O", "p|P", "´|`", "[|{", "]|}"],
-            ["a|A", "s|S", "d|D", "f|F", "g|G", "h|H", "j|J", "k|K", "l|L", "ç|Ç", "~|^"],
+            ["1|!", "2|@", "3|#", "4|$", "5|%", "6|?", "7|&", "8|*", "9|(", "0|)", "-|_", "=|+"],
+            ["q|Q", "w|W", "e|E", "r|R", "t|T", "y|Y", "u|U", "i|I", "o|O", "p|P", "?|`", "[|{", "]|}"],
+            ["a|A", "s|S", "d|D", "f|F", "g|G", "h|H", "j|J", "k|K", "l|L", "?|?", "~|^"],
             ["SHIFT", "z|Z", "x|X", "c|C", "v|V", "b|B", "n|N", "m|M", ",|<", ".|>", ";|:"],
-            ["/|?", "\\||", "ESPAÇO", "ENVIAR"]
+            ["/|?", "\\||", "ESPA?O", "ENVIAR"]
         ];
 
         foreach (var row in rows)
@@ -429,7 +429,7 @@ public partial class AiAssistantDialog : Window
                 {
                     Content = GetKeyboardDisplayText(key),
                     Tag = key,
-                    MinWidth = key is "ESPAÇO" or "ENVIAR" ? 112 : key == "SHIFT" ? 72 : 34,
+                    MinWidth = key is "ESPA?O" or "ENVIAR" ? 112 : key == "SHIFT" ? 72 : 34,
                     Height = 30,
                     Margin = new Thickness(2),
                     Padding = new Thickness(4, 0, 4, 0),
@@ -465,7 +465,7 @@ public partial class AiAssistantDialog : Window
         {
             DeleteLastCharacter();
         }
-        else if (key == "ESPAÇO")
+        else if (key == "ESPA?O")
             InputBox.Text += " ";
         else if (key == "ENVIAR")
             _ = SendMessageAsync();
@@ -489,7 +489,7 @@ public partial class AiAssistantDialog : Window
     {
         foreach (var key in _keyboardKeys)
         {
-            if (key.Tag is not string value || value is "SHIFT" or "ESPAÇO" or "ENVIAR")
+            if (key.Tag is not string value || value is "SHIFT" or "ESPA?O" or "ENVIAR")
                 continue;
 
             key.Content = GetKeyboardDisplayText(value);
@@ -505,7 +505,7 @@ public partial class AiAssistantDialog : Window
 
     private string GetKeyboardDisplayText(string key)
     {
-        if (key is "SHIFT" or "ESPAÇO" or "ENVIAR")
+        if (key is "SHIFT" or "ESPA?O" or "ENVIAR")
             return key;
 
         var parts = key.Split('|', 2);
@@ -516,7 +516,7 @@ public partial class AiAssistantDialog : Window
 
     private string GetKeyboardInputText(string key)
     {
-        if (key is "SHIFT" or "ESPAÇO" or "ENVIAR")
+        if (key is "SHIFT" or "ESPA?O" or "ENVIAR")
             return key;
 
         var parts = key.Split('|', 2);

@@ -1,7 +1,7 @@
-<div align="center">
+﻿<div align="center">
   <img src="Assets/icon.png" width="100" alt="GLauncher Logo"/>
 
-  # GLauncher V.2.10.0
+  # GLauncher V.2.10.1
 
   **Launcher de jogos pessoal com interface inspirada em consoles — feito com WPF e .NET 8**
 
@@ -9,8 +9,7 @@
   ![WPF](https://img.shields.io/badge/WPF-Windows-0078D4?style=flat-square&logo=windows)
   ![C#](https://img.shields.io/badge/C%23-12.0-239120?style=flat-square&logo=csharp)
   ![SkiaSharp](https://img.shields.io/badge/SkiaSharp-4.152-0B8AC9?style=flat-square)
-  ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square)
-  ![Discord](https://img.shields.io/badge/Discord-Integration-5865F2?style=flat-square&logo=discord&logoColor=white)
+  ![Material Design](https://img.shields.io/badge/Material_Design-Themes-757575?style=flat-square&logo=materialdesign)
   ![Epic Games](https://img.shields.io/badge/Epic_Games-Integration-2F2D2E?style=flat-square&logo=epicgames&logoColor=white)
   ![License]
 
@@ -20,7 +19,7 @@
 
 ## 📋 Sobre o projeto
 
-O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com uma interface inspirada em consoles, busca automática de capas e informações, fundos de jogo estáticos, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Discord** (login OAuth2 + Rich Presence), **Epic Games** (importação automática de jogos) e suporte a controles via **XInput e HID**.
+O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, seguindo a arquitetura **MVVM**. Centraliza sua biblioteca de jogos com uma interface inspirada em consoles, busca automática de capas e informações, fundos de jogo estáticos, monitoramento de hardware em tempo real, efeitos sonoros estilo console, integração com **Epic Games** (importação automática de jogos) e suporte a controles via **XInput e HID**.
 
 
 <div align="center">
@@ -29,9 +28,9 @@ O **GLauncher** é um launcher de jogos desktop desenvolvido em **C# com WPF**, 
 
 ### Baixe a última versão do GLauncher na aba Releases:
 
-  ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.10.0-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
+  ### 👉 [![Download GLauncher](https://img.shields.io/badge/⬇_DOWNLOAD_GLauncher_v2.10.1-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kleberfreitas2/GameLauncher/releases/latest)
 
-> Baixe o instalador `GLauncher_Setup_v2.10.0.exe` na release e siga as etapas de instalação.
+> Baixe o instalador `GLauncher_Setup_v2.10.1.exe` na release e siga as etapas de instalação.
 >
 > 💡 Requer **Windows 10/11 (x64)** — o [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) é necessário caso não esteja instalado.
 
@@ -91,26 +90,6 @@ Busca automática de metadados via **IGDB** (Internet Game Database):
 - A versão atual do launcher é exibida no manual e na tela **Sobre**
 - A tela **Sobre** verifica automaticamente se existe uma release mais nova no GitHub
 - O botão **ATUALIZAR** baixa e executa o instalador da última release disponível
-
-### 💬 Integração Discord
-Login com conta Discord via **OAuth2** e **Rich Presence** automático ao jogar:
-
-**Login Discord (OAuth2)**
-- Autenticação via **Authorization Code Grant** com redirecionamento local
-- Exibição do perfil: **avatar**, **nome de exibição** e **@username**
-- Sessão persistida e restaurada automaticamente ao reabrir o app
-- Botão **DISCORD** no cabeçalho (roxo 💜) — clique para login ou ver perfil
-- Credenciais Discord já embutidas — **funciona sem configuração**
-
-**Rich Presence (Status no Discord)**
-- Ao iniciar um jogo, o Discord exibe automaticamente:
-  - 🎮 **"Jogando [Nome do Jogo]"**
-  - 📝 **"via GLauncher"**
-  - ⏱️ **Tempo de jogo** (contador desde o início)
-- Implementação via **IPC Named Pipes** (zero dependências externas)
-- O status é limpo automaticamente quando o jogo fecha
-
-> 💡 Basta ter o Discord aberto no PC — o Rich Presence é detectado automaticamente.
 
 ### 🤖 GLauncher AI
 - Assistente integrado para dúvidas sobre o jogo em execução ou sobre a biblioteca
@@ -254,13 +233,10 @@ GameLauncher/
 │   └── UrlToImageSourceConverter.cs   # URL → ImageSource para previews
 ├── Models/
 │   ├── AppSettings.cs            # Configurações + credenciais padrão
-│   ├── DiscordProfile.cs         # Modelo de perfil Discord (avatar, username)
 │   ├── EpicProfile.cs            # Modelo de perfil Epic Games
 │   ├── Game.cs                   # Modelo de jogo (ObservableObject)
 │   └── GameTechInfo.cs           # Info técnica do jogo
 ├── Services/
-│   ├── DiscordRichPresenceService.cs # Rich Presence via IPC Named Pipes
-│   ├── DiscordService.cs         # Discord OAuth2 (login, perfil, token cache)
 │   ├── EpicGamesService.cs       # Integração Epic Games (detecção, importação)
 │   ├── GameScanner.cs            # Scanner de pasta por executáveis
 │   ├── HardwareMonitorService.cs # CPU/GPU/RAM + WMI para storage
@@ -279,8 +255,6 @@ GameLauncher/
 │   ├── ApiKeyDialog.xaml          # Cadastro de API Key SteamGridDB
 │   ├── BackgroundSearchDialog.xaml # Busca e preview de fundos
 │   ├── CoverSearchDialog.xaml     # Busca e seleção de capas online
-│   ├── DiscordProfileDialog.xaml   # Perfil Discord (avatar, nome, logout)
-│   ├── DiscordSetupDialog.xaml    # Configuração Discord Client ID
 │   ├── EpicProfileDialog.xaml     # Perfil Epic Games (jogos, importar)
 │   ├── EpicSetupDialog.xaml       # Configuração Epic Games
 │   ├── HelpDialog.xaml            # Manual interativo (14 páginas)
@@ -335,84 +309,5 @@ Ou abra `GameLauncher.slnx` no **Visual Studio 2022+** e pressione `F5`.
 
 > ⚠️ O app é executado como **Administrador** automaticamente (necessário para leitura completa dos sensores de hardware).
 
-### Primeiro uso
-
-1. O launcher abre e já está pronto — **credenciais de API já estão embutidas** (SteamGridDB + IGDB + Discord)
-2. Clique em **`+ ADICIONAR JOGO`** e selecione o(s) `.exe` do(s) jogo(s)
-3. O GLauncher busca automaticamente: ícone, capa, logo, fundo, sinopse, gênero, nota e ano
-4. Descrições são traduzidas automaticamente para **Português**
-5. Para alterar o tema: clique em **`TEMA`** no cabeçalho
-6. Para trocar o avatar: clique na foto no canto superior direito
-7. Para opções do jogo: clique no ícone ⚙️ no cabeçalho
-8. Para ajuda: clique no ícone ❓ azul para abrir o manual integrado
-9. Conecte um controle de console compatível para navegar com gamepad
-10. Sons estilo console tocam durante a navegação (desative em ⚙️ → Sons)
-11. Clique em **`EPIC`** no cabeçalho para importar jogos da **Epic Games Store**
-
----
-
-## 📸 Interface
-
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│  🟢 GLauncher  [+ ADICIONAR] [TEMA] [XBOX] [STEAM] [EPIC] [DISCORD] [❓] [⚙️] 14:30 [👤] │  ← Header
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│          ┌─────────────────────────────────────────────┐                 │
-│          │           🎬 Fundo do jogo                  │                 │
-│          │                                             │                 │
-│          │    🏷️ Logo do Jogo                          │                 │
-│          │    [▶ JOGAR]                                │                 │
-│          └─────────────────────────────────────────────┘                 │
-│                                                                          │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐          │
-│  │ ⭐   │ │      │ │      │ │      │ │      │ │      │ │      │          │  ← Carrossel
-│  │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │ │ capa │           │
-│  │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │ │ Nome │           │
-│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘           │
-│                                                                           │
-│  ┌─ Detalhes ────────────────┐  ┌─ Descrição ──────────────────────┐      │
-│  │ Atividade: Há 2 dias      │  │ Sinopse traduzida para PT-BR    │       │
-│  │ Tamanho: 45.2 GB          │  │ Lorem ipsum dolor sit amet...   │       │
-│  │ Gênero: Ação, Aventura    │  │                                 │       │
-│  │ Rating: ⭐ 92/100          │  │                                 │      │
-│  │ Lançamento: 2023           │  │                                 │      │
-│  └────────────────────────────┘  └─────────────────────────────────┘      │
-│                                                                          │
-├──────────────────────────────────────────────────────────────────────────┤
-│  12 jogos  🎮 Xbox  🔋 85%  CPU: Ryzen 7 5800X  [CPU%][GPU%][RAM] │  ← Footer
-│  por Kleber       GPU: RTX 3070                                          │
-│                   RAM: 32 GB · SSD: 1TB                                  │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 📁 Dados persistidos
-
-Todos os dados são salvos em `%AppData%\GameLauncher\`:
-
-```
-%AppData%\GameLauncher\
-├── games.json       # Biblioteca de jogos (paths, favoritos, metadados IGDB)
-├── settings.json    # Configurações, tema, avatar, nome do jogador
-├── discord_token.json # Token de sessão Discord (OAuth2 refresh token)
-├── icons/           # Cache de ícones extraídos (.png)
-├── covers/          # Capas e logos baixados do SteamGridDB
-├── backgrounds/     # Fundos dos jogos
-```
-
----
-
-## 🛠️ Desenvolvido por
-
-**Kleber Freitas**
-- GitHub: [@kleberfreitas2](https://github.com/kleberfreitas2)
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 

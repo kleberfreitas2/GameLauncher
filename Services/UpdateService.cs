@@ -48,7 +48,7 @@ public sealed class UpdateService
         }
         catch
         {
-            // Mantém a API de releases como fallback.
+            // Mant?m a API de releases como fallback.
         }
 
         using var response = await _http.GetAsync(

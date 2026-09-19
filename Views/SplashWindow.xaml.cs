@@ -81,7 +81,7 @@ public partial class SplashWindow : Window
             bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             bitmap.EndInit();
 
-            // Não ampliar imagens pequenas para preencher a tela. Isso deixa
+            // N?o ampliar imagens pequenas para preencher a tela. Isso deixa
             // o fundo pixelado/estourado mesmo quando a imagem original tem
             // boa qualidade em seu tamanho nativo.
             if (bitmap.PixelWidth < MinimumBackgroundWidth ||

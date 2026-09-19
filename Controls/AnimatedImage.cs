@@ -77,8 +77,8 @@ public class AnimatedImage : Image
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
         // Fundos animados podem conter centenas de frames e bloquear a
-        // experiência enquanto são decodificados. O launcher usa somente o
-        // primeiro frame como fundo estático para abrir imediatamente.
+        // experi?ncia enquanto s?o decodificados. O launcher usa somente o
+        // primeiro frame como fundo est?tico para abrir imediatamente.
         if (ext is ".webp" or ".gif")
             LoadFirstFrame(path);
         else
@@ -322,7 +322,7 @@ public class AnimatedImage : Image
         if (ImageData is not byte[] data || data.Length == 0)
             return;
 
-        // Mantém fundos obtidos em memória estáticos pelo mesmo motivo
+        // Mant?m fundos obtidos em mem?ria est?ticos pelo mesmo motivo
         // aplicado aos arquivos locais: abertura imediata e menor uso de RAM.
         LoadFirstFrameFromBytes(data);
     }

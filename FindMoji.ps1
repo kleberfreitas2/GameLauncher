@@ -4,7 +4,7 @@ $i = 0
 $results = @()
 foreach ($l in $lines) {
     $i++
-    if ($l -match 'Ã|â€|ðŸ|âš|â†|Ãº|Ã­|Ãª|Ã©') {
+    if ($l -match '?|??|?Y|?s|??|ú|í|ê|é') {
         $results += ($i.ToString().PadLeft(4) + ': ' + $l.Trim())
     }
 }

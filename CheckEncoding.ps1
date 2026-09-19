@@ -5,16 +5,16 @@ $bom = ($bytes[0].ToString('X2') + ' ' + $bytes[1].ToString('X2') + ' ' + $bytes
 Write-Host "BOM: $bom"
 Write-Host "Total bytes: $($bytes.Length)"
 
-# Testa se é UTF-8 valido
+# Testa se ? UTF-8 valido
 try {
     $enc = New-Object System.Text.UTF8Encoding $true,$true
     $text = $enc.GetString($bytes)
     Write-Host "Valid UTF-8: YES"
     # Verifica se tem mojibake residual
-    $mojibake = @("Ã¡","Ã§","â€","ðŸš€","Ã£","Ã©","Ã­","Ãª","Ãµ","Ãº")
+    $mojibake = @("á","ç","??","?Ys?","ã","é","í","ê","õ","ú")
     foreach ($m in $mojibake) {
         if ($text.Contains($m)) { Write-Host "Mojibake found: $m" }
     }
 } catch {
-    Write-Host "Valid UTF-8: NO — encoding is likely CP1252"
+    Write-Host "Valid UTF-8: NO - encoding is likely CP1252"
 }

@@ -12,17 +12,17 @@ public partial class AboutDialog : Window
     public AboutDialog()
     {
         InitializeComponent();
-        VersionText.Text = $"Versão {AppInfo.Version}";
+        VersionText.Text = $"Vers?o {AppInfo.Version}";
         Closed += (_, _) => _updateService.Dispose();
         Loaded += async (_, _) =>
         {
             var version = await _updateService.GetAvailableVersionAsync();
             if (version is not null)
-                UpdateStatus.Text = $"Nova versão para baixar: {version}";
+                UpdateStatus.Text = $"Nova vers?o para baixar: {version}";
             else if (_updateService.LastError is not null)
-                UpdateStatus.Text = "Não foi possível verificar novas versões.";
+                UpdateStatus.Text = "N?o foi poss?vel verificar novas vers?es.";
             else
-                UpdateStatus.Text = "Você está usando a versão mais recente.";
+                UpdateStatus.Text = "Voc? est? usando a vers?o mais recente.";
         };
     }
 

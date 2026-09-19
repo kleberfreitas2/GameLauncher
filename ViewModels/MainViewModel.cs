@@ -34,14 +34,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string? _runningGameExecutablePath;
     public  string? RunningGameName => _runningGameName;
 
-    // ── Sistema de troféus ────────────────────────────────────────────────────
+    // Sistema de trofeus
     private readonly TrophyService _trophyService = new();
     private DispatcherTimer? _launcherTimeTimer;
     public  TrophyService TrophyService => _trophyService;
 
     public enum NavZone { Header, Actions, Carousel }
 
-    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Epic", "Discord", "Help", "Settings", "AddGame", "Theme"];
+    private static readonly string[] HeaderItems = ["Xbox", "Steam", "Epic", "Help", "Settings", "AddGame", "Theme"];
 
     [ObservableProperty] private NavZone activeZone = NavZone.Carousel;
     [ObservableProperty] private int headerIndex;
@@ -72,7 +72,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool gamepadConnected;
     [ObservableProperty] private string gamepadStatus = "";
     [ObservableProperty] private bool isAnimationLoading;
-    [ObservableProperty] private bool isDiscordLoading;
     [ObservableProperty] private bool isSoundEnabled = SettingsService.Current.SoundEnabled;
     [ObservableProperty] private bool isFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
 
@@ -129,7 +128,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public bool HasGamepadBattery => GamepadBatteryLevel >= 0 && GamepadConnected;
 
-    // ── Recomendação gráfica ──────────────────────────────────────────────
+    // Recomendacao grafica
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasHwRecommendation))]
     private Models.GraphicsRecommendation? hwRecommendation;
@@ -204,7 +203,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string currentTime = DateTime.Now.ToString("H:mm");
     [ObservableProperty] private string playerName = SettingsService.Current.PlayerName;
 
-    // ── Troféus: exibição no header ───────────────────────────────────────
+    // Trofeus: exibicao no header
     [ObservableProperty] private string trophyGamerscoreDisplay = "0G";
     [ObservableProperty] private string trophyCountDisplay      = "0/27 troféus";
     [ObservableProperty]
@@ -259,25 +258,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public bool IsEpicConnected => EpicConnected && EpicProfile is not null;
     public string EpicButtonText => IsEpicConnected ? EpicProfile!.DisplayName : "EPIC";
-
-    private DiscordService? _discordService;
-    private DiscordRichPresenceService? _discordRpc;
-    private DiscordRpcService? _discordRpcPanel;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDiscordConnected))]
-    [NotifyPropertyChangedFor(nameof(DiscordButtonText))]
-    private DiscordProfile? discordProfile;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDiscordConnected))]
-    [NotifyPropertyChangedFor(nameof(DiscordButtonText))]
-    private bool discordConnected;
-
-    public bool IsDiscordConnected => DiscordConnected && DiscordProfile is not null;
-    public string DiscordButtonText => IsDiscordConnected ? DiscordProfile!.DisplayName : "DISCORD";
-
-    private readonly DispatcherTimer _clockTimer;
+private readonly DispatcherTimer _clockTimer;
 
     public ICollectionView GamesView => _gamesView;
 
@@ -364,7 +345,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _hwMonitor = null;
         }
 
-        // ── Troféus: subscrever ANTES dos restores de plataformas ────────────
+        // Trofeus: subscrever antes dos restores de plataformas
         _trophyService.TrophyUnlocked += OnTrophyUnlocked;
         _trophyService.OnAppStarted();
         RefreshTrophyHeader();
@@ -376,7 +357,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _ = TryRestoreXboxSessionAsync();
         _ = TryRestoreSteamSessionAsync();
         _ = TryRestoreEpicSessionAsync();
-        _ = TryRestoreDiscordSessionAsync();
     }
 
     private void OnMetricsUpdated(HardwareMetrics m)
@@ -417,20 +397,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _xboxService?.Dispose();
         _steamService?.Dispose();
         _epicService?.Dispose();
-        _discordService?.Dispose();
-        _discordRpc?.Dispose();
-        _discordRpcPanel?.Dispose();
         _fpsOverlay?.Close();
         _fpsOverlay = null;
     }
 
-    // ── Fila de toasts (UI thread) ────────────────────────────────────────────
+    // Fila de toasts (UI thread)
     private readonly Queue<Models.Trophy> _toastQueue = new();
     private bool _toastBusy;
 
     private void OnTrophyUnlocked(Models.Trophy trophy)
     {
-        // Garante execução na UI thread — TrophyService pode vir de qualquer thread
+        // Garante execucao na UI thread - TrophyService pode vir de qualquer thread
         if (!_dispatcher.CheckAccess())
         {
             _dispatcher.BeginInvoke(() => OnTrophyUnlocked(trophy));
@@ -521,8 +498,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             IconKind = icon,
             StatusText = status switch
             {
-                CompatStatus.Compatible => "✓ Compatível",
-                CompatStatus.Incompatible => "✗ Não suportado",
+                CompatStatus.Compatible => "OK - Compativel",
+                CompatStatus.Incompatible => "NAO - Nao suportado",
                 _ => "? Desconhecido"
             },
             StatusColor = status switch
@@ -1053,7 +1030,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         game.IgdbId = igdbGame.Id;
         game.IgdbRating = igdbGame.Rating;
         game.ReleaseYear = igdbGame.ReleaseYear;
-        game.Genres = igdbGame.GenreNames == "—" ? null : TranslationService.TranslateGenres(igdbGame.GenreNames);
+        game.Genres = igdbGame.GenreNames == "" ? null : TranslationService.TranslateGenres(igdbGame.GenreNames);
         game.Platforms = igdbGame.PlatformNames;
         game.GameModes = igdbGame.GameModeNames;
         game.PlayerPerspectives = igdbGame.PerspectiveNames;
@@ -1122,7 +1099,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
 
             SaveGames();
-            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
+            StatusMessage = $"\'{game.DisplayName}\' - info IGDB aplicada!";
         }
         catch
         {
@@ -1217,7 +1194,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SaveGames();
             StatusMessage = $"Iniciando {game.DisplayName}...";
 
-            SetDiscordRichPresence(game.DisplayName);
 
             // O launcher preserva seu estado atual durante o jogo.
             // O monitor do controle continua ativo para que a navegação
@@ -1279,7 +1255,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void CleanupAfterGameExit()
     {
-        ClearDiscordRichPresence();
         _runningGameName = null;
         _runningGameExecutablePath = null;
         _aiHintTimer?.Stop();
@@ -1299,7 +1274,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SettingsService.Save();
         IsFpsOverlayEnabled = SettingsService.Current.FpsOverlayEnabled;
         StatusMessage = SettingsService.Current.FpsOverlayEnabled
-            ? "FPS Overlay ativado — será exibido durante os jogos"
+            ? "FPS Overlay ativado - sera exibido durante os jogos"
             : "FPS Overlay desativado";
     }
 
@@ -1432,8 +1407,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SettingsService.Save();
         IsSoundEnabled = SettingsService.Current.SoundEnabled;
         StatusMessage = SettingsService.Current.SoundEnabled
-            ? "Sons ativados 🔊"
-            : "Sons desativados 🔇";
+            ? "Sons ativados"
+            : "Sons desativados";
         if (SettingsService.Current.SoundEnabled)
             SoundService.PlaySelect();
     }
@@ -1454,19 +1429,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenAiAssistant()
     {
-        // Aberto pelo launcher → chat geral, sem foco em jogo específico
+        // Aberto pelo launcher - chat geral, sem foco em jogo especifico
         OpenAiAssistantCore(viaGamepad: false, fromLauncher: true);
     }
 
     private void OnAiComboTriggered()
     {
-        // Ativado por hotkey/controle durante o jogo → focado no jogo em execução
+        // Ativado por hotkey/controle durante o jogo - focado no jogo em execucao
         _dispatcher.BeginInvoke(() => OpenAiAssistantCore(viaGamepad: true, fromLauncher: false));
     }
 
     private void OpenAiAssistantCore(bool viaGamepad, bool fromLauncher = false)
     {
-        // Prioridade: Groq (grátis) → OpenAI (pago)
+        // Prioridade: Groq (gratis) - OpenAI (pago)
         var environmentGroqKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
         var groqKey   = !string.IsNullOrWhiteSpace(environmentGroqKey)
             ? environmentGroqKey.Trim()
@@ -1590,7 +1565,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             XboxProfile = profile;
             XboxConnected = true;
             _trophyService.OnXboxConnected();
-            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+            StatusMessage = $"Xbox Live: {profile.Gamertag} - Gamerscore: {profile.Gamerscore:N0}";
         }
     }
 
@@ -1640,7 +1615,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             XboxProfile = profile;
             XboxConnected = true;
             _trophyService.OnXboxConnected();
-            StatusMessage = $"Xbox Live: {profile.Gamertag} — Gamerscore: {profile.Gamerscore:N0}";
+            StatusMessage = $"Xbox Live: {profile.Gamertag} - Gamerscore: {profile.Gamerscore:N0}";
         }
         else
         {
@@ -1776,7 +1751,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SteamProfile = profile;
             SteamConnected = true;
             _trophyService.OnSteamConnected();
-            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+            StatusMessage = $"Steam: {profile.PersonaName} - {profile.OwnedGamesCount:N0} jogos";
         }
     }
 
@@ -1826,7 +1801,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SteamProfile = profile;
             SteamConnected = true;
             _trophyService.OnSteamConnected();
-            StatusMessage = $"Steam: {profile.PersonaName} — {profile.OwnedGamesCount:N0} jogos";
+            StatusMessage = $"Steam: {profile.PersonaName} - {profile.OwnedGamesCount:N0} jogos";
         }
         else
         {
@@ -1946,7 +1921,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             EpicProfile = profile;
             EpicConnected = true;
             _trophyService.OnEpicConnected();
-            StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
+            StatusMessage = $"Epic Games: {profile.DisplayName} - {profile.InstalledGamesCount:N0} jogos";
         }
 
         return Task.CompletedTask;
@@ -1992,7 +1967,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             EpicProfile = profile;
             EpicConnected = true;
             _trophyService.OnEpicConnected();
-            StatusMessage = $"Epic Games: {profile.DisplayName} — {profile.InstalledGamesCount:N0} jogos";
+            StatusMessage = $"Epic Games: {profile.DisplayName} - {profile.InstalledGamesCount:N0} jogos";
         }
         else
         {
@@ -2097,207 +2072,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             await AutoFetchAllWithProgressAsync(game);
         }
     }
-
-
-    private async Task TryRestoreDiscordSessionAsync()
-    {
-        if (!DiscordService.HasCachedToken())
-            return;
-
-        var clientId = SettingsService.Current.DiscordClientId;
-        if (string.IsNullOrEmpty(clientId))
-            clientId = AppSettings.DefaultDiscordClientId;
-
-        var clientSecret = SettingsService.Current.DiscordClientSecret;
-        if (string.IsNullOrEmpty(clientSecret))
-            clientSecret = AppSettings.DefaultDiscordClientSecret;
-
-        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
-            return;
-
-        IsDiscordLoading = true;
-        try
-        {
-            _discordService?.Dispose();
-            _discordService = new DiscordService(clientId, clientSecret);
-
-            var restored = await _discordService.TrySilentLoginAsync();
-            if (!restored) return;
-
-            var profile = await _discordService.GetProfileAsync();
-            if (profile is not null)
-            {
-                DiscordProfile = profile;
-                DiscordConnected = true;
-                _trophyService.OnDiscordConnected();
-                StatusMessage = $"Discord: {profile.DisplayName}";
-
-                var rid = SettingsService.Current.DiscordClientId;
-                if (string.IsNullOrEmpty(rid)) rid = AppSettings.DefaultDiscordClientId;
-                if (!string.IsNullOrEmpty(rid)) InitDiscordRpcPanel(rid);
-            }
-        }
-        finally
-        {
-            IsDiscordLoading = false;
-        }
-    }
-
-    [RelayCommand]
-    private async Task DiscordLogin()
-    {
-        var clientId = SettingsService.Current.DiscordClientId;
-
-        if (string.IsNullOrEmpty(clientId) || clientId == AppSettings.DefaultDiscordClientId)
-        {
-            if (!string.IsNullOrEmpty(AppSettings.DefaultDiscordClientId))
-            {
-                clientId = AppSettings.DefaultDiscordClientId;
-            }
-            else
-            {
-                var setup = new DiscordSetupDialog { Owner = Application.Current.MainWindow };
-                if (setup.ShowDialog() != true) return;
-                clientId = setup.ClientId;
-                SettingsService.Current.DiscordClientId = clientId;
-                SettingsService.Save();
-            }
-        }
-
-        StatusMessage = "Conectando ao Discord...";
-
-        var clientSecret = SettingsService.Current.DiscordClientSecret;
-        if (string.IsNullOrEmpty(clientSecret))
-            clientSecret = AppSettings.DefaultDiscordClientSecret;
-
-        _discordService?.Dispose();
-        _discordService = new DiscordService(clientId, clientSecret);
-
-        var success = await _discordService.LoginAsync();
-        if (!success)
-        {
-            StatusMessage = "Falha ao conectar ao Discord.";
-            MessageBox.Show(
-                "Não foi possível autenticar com o Discord.\n\n" +
-                "Verifique se o Client ID está correto e se o redirect URI\n" +
-                "http://localhost:9547/callback está configurado no app.",
-                "Discord", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        IsDiscordLoading = true;
-        try
-        {
-            StatusMessage = "Carregando perfil Discord...";
-            var profile = await _discordService.GetProfileAsync();
-
-            if (profile is not null)
-            {
-                DiscordProfile = profile;
-                DiscordConnected = true;
-                _trophyService.OnDiscordConnected();
-                StatusMessage = $"Discord: {profile.DisplayName}";
-            }
-            else
-            {
-                DiscordConnected = true;
-                StatusMessage = "Discord conectado (perfil indisponível).";
-            }
-
-            InitDiscordRpcPanel(clientId);
-        }
-        finally
-        {
-            IsDiscordLoading = false;
-        }
-    }
-
-    private void InitDiscordRpcPanel(string clientId)
-    {
-        try
-        {
-            _discordRpcPanel?.Dispose();
-            _discordRpcPanel = new DiscordRpcService(clientId);
-
-            if (!_discordRpcPanel.TryConnect())
-            {
-                _discordRpcPanel = null;
-                return;
-            }
-
-            var token = _discordService?.AccessToken;
-            if (!string.IsNullOrEmpty(token))
-            {
-                if (_discordRpcPanel.Authenticate(token))
-                    _discordRpcPanel.SubscribeNotifications();
-            }
-        }
-        catch
-        {
-            _discordRpcPanel?.Dispose();
-            _discordRpcPanel = null;
-        }
-    }
-
-    [RelayCommand]
-    private async Task OpenDiscordProfile()
-    {
-        if (!IsDiscordConnected || DiscordProfile is null)
-        {
-            await DiscordLogin();
-            return;
-        }
-
-        var dialog = new DiscordPanelDialog(_discordRpcPanel, _discordService)
-        {
-            Owner = Application.Current.MainWindow
-        };
-
-        IsProfileDialogOpen = true;
-        ProfileDialogNavigate = dialog.HandleGamepadInput;
-
-        dialog.ShowDialog();
-
-        IsProfileDialogOpen = false;
-        ProfileDialogNavigate = null;
-
-        if (dialog.LogoutRequested && _discordService is not null)
-        {
-            await _discordService.LogoutAsync();
-            _discordRpcPanel?.Dispose();
-            _discordRpcPanel = null;
-            DiscordProfile = null;
-            DiscordConnected = false;
-            StatusMessage = "Discord desconectado.";
-        }
-    }
-
-    private void SetDiscordRichPresence(string gameName)
-    {
-        try
-        {
-            var clientId = SettingsService.Current.DiscordClientId;
-            if (string.IsNullOrEmpty(clientId))
-                clientId = AppSettings.DefaultDiscordClientId;
-
-            if (string.IsNullOrEmpty(clientId))
-                return;
-
-            _discordRpc ??= new DiscordRichPresenceService(clientId);
-            _discordRpc.SetActivity(gameName, DateTimeOffset.UtcNow);
-        }
-        catch { }
-    }
-
-    private void ClearDiscordRichPresence()
-    {
-        try
-        {
-            _discordRpc?.ClearActivity();
-        }
-        catch { }
-    }
-
     [RelayCommand]
     private async Task FetchIgdbInfo(Game game)
     {
@@ -2334,7 +2108,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             await FetchIgdbScreenshotsAsync(game, igdbGame.Id);
 
             SaveGames();
-            StatusMessage = $"'{game.DisplayName}' — info IGDB aplicada!";
+            StatusMessage = $"\'{game.DisplayName}\' - info IGDB aplicada!";
 
             await AutoFetchSteamGridDbAssetsAsync(game);
 
@@ -2375,11 +2149,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var name = _xinput.ControllerName;
             bool isPlayStation = name.Contains("DualSense", StringComparison.OrdinalIgnoreCase)
                               || name.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
-            var buttons = isPlayStation ? "✕ = Jogar  |  △ = Opções" : "A = Jogar  |  Y = Opções";
+        var buttons = isPlayStation ? "X = Jogar  |  O = Opcoes" : "A = Jogar  |  Y = Opcoes";
             GamepadStatus = connected
                 ? string.IsNullOrEmpty(name)
-                    ? $"🎮 Controle conectado  |  {buttons}"
-                    : $"🎮 {name} conectado  |  {buttons}"
+                    ? $"[CTRL] Controle conectado  |  {buttons}"
+                    : $"[CTRL] {name} conectado  |  {buttons}"
                 : "";
             if (!connected)
                 GamepadBatteryLevel = -1;
@@ -2735,9 +2509,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case "Steam":
                 OpenSteamProfileCommand.Execute(null);
                 break;
-            case "Discord":
-                OpenDiscordProfileCommand.Execute(null);
-                break;
             case "Help":
                 OpenHelp();
                 break;
@@ -2796,19 +2567,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         string hint = ActiveZone switch
         {
             NavZone.Header => isPS
-                ? "⬅➡ Navegar  |  ✕ = Selecionar  |  ⬇ Jogos"
-                : "⬅➡ Navegar  |  A = Selecionar  |  ⬇ Jogos",
+                ? "D-Pad = Navegar  |  X = Selecionar  |  Y = Jogos"
+                : "D-Pad = Navegar  |  A = Selecionar  |  Y = Jogos",
             NavZone.Actions => isPS
-                ? "✕ = Jogar  |  ⬆ Menu  |  ⬇ Jogos"
-                : "A = Jogar  |  ⬆ Menu  |  ⬇ Jogos",
+                ? "X = Jogar  |  B = Menu  |  Y = Jogos"
+                : "A = Jogar  |  B = Menu  |  Y = Jogos",
             NavZone.Carousel => isPS
-                ? "⬅➡ Jogos  |  ✕ = Jogar  |  △ = Opções  |  ⬆ Ações"
-                : "⬅➡ Jogos  |  A = Jogar  |  Y = Opções  |  ⬆ Ações",
+                ? "D-Pad = Jogos  |  X = Jogar  |  O = Opcoes  |  Y = Acoes"
+                : "D-Pad = Jogos  |  A = Jogar  |  Y = Opcoes  |  B = Acoes",
             _ => ""
         };
 
-        string prefix = string.IsNullOrEmpty(name) ? "🎮" : $"🎮 {name}";
-        string battery = GamepadBatteryLevel >= 0 ? $"  |  🔋 {GamepadBatteryLevel}%" : "";
+        string prefix = string.IsNullOrEmpty(name) ? "[CTRL]" : $"[CTRL] {name}";
+        string battery = GamepadBatteryLevel >= 0 ? $"  |  BAT {GamepadBatteryLevel}%" : "";
         GamepadStatus = $"{prefix}{battery}  |  {hint}";
     }
 
@@ -2824,4 +2595,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     }
+
+
+
 
