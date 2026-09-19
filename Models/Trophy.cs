@@ -1,4 +1,4 @@
-namespace GameLauncher.Models;
+﻿namespace GameLauncher.Models;
 
 public enum TrophyRarity
 {
@@ -17,7 +17,6 @@ public enum TrophyId
     CustomAvatar,
     Decorator,
     Configurator,
-    SocialDiscord,
     XboxLive,
     SteamGamer,
     EpicGamer,
@@ -115,11 +114,6 @@ public class Trophy
         new Trophy { Id = TrophyId.Configurator,    Rarity = TrophyRarity.Bronze, Gamerscore = 10,
             Name = "Configurador",          Icon = "⚙️",
             Description = "Abriu as configurações. Sempre bom saber o que tem lá!" },
-
-        new Trophy { Id = TrophyId.SocialDiscord,   Rarity = TrophyRarity.Bronze, Gamerscore = 15,
-            Name = "Social Gamer",          Icon = "💬",
-            Description = "Conectou o Discord. Ninguém joga sozinho!" },
-
         new Trophy { Id = TrophyId.XboxLive,        Rarity = TrophyRarity.Bronze, Gamerscore = 15,
             Name = "Xbox Live!",            Icon = "🟢",
             Description = "Conectou ao Xbox Live. Achievement unlocked!" },
@@ -204,3 +198,4 @@ public class Trophy
             Description = "Desbloqueou todos os outros troféus. Você é o(a) mestre absoluto(a)!" },
     ];
 }
+

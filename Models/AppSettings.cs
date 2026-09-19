@@ -1,4 +1,4 @@
-using GameLauncher.Services;
+﻿using GameLauncher.Services;
 
 namespace GameLauncher.Models;
 
@@ -11,8 +11,6 @@ public class AppSettings
     internal static string DefaultIgdbClientSecret   => SecretsService.IgdbClientSecret;
     internal static string DefaultXboxClientId       => SecretsService.XboxClientId;
     internal static string DefaultSteamApiKey        => SecretsService.SteamApiKey;
-    internal static string DefaultDiscordClientId    => SecretsService.DiscordClientId;
-    internal static string DefaultDiscordClientSecret => SecretsService.DiscordClientSecret;
     internal static string DefaultOpenAiApiKey       => SecretsService.OpenAiApiKey;
     internal static string DefaultGroqApiKey         => SecretsService.GroqApiKey;
 
@@ -25,24 +23,11 @@ public class AppSettings
     public string XboxClientId         { get; set; } = SecretsService.XboxClientId;
     public string SteamApiKey          { get; set; } = SecretsService.SteamApiKey;
     public string SteamId              { get; set; } = string.Empty;
-    public string DiscordClientId      { get; set; } = SecretsService.DiscordClientId;
-    public string DiscordClientSecret  { get; set; } = SecretsService.DiscordClientSecret;
 
     public bool SoundEnabled           { get; set; } = true;
     public bool FpsOverlayEnabled      { get; set; } = false;
     public string OpenAiApiKey         { get; set; } = SecretsService.OpenAiApiKey;
     public string GroqApiKey           { get; set; } = SecretsService.GroqApiKey;
-
-    public string DiscordWebhookUrl      { get; set; } = string.Empty;
-    public List<string> DiscordQuickMessages { get; set; } =
-    [
-        "Bora jogar!",
-        "Já volto, 5 min",
-        "GG!",
-        "Tô online no GLauncher",
-        "Quem tá aí?",
-        "Vou sair, até mais!"
-    ];
 
     public string AccentColor          { get; set; } = "#7C4DFF";
     public string SecondaryAccentColor { get; set; } = "#00E676";
@@ -54,3 +39,4 @@ public class AppSettings
     /// <summary>Quantas vezes o callout "experimente a IA" já foi exibido.</summary>
     public int AiNotificationCount     { get; set; } = 0;
 }
+

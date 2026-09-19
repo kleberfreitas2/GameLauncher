@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using GameLauncher.Models;
 
@@ -80,14 +80,6 @@ public class TrophyService
     {
         _progress.SettingsOpened = true;
         TryUnlock(TrophyId.Configurator);
-        Save();
-    }
-
-    public void OnDiscordConnected()
-    {
-        _progress.DiscordConnected = true;
-        TryUnlock(TrophyId.SocialDiscord);
-        CheckAllInOne();
         Save();
     }
 
@@ -233,3 +225,4 @@ public class TrophyService
         catch { return new TrophyProgress(); }
     }
 }
+

@@ -1,4 +1,4 @@
-namespace GameLauncher.Models;
+﻿namespace GameLauncher.Models;
 
 /// <summary>Dados de progresso dos troféus — persistidos em JSON.</summary>
 public class TrophyProgress
@@ -17,10 +17,10 @@ public class TrophyProgress
     public bool   AvatarChanged            { get; set; }
     public bool   BackgroundChanged        { get; set; }
     public bool   SettingsOpened           { get; set; }
-    public bool   DiscordConnected         { get; set; }
     public bool   XboxConnected            { get; set; }
     public bool   SteamConnected           { get; set; }
     public bool   EpicConnected            { get; set; }
     public bool   RenamedGame              { get; set; }
     public bool   EasterEggFound           { get; set; }
 }
+

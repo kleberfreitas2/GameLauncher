@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
@@ -32,8 +32,6 @@ public static class SettingsService
             // Descriptografa campos sensíveis salvos com DPAPI
             Current.OpenAiApiKey      = SecretsService.Unprotect(Current.OpenAiApiKey);
             Current.GroqApiKey        = SecretsService.Unprotect(Current.GroqApiKey);
-            Current.DiscordClientSecret = SecretsService.Unprotect(Current.DiscordClientSecret);
-            Current.DiscordWebhookUrl = SecretsService.Unprotect(Current.DiscordWebhookUrl);
 
             // A chave Groq embutida é apenas um valor legado/ofuscado.
             // Nunca a use como credencial padrão: solicite uma chave configurada pelo usuário.
@@ -88,10 +86,8 @@ public static class SettingsService
                 XboxClientId         = Current.XboxClientId,
                 SteamApiKey          = Current.SteamApiKey,
                 SteamId              = Current.SteamId,
-                DiscordClientId      = Current.DiscordClientId,
                 SoundEnabled         = Current.SoundEnabled,
                 FpsOverlayEnabled    = Current.FpsOverlayEnabled,
-                DiscordQuickMessages = Current.DiscordQuickMessages,
                 AccentColor          = Current.AccentColor,
                 SecondaryAccentColor = Current.SecondaryAccentColor,
                 BackgroundColor      = Current.BackgroundColor,
@@ -104,8 +100,6 @@ public static class SettingsService
                 // As chaves padrão ficam em texto plano para funcionar em qualquer máquina.
                 OpenAiApiKey         = ProtectIfCustom(Current.OpenAiApiKey,      SecretsService.OpenAiApiKey),
                 GroqApiKey           = ProtectIfCustom(Current.GroqApiKey,        SecretsService.GroqApiKey),
-                DiscordClientSecret  = ProtectIfCustom(Current.DiscordClientSecret, SecretsService.DiscordClientSecret),
-                DiscordWebhookUrl    = SecretsService.Protect(Current.DiscordWebhookUrl),
             };
 
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
@@ -147,3 +141,4 @@ public static class SettingsService
             Application.Current.Resources[key] = new SolidColorBrush(c);
     }
 }
+
